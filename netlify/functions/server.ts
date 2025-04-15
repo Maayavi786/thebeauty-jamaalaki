@@ -41,6 +41,22 @@ app.use(cors({
 
 app.use(express.json());
 
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'default-secret-key',
+  store: new MemoryStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  }),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 // Initialize passport
 app.use(passport.initialize());
 app.use(passport.session());
@@ -76,27 +92,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
-// Session middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    store: new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    }),
-    cookie: {
-      secure: true,
-      sameSite: 'none',
-      maxAge: 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      domain: '.netlify.app',
-      path: '/',
-      partitioned: true
-    }
-  })
-);
 
 // Authentication routes
 app.post("/api/auth/login", async (req, res) => {
