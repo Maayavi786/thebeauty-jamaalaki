@@ -75,7 +75,6 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.341.0",
     "memorystore": "^1.6.7",
-    "neon": "^1.7.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "pg": "^8.11.4",
