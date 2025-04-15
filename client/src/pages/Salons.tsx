@@ -61,7 +61,7 @@ const Salons = () => {
   }, [location]);
   
   // Fetch salons data
-  const { data: salons, isLoading, error } = useQuery<Salon[]>({
+  const { data: salonsResponse, isLoading, error } = useQuery<{ success: boolean; data: Salon[] }>({
     queryKey: ['/api/salons'],
     queryFn: async () => {
       const response = await fetch(`${API_BASE_URL}/api/salons`, {
@@ -168,7 +168,7 @@ const Salons = () => {
   };
   
   // Filter salons based on search term and service type
-  const filteredSalons: Salon[] = salons ? salons.filter((salon: Salon) => {
+  const filteredSalons: Salon[] = salonsResponse?.data ? salonsResponse.data.filter((salon: Salon) => {
     let matchesSearch = true;
     let matchesService = true;
     

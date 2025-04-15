@@ -126,9 +126,9 @@ app.post("/api/auth/login", async (req, res) => {
 
     const sql = neon(process.env.DATABASE_URL);
     
-    // Get user from database
+    // Get user from database with password hash
     const result = await sql`
-      SELECT id, username, email, role, created_at 
+      SELECT id, username, email, role, password, created_at 
       FROM users 
       WHERE username = ${username}
     `;
@@ -142,8 +142,20 @@ app.post("/api/auth/login", async (req, res) => {
 
     const user = result[0];
     
+    // Verify password
+    const passwordMatch = await comparePasswords(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid credentials"
+      });
+    }
+    
+    // Remove password from user object before storing in session
+    const { password: _, ...userWithoutPassword } = user;
+    
     // Store user in session
-    req.session.user = user;
+    req.session.user = userWithoutPassword;
     
     // Save session
     req.session.save((err) => {
@@ -157,10 +169,21 @@ app.post("/api/auth/login", async (req, res) => {
 
       console.log('Login successful - Session:', req.session);
       
+      // Set session cookie explicitly
+      res.cookie('jamaalaki.sid', req.sessionID, {
+        secure: true,
+        sameSite: 'none',
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        domain: '.netlify.app',
+        path: '/',
+        partitioned: true
+      });
+      
       res.status(200).json({
         success: true,
         message: "Login successful",
-        user: user
+        user: userWithoutPassword
       });
     });
   } catch (error) {
@@ -452,7 +475,18 @@ app.get("/api/services", async (req, res) => {
   try {
     const sql = neon(process.env.DATABASE_URL);
     const services = await sql`
-      SELECT s.*, sl.name_en as salon_name
+      SELECT 
+        s.id,
+        s.salon_id as "salonId",
+        s.name_en as "nameEn",
+        s.name_ar as "nameAr",
+        s.description_en as "descriptionEn",
+        s.description_ar as "descriptionAr",
+        s.duration,
+        s.price,
+        s.category,
+        s.image_url as "imageUrl",
+        sl.name_en as "salonName"
       FROM services s
       JOIN salons sl ON s.salon_id = sl.id
       ORDER BY s.price ASC
