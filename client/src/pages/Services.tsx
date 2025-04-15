@@ -10,6 +10,11 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { getIslamicPatternSvg } from '@/lib/utils';
 
+interface ServicesResponse {
+  success: boolean;
+  data: Service[];
+}
+
 const Services = () => {
   const { t } = useTranslation(['services', 'common']);
   const { isRtl } = useLanguage();
@@ -18,7 +23,7 @@ const Services = () => {
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
 
   // Fetch all services
-  const { data: servicesResponse = { success: false, data: [] }, isLoading, error } = useQuery({
+  const { data: servicesResponse = { success: false, data: [] }, isLoading, error } = useQuery<ServicesResponse>({
     queryKey: ['/api/services'],
   });
 
