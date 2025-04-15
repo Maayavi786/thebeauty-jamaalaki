@@ -50,10 +50,13 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    sameSite: 'none',
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    domain: '.netlify.app',
+    path: '/',
+    partitioned: true
   }
 }));
 
@@ -81,7 +84,8 @@ app.use((req, res, next) => {
       maxAge: 24 * 60 * 60 * 1000,
       httpOnly: true,
       domain: '.netlify.app',
-      path: '/'
+      path: '/',
+      partitioned: true
     };
   }
 
