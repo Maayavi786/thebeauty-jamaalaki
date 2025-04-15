@@ -18,7 +18,7 @@ const Services = () => {
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
 
   // Fetch all services
-  const { data: services = [], isLoading, error } = useQuery({
+  const { data: servicesResponse = { success: false, data: [] }, isLoading, error } = useQuery({
     queryKey: ['/api/services'],
   });
 
@@ -36,9 +36,9 @@ const Services = () => {
 
   // Filter services based on category and search query
   useEffect(() => {
-    if (!Array.isArray(services)) return;
+    if (!Array.isArray(servicesResponse.data)) return;
 
-    let filtered = [...services];
+    let filtered = [...servicesResponse.data];
 
     // Filter by category
     if (selectedCategory !== 'all') {
@@ -57,7 +57,7 @@ const Services = () => {
     }
 
     setFilteredServices(filtered);
-  }, [services, selectedCategory, searchQuery]);
+  }, [servicesResponse.data, selectedCategory, searchQuery]);
 
   // Handle category selection
   const handleCategoryChange = (categoryId: string) => {
