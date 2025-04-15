@@ -69,7 +69,7 @@ app.use(passport.session());
 app.use((req, res, next) => {
   // Set CORS headers
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Origin', req.headers.origin || 'https://jamaalaki-app.windsurf.build');
+  res.header('Access-Control-Allow-Origin', req.headers.origin || 'https://thebeauty.netlify.app');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
   res.header('Access-Control-Expose-Headers', 'Set-Cookie');
