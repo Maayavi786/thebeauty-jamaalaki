@@ -1,11 +1,11 @@
 [build]
   command = "cd client && npm install && npm run netlify-build"
   publish = "client/dist"
-  environment = { 
-    NODE_VERSION = "20",
-    NODE_ENV = "production",
-    VITE_API_BASE_URL = "https://thebeauty.netlify.app"
-  }
+
+[build.environment]
+  NODE_VERSION = "20"
+  NODE_ENV = "production"
+  VITE_API_BASE_URL = "https://thebeauty.netlify.app"
 
 [functions]
   directory = "netlify/functions"
