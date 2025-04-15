@@ -126,7 +126,7 @@ const LoadingSkeleton = ({ isLtr }: { isLtr: boolean }) => (
 
 const useSalonData = (salonId: number): SalonData => {
   const {
-    data: salon,
+    data: salonResponse,
     isLoading: isSalonLoading,
     error: salonError
   } = useQuery({
@@ -136,7 +136,8 @@ const useSalonData = (salonId: number): SalonData => {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch salon');
-      return response.json();
+      const data = await response.json();
+      return data.success ? data.data : null;
     },
     retry: false
   });
@@ -155,7 +156,7 @@ const useSalonData = (salonId: number): SalonData => {
       return response.json();
     },
     retry: false,
-    enabled: !!salon
+    enabled: !!salonResponse
   });
 
   const {
@@ -165,18 +166,18 @@ const useSalonData = (salonId: number): SalonData => {
   } = useQuery({
     queryKey: ['reviews', salonId],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/reviews/salon/${salonId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/reviews?salonId=${salonId}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch reviews');
       return response.json();
     },
     retry: false,
-    enabled: !!salon
+    enabled: !!salonResponse
   });
 
   return {
-    salon: salon || null,
+    salon: salonResponse || null,
     services: services || null,
     reviews: reviews || null,
     isLoading: isSalonLoading || isServicesLoading || isReviewsLoading,

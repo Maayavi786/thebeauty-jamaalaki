@@ -55,8 +55,9 @@ app.use(cors({
   origin: ['https://thebeauty.netlify.app', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie'],
+  maxAge: 86400 // 24 hours
 }));
 
 app.use(express.json());
@@ -68,11 +69,14 @@ app.use(passport.session());
 // Add middleware to ensure session cookie is set and handle CORS properly
 app.use((req, res, next) => {
   // Set CORS headers
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Origin', req.headers.origin || 'https://thebeauty.netlify.app');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
-  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  const origin = req.headers.origin;
+  if (origin && ['https://thebeauty.netlify.app', 'http://localhost:5173'].includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With');
+    res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  }
 
   // Ensure session cookie is set
   if (req.session && !req.session.cookie) {
@@ -528,17 +532,32 @@ app.get('/api/reviews', async (req, res) => {
     const { salonId } = req.query;
     const sql = neon(process.env.DATABASE_URL!);
     
+    let reviews;
     if (salonId) {
-      const reviews = await sql`SELECT * FROM reviews WHERE salon_id = ${salonId}`;
-      res.json(reviews);
+      reviews = await sql`
+        SELECT r.*, u.username, u.full_name
+        FROM reviews r
+        JOIN users u ON r.user_id = u.id
+        WHERE r.salon_id = ${parseInt(salonId as string)}
+        ORDER BY r.created_at DESC
+      `;
     } else {
-      const reviews = await sql`SELECT * FROM reviews`;
-      res.json(reviews);
+      reviews = await sql`
+        SELECT r.*, u.username, u.full_name
+        FROM reviews r
+        JOIN users u ON r.user_id = u.id
+        ORDER BY r.created_at DESC
+      `;
     }
+    
+    res.json({
+      success: true,
+      data: reviews
+    });
   } catch (error) {
     console.error('Error fetching reviews:', error);
     res.status(500).json({
-      status: 'error',
+      success: false,
       message: 'Failed to fetch reviews',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
