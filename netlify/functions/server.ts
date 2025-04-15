@@ -33,7 +33,7 @@ const MemoryStore = memorystore(session);
 app.use(cors({
   origin: ['https://thebeauty.netlify.app', 'http://localhost:5173'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
   exposedHeaders: ['Set-Cookie'],
   maxAge: 86400 // 24 hours
@@ -47,16 +47,18 @@ app.use(session({
   store: new MemoryStore({
     checkPeriod: 86400000 // prune expired entries every 24h
   }),
-  resave: false,
+  name: 'thebeauty.sid',
+  resave: true,
   saveUninitialized: false,
+  rolling: true, // Refresh session with each request
+  proxy: true, // Required for secure cookies behind a proxy/CDN
   cookie: {
     secure: true,
     httpOnly: true,
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    domain: '.netlify.app',
     path: '/',
-    partitioned: true
+    domain: 'netlify.app'
   }
 }));
 
@@ -71,22 +73,9 @@ app.use((req, res, next) => {
   if (origin && ['https://thebeauty.netlify.app', 'http://localhost:5173'].includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With');
     res.header('Access-Control-Expose-Headers', 'Set-Cookie');
-  }
-
-  // Ensure session cookie is set
-  if (req.session && !req.session.cookie) {
-    req.session.cookie = {
-      secure: true,
-      sameSite: 'none',
-      maxAge: 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      domain: '.netlify.app',
-      path: '/',
-      partitioned: true
-    };
   }
 
   // Handle preflight requests
@@ -168,17 +157,6 @@ app.post("/api/auth/login", async (req, res) => {
       }
 
       console.log('Login successful - Session:', req.session);
-      
-      // Set session cookie explicitly
-      res.cookie('jamaalaki.sid', req.sessionID, {
-        secure: true,
-        sameSite: 'none',
-        maxAge: 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        domain: '.netlify.app',
-        path: '/',
-        partitioned: true
-      });
       
       res.status(200).json({
         success: true,
@@ -285,7 +263,7 @@ app.post("/api/auth/register", async (req, res) => {
       }
       
       // Set session cookie explicitly
-      res.cookie('jamaalaki.sid', req.sessionID, {
+      res.cookie('thebeauty.sid', req.sessionID, {
         secure: true,
         sameSite: 'none',
         maxAge: 24 * 60 * 60 * 1000,
@@ -316,6 +294,7 @@ app.get("/api/auth/session", async (req, res) => {
   try {
     console.log('Session check - Session ID:', req.sessionID);
     console.log('Session check - Session:', req.session);
+    console.log('Session check - Cookies:', req.headers.cookie);
     
     if (!req.session.user) {
       console.log('No user in session');
@@ -325,8 +304,18 @@ app.get("/api/auth/session", async (req, res) => {
       });
     }
 
-    // Refresh session
+    // Refresh session cookie
     req.session.touch();
+    
+    // Set cookie explicitly
+    res.cookie('thebeauty.sid', req.sessionID, {
+      secure: true,
+      httpOnly: true,
+      sameSite: 'none',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: '/',
+      partitioned: true
+    });
     
     res.json({ 
       success: true, 
@@ -367,7 +356,7 @@ app.post("/api/auth/logout", async (req, res) => {
       }
       
       // Clear session cookie
-      res.clearCookie('jamaalaki.sid', {
+      res.clearCookie('thebeauty.sid', {
         domain: '.netlify.app',
         path: '/'
       });

@@ -32,23 +32,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check session on mount
+    // Check session on mount and after login/logout
     const checkSession = async () => {
       try {
-        const response = await apiRequest('GET', '/api/auth/session');
+        console.log('Checking session...');
+        const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Session response:', response.status);
         const data = await response.json();
+        console.log('Session data:', data);
         
         if (!data.success) {
           console.error('Session check failed:', data.error || data.message);
-          localStorage.removeItem('user');
+          setUser(null);
           return;
         }
         
         setUser(data.user);
-        localStorage.setItem('user', JSON.stringify(data.user));
       } catch (error) {
         console.error('Failed to check session:', error);
-        localStorage.removeItem('user');
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -60,15 +69,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await apiRequest('POST', '/api/auth/login', { username, password });
+      console.log('Attempting login...');
+      
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
+      
+      console.log('Login response:', response.status);
       const data = await response.json();
+      console.log('Login data:', data);
       
       if (!data.success) {
         throw new Error(data.error || data.message);
       }
       
       setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
       
       toast({
         title: 'Login Successful',
@@ -130,31 +150,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
 
   const logout = async () => {
     try {
-      await apiRequest('POST', '/api/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
+      console.log('Attempting logout...');
+      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Logout response:', response.status);
+      
       setUser(null);
-      localStorage.removeItem('user');
       toast({
         title: 'Logged Out',
-        description: 'You have been logged out successfully',
+        description: 'You have been successfully logged out.',
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+      toast({
+        title: 'Logout Failed',
+        description: 'Failed to log out. Please try again.',
+        variant: 'destructive',
       });
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        register,
-        logout,
-        isAuthenticated: !!user,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    loading,
+    login,
+    register,
+    logout,
+    isAuthenticated: !!user,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
