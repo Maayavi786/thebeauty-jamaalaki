@@ -50,26 +50,13 @@ app.use(
   })
 );
 
-// Enable CORS with credentials
-const allowedOrigins = [
-  'https://thebeauty.netlify.app',
-  'http://localhost:5173',
-  'http://localhost:5000'
-];
-
+// CORS configuration
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['https://thebeauty.netlify.app', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie'],
-  maxAge: 86400 // 24 hours
+  exposedHeaders: ['Set-Cookie']
 }));
 
 app.use(express.json());
@@ -691,6 +678,32 @@ app.get('/api/test', async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Failed to run tests',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Database connection
+const sql = neon(process.env.DATABASE_URL!);
+
+// Test database connection
+app.get('/api/test-db', async (req, res) => {
+  try {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL is not set');
+    }
+    
+    const result = await sql`SELECT 1 as test`;
+    res.json({ 
+      success: true, 
+      message: 'Database connection successful',
+      data: result 
+    });
+  } catch (error) {
+    console.error('Database connection test failed:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Database connection failed',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
