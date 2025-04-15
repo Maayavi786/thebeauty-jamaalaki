@@ -1,0 +1,25 @@
+ id |         name_en         |                                         image_url                                         
+----+-------------------------+-------------------------------------------------------------------------------------------
+  1 | The Beauty Elegance Spa | https://images.unsplash.com/photo-1560750588-73207b1ef5b8?auto=format&fit=crop&w=800&q=80
+  2 | Glamour & Grace         | https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&q=80
+  3 | Elite Beauty Lounge     | https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80
+  4 | Royal Spa & Salon       | https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&q=80
+  7 | Zen Beauty Retreat      | https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&q=80
+  5 | Serenity Beauty Center  | https://images.unsplash.com/photo-1560750588-73207b1ef5b8?auto=format&fit=crop&q=80
+  6 | Modern Cuts & Colors    | https://images.unsplash.com/photo-1600948836654-e0c024d4dfb5?auto=format&fit=crop&q=80
+  8 | Chic & Shine            | https://images.unsplash.com/photo-1600948836673-c1f82dcafb3b?auto=format&fit=crop&q=80
+  9 | Pure Bliss Salon        | https://images.unsplash.com/photo-1632345031163-2431447e5283?auto=format&fit=crop&q=80
+ 10 | Elegance Studio         | https://images.unsplash.com/photo-1600948836789-e1c0f9578ef1?auto=format&fit=crop&q=80
+ 11 | Beauty Haven            | https://images.unsplash.com/photo-1632345031163-2431447e5283?auto=format&fit=crop&q=80
+ 12 | Glamour & Grace         | https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&q=80
+ 13 | Elite Beauty Lounge     | https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80
+ 14 | Royal Spa & Salon       | https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&q=80
+ 15 | Serenity Beauty Center  | https://images.unsplash.com/photo-1560750588-73207b1ef5b8?auto=format&fit=crop&q=80
+ 16 | Modern Cuts & Colors    | https://images.unsplash.com/photo-1600948836654-e0c024d4dfb5?auto=format&fit=crop&q=80
+ 17 | Zen Beauty Retreat      | https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&q=80
+ 18 | Chic & Shine            | https://images.unsplash.com/photo-1600948836673-c1f82dcafb3b?auto=format&fit=crop&q=80
+ 19 | Pure Bliss Salon        | https://images.unsplash.com/photo-1632345031163-2431447e5283?auto=format&fit=crop&q=80
+ 20 | Elegance Studio         | https://images.unsplash.com/photo-1600948836789-e1c0f9578ef1?auto=format&fit=crop&q=80
+ 21 | Beauty Haven            | https://images.unsplash.com/photo-1632345031163-2431447e5283?auto=format&fit=crop&q=80
+(21 rows)
+

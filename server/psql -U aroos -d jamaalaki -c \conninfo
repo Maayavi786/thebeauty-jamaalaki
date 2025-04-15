@@ -1,0 +1,9 @@
+                                  List of roles
+     Role name      |                         Attributes                         
+--------------------+------------------------------------------------------------
+ aroos              | Superuser
+ defaultuser        | Superuser
+ postgres           | Superuser, Create role, Create DB, Replication, Bypass RLS
+ salon_ksa          | Create DB
+ salon_ksa_windsurf | Create DB
+

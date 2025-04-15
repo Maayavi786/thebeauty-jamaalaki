@@ -1,0 +1,10 @@
+            List of relations
+ Schema |   Name   | Type  |    Owner    
+--------+----------+-------+-------------
+ public | bookings | table | defaultuser
+ public | reviews  | table | defaultuser
+ public | salons   | table | defaultuser
+ public | services | table | defaultuser
+ public | users    | table | defaultuser
+(5 rows)
+

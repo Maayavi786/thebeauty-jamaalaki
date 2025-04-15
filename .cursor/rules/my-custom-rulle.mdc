@@ -1,0 +1,41 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- You can @ files here
+- You can use markdown but dont have to
+always check any implementation should support LTR and RTL and in seperate Arabic and English Languages 
+
+# Deployment and Build Rules
+
+- GitHub will automatically trigger deployments to Netlify - no need for manual deployment
+- Always check TypeScript errors in the build logs
+- When using drizzle-zod, prefer explicit Zod schemas over createInsertSchema for better type safety
+- Schema validation should be explicit and include proper validation rules
+- Monitor deployment progress on GitHub Actions or Netlify dashboard
+- Keep an eye on security vulnerabilities reported by GitHub
+- Ensure CORS configuration matches the actual domain being used
+- API base URL should be consistent across client and server configurations
+
+# Deployment Monitoring Rule
+
+- After every git push, immediately check the deployment logs at https://app.netlify.com/sites/thebeauty/deploys
+- Fix any issues found in the deployment logs
+- Push the fixes to git
+- Verify the new deployment is successful
+- This rule is always active and must be followed for every deployment
+
+# Security and Cookie Rules
+
+- All cookies must have the "Partitioned" attribute when using Cloudflare
+- Session cookies should be properly configured with security attributes:
+  - Secure
+  - HttpOnly
+  - SameSite
+  - Partitioned (for cross-site cookies)
+- Monitor browser console for cookie-related warnings
+- Keep Cloudflare configuration up to date with latest security standards

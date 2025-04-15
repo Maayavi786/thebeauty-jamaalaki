@@ -1,0 +1,46 @@
+[build]
+  command = "cd client && npm install && npm run netlify-build"
+  publish = "client/dist"
+  environment = { VITE_API_BASE_URL = "https://thebeauty.netlify.app" }
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NODE_ENV = "production"
+
+[site]
+  id = "069c9446-cee2-4862-acb3-716877b79f6b"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/server/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/bookings/*"
+  to = "/.netlify/functions/server/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Credentials = "true"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, Cookie"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Origin = "https://thebeauty.netlify.app"
+    Access-Control-Expose-Headers = "Set-Cookie"
+
+[dev]
+  framework = "vite"
+  targetPort = 5173
+  port = 8888

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo "Please set the following environment variables in your Netlify UI:"
+echo "https://app.netlify.com/sites/thebeauty/settings/env"
+echo ""
+echo "1. DATABASE_URL:"
+echo "postgresql://postgres:postgres@db.bit.io:5432/thebeauty"
+echo ""
+echo "2. SESSION_SECRET:"
+echo "7724aa05362e0d0833b36627802758c39949e8f7307e5a1f8215d9a2214c6de6c808f7774463afac45b4357b45c774f91d5e517959c4cc940a18127de1714ad4"
+echo ""
+echo "3. VITE_API_BASE_URL:"
+echo "https://thebeauty.netlify.app"
+echo ""
+echo "4. ALLOWED_ORIGINS:"
+echo "https://thebeauty.netlify.app,http://localhost:5173"
+echo ""
+echo "After setting these variables, trigger a new deployment." 
