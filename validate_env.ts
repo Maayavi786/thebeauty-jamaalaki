@@ -12,7 +12,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   SESSION_SECRET: z.string().min(64),
   JWT_SECRET: z.string().min(32),
-  VITE_API_URL: z.string().url(),
+  VITE_API_BASE_URL: z.string().url(),
   VITE_WS_URL: z.string().url(),
 
   // Optional variables
@@ -49,10 +49,10 @@ async function validateEnvironment() {
 
     // Validate URLs
     console.log('\n🌐 Validating API URLs...');
-    if (env.VITE_API_URL.startsWith('https://')) {
-      console.log('✅ VITE_API_URL is valid');
+    if (env.VITE_API_BASE_URL.startsWith('https://')) {
+      console.log('✅ VITE_API_BASE_URL is valid');
     } else {
-      console.error('❌ VITE_API_URL must start with https://');
+      console.error('❌ VITE_API_BASE_URL must start with https://');
     }
 
     if (env.VITE_WS_URL.startsWith('wss://')) {

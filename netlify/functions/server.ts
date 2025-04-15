@@ -29,27 +29,6 @@ app.use(Sentry.Handlers.requestHandler());
 // Create MemoryStore
 const MemoryStore = memorystore(session);
 
-// Session middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET!,
-    resave: false,
-    saveUninitialized: false,
-    store: new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    }),
-    cookie: {
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      partitioned: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      domain: '.netlify.app',
-      path: '/'
-    }
-  })
-);
-
 // CORS configuration
 app.use(cors({
   origin: ['https://thebeauty.netlify.app', 'http://localhost:5173'],
@@ -97,6 +76,27 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Session middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    store: new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    }),
+    cookie: {
+      secure: true,
+      sameSite: 'none',
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      domain: '.netlify.app',
+      path: '/',
+      partitioned: true
+    }
+  })
+);
 
 // Authentication routes
 app.post("/api/auth/login", async (req, res) => {
