@@ -9,6 +9,7 @@ import { env } from "./config";
 import cors from "cors";
 import { initializeDatabase } from './initDb';
 import { DatabaseStorage } from './storage.db';
+import pgSession from 'connect-pg-simple';
 
 const app = express();
 
@@ -21,20 +22,23 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'development_secret_key_change_in_production',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: true, // Always use secure cookies
-      sameSite: 'lax', // Use 'lax' in development, 'strict' in production
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      httpOnly: true, // Prevent client-side JavaScript access
-    },
-  })
-);
+// Add persistent session store for serverless (Postgres)
+app.use(session({
+  store: new (pgSession(session))({
+    conString: process.env.DATABASE_URL,
+    tableName: 'user_sessions',
+    createTableIfMissing: true
+  }),
+  secret: process.env.SESSION_SECRET || 'development_secret_key_change_in_production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: true, // Always use secure cookies
+    sameSite: 'lax', // Use 'lax' in development, 'strict' in production
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    httpOnly: true, // Prevent client-side JavaScript access
+  },
+}));
 
 // Initialize passport
 app.use(passport.initialize());
