@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import ServiceCard from "@/components/ServiceCard";
 import { API_BASE_URL } from "@/lib/config";
+import { apiRequest } from "@/lib/queryClient";
 
 // TypeScript Interfaces
 interface InfoItemProps {
@@ -132,59 +133,22 @@ const useSalonData = (salonId: number): SalonData => {
   } = useQuery({
     queryKey: ['salon', salonId],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/salons/${salonId}`, {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch salon');
+      const response = await apiRequest('GET', `/api/salons/${salonId}`);
       const data = await response.json();
       return data.success ? data.data : null;
     },
     retry: false
   });
 
-  const {
-    data: services,
-    isLoading: isServicesLoading,
-    error: servicesError
-  } = useQuery({
-    queryKey: ['services', salonId],
-    queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/services/salon/${salonId}`, {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch services');
-      return response.json();
-    },
-    retry: false,
-    enabled: !!salonResponse
-  });
-
-  const {
-    data: reviews,
-    isLoading: isReviewsLoading,
-    error: reviewsError
-  } = useQuery({
-    queryKey: ['reviews', salonId],
-    queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/reviews?salonId=${salonId}`, {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch reviews');
-      return response.json();
-    },
-    retry: false,
-    enabled: !!salonResponse
-  });
-
   return {
     salon: salonResponse || null,
-    services: services || null,
-    reviews: reviews || null,
-    isLoading: isSalonLoading || isServicesLoading || isReviewsLoading,
+    services: salonResponse?.services || null,
+    reviews: salonResponse?.reviews || null,
+    isLoading: isSalonLoading,
     errors: {
       salonError,
-      servicesError,
-      reviewsError
+      servicesError: null,
+      reviewsError: null
     }
   };
 };
@@ -212,8 +176,6 @@ const SalonDetails = () => {
     };
 
     handleError(errors.salonError, "Failed to load salon details");
-    handleError(errors.servicesError, "Failed to load services");
-    handleError(errors.reviewsError, "Failed to load reviews");
   }, [errors, toast, isLtr]);
 
   if (!salonId) {

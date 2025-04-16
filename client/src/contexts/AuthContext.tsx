@@ -38,28 +38,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
     const checkSession = async () => {
       try {
         console.log('Checking session...');
-        const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        });
-        
-        console.log('Session response:', response.status);
+        const response = await apiRequest('GET', '/api/auth/session');
         const data = await response.json();
-        console.log('Session data:', data);
         
-        if (!data.success) {
-          console.error('Session check failed:', data.error || data.message);
+        if (data.success && data.user) {
+          setUser(data.user);
+        } else {
           setUser(null);
-          return;
         }
-        
-        setUser(data.user);
       } catch (error) {
-        console.error('Failed to check session:', error);
+        console.error('Session check failed:', error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -67,11 +55,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
     };
 
     checkSession();
-    
-    // Set up periodic session check
-    const intervalId = setInterval(checkSession, 5 * 60 * 1000); // Check every 5 minutes
-    
-    return () => clearInterval(intervalId);
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
