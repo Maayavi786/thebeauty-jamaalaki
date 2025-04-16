@@ -25,6 +25,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Salon, Service } from "@shared/schema";
 import { API_BASE_URL } from '../lib/config';
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { BookingSkeleton } from "@/components/Skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const BookingPage = () => {
   const { isLtr, isRtl } = useLanguage();
@@ -39,16 +43,40 @@ const BookingPage = () => {
   // Get time slots
   const timeSlots = getTimeSlots(9, 21, 30);
   
-  // Fetch salon data
-  const { data: salon, isLoading: isSalonLoading } = useQuery<Salon>({
-    queryKey: [`/api/salons/${params?.salonId}`],
-    enabled: !!params?.salonId
+  // Fetch salon data with retry logic
+  const { data: salon, isLoading: isSalonLoading, error: salonError } = useQuery<Salon>({
+    queryKey: ['salon', params?.salonId],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/api/salons/${params?.salonId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch salon');
+      const data = await response.json();
+      return data.success ? data.data : null;
+    },
+    enabled: !!params?.salonId,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
   
-  // Fetch service data
-  const { data: service, isLoading: isServiceLoading } = useQuery<Service>({
-    queryKey: [`/api/services/${params?.serviceId}`],
-    enabled: !!params?.serviceId
+  // Fetch service data with retry logic
+  const { data: service, isLoading: isServiceLoading, error: serviceError } = useQuery<Service>({
+    queryKey: ['service', params?.serviceId],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/api/services/${params?.serviceId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch service');
+      const data = await response.json();
+      return data.success ? data.data : null;
+    },
+    enabled: !!params?.serviceId,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
   
   // Create booking form schema
@@ -178,8 +206,8 @@ const BookingPage = () => {
     
     const bookingData = {
       userId: user.id,
-      salonId: salon.id,
-      serviceId: service.id,
+      salonId: (salon as Salon).id,
+      serviceId: (service as Service).id,
       datetime: bookingDate.toISOString(),
       status: "pending",
       notes: formData.notes,
@@ -193,9 +221,24 @@ const BookingPage = () => {
   };
   
   if (isSalonLoading || isServiceLoading) {
+    return <BookingSkeleton />;
+  }
+  
+  if (salonError || serviceError) {
     return (
-      <div className="container mx-auto px-4 py-16 flex justify-center items-center">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      <div className="container mx-auto px-4 py-16 text-center">
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>
+            {isLtr ? "Error Loading Data" : "خطأ في تحميل البيانات"}
+          </AlertTitle>
+          <AlertDescription>
+            {isLtr 
+              ? "Failed to load booking information. Please try again later."
+              : "فشل في تحميل معلومات الحجز. يرجى المحاولة مرة أخرى لاحقًا."
+            }
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -217,14 +260,14 @@ const BookingPage = () => {
   }
   
   return (
-    <>
+    <ErrorBoundary>
       <Helmet>
         <title>
           {isLtr ? "Book Appointment | The Beauty" : "حجز موعد | جمالكِ"}
         </title>
         <meta name="description" content={isLtr 
-          ? `Book your appointment for ${service.nameEn} at ${salon.nameEn}`
-          : `احجزي موعدك لخدمة ${service.nameAr} في ${salon.nameAr}`
+          ? `Book your appointment for ${(service as Service).nameEn} at ${(salon as Salon).nameEn}`
+          : `احجزي موعدك لخدمة ${(service as Service).nameAr} في ${(salon as Salon).nameAr}`
         } />
       </Helmet>
       
@@ -262,14 +305,14 @@ const BookingPage = () => {
                           <div className="flex justify-between items-center">
                             <div>
                               <p className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>
-                                {isLtr ? service.nameEn : service.nameAr}
+                                {isLtr ? (service as Service).nameEn : (service as Service).nameAr}
                               </p>
                               <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                                {isLtr ? "Duration" : "المدة"}: {service.duration} {isLtr ? "minutes" : "دقيقة"}
+                                {isLtr ? "Duration" : "المدة"}: {(service as Service).duration} {isLtr ? "minutes" : "دقيقة"}
                               </p>
                             </div>
                             <p className="text-primary font-medium">
-                              {formatPrice(service.price)}
+                              {formatPrice((service as Service).price)}
                             </p>
                           </div>
                         </div>
@@ -355,10 +398,10 @@ const BookingPage = () => {
                     <div className="flex justify-between items-center pb-3 border-b">
                       <div>
                         <p className={`${isRtl ? 'font-tajawal' : ''}`}>
-                          <span className="font-medium">{isLtr ? salon.nameEn : salon.nameAr}</span>
+                          <span className="font-medium">{isLtr ? (salon as Salon).nameEn : (salon as Salon).nameAr}</span>
                           <br />
                           <span className="text-sm text-muted-foreground">
-                            {isLtr ? salon.city.split(' | ')[0] : `${salon.city.split(' | ')[0]} | ${salon.city.split(' | ')[1]}`}
+                            {isLtr ? (salon as Salon).city.split(' | ')[0] : `${(salon as Salon).city.split(' | ')[0]} | ${(salon as Salon).city.split(' | ')[1]}`}
                           </span>
                         </p>
                       </div>
@@ -366,13 +409,13 @@ const BookingPage = () => {
                     
                     <div className="flex justify-between items-center pb-3 border-b">
                       <div className={`${isRtl ? 'font-tajawal' : ''}`}>
-                        <p className="font-medium">{isLtr ? service.nameEn : service.nameAr}</p>
+                        <p className="font-medium">{isLtr ? (service as Service).nameEn : (service as Service).nameAr}</p>
                         <p className="text-sm text-muted-foreground">
-                          {service.duration} {isLtr ? "minutes" : "دقيقة"}
+                          {(service as Service).duration} {isLtr ? "minutes" : "دقيقة"}
                         </p>
                       </div>
                       <p className="text-primary font-medium">
-                        {formatPrice(service.price)}
+                        {formatPrice((service as Service).price)}
                       </p>
                     </div>
                     
@@ -402,7 +445,7 @@ const BookingPage = () => {
                       <p className={`${isRtl ? 'font-tajawal' : ''}`}>
                         {isLtr ? "Total Amount" : "المبلغ الإجمالي"}
                       </p>
-                      <p className="text-primary">{formatPrice(service.price)}</p>
+                      <p className="text-primary">{formatPrice((service as Service).price)}</p>
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -425,7 +468,7 @@ const BookingPage = () => {
           </div>
         </div>
       </div>
-    </>
+    </ErrorBoundary>
   );
 };
 

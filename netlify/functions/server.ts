@@ -1,41 +1,58 @@
-import { Handler } from '@netlify/functions';
+import { Handler, HandlerEvent, HandlerContext, HandlerResponse } from '@netlify/functions';
 import express from 'express';
 import serverless from 'serverless-http';
 import { neon } from '@neondatabase/serverless';
 import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
-import * as Sentry from "@sentry/node";
 import { comparePasswords } from '../utils/passwordUtils';
 import { hashPassword } from '../utils/passwordUtils';
 import memorystore from 'memorystore';
+import * as Sentry from "@sentry/node";
+import rateLimit from 'express-rate-limit';
+
+// Define session types
+declare module 'express-session' {
+  interface SessionData {
+    user?: User;
+  }
+}
+
+// Ensure DATABASE_URL is defined
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
+
+const app = express();
+
+// Create MemoryStore
+const MemoryStore = memorystore(session);
 
 // Initialize Sentry
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   environment: process.env.NODE_ENV || 'development',
-  integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
-    new Sentry.Integrations.Express({ app }),
-  ],
   tracesSampleRate: 1.0,
 });
 
-const app = express();
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: "Too many requests, please try again later"
+  }
+});
 
-// Sentry request handler must be the first middleware
-app.use(Sentry.Handlers.requestHandler());
-
-// Create MemoryStore
-const MemoryStore = memorystore(session);
+// Apply rate limiting to all routes
+app.use(limiter);
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://thebeauty.netlify.app' 
-    : 'http://localhost:5173',
+  origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') || ['https://thebeauty.netlify.app', 'http://localhost:5173'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
   exposedHeaders: ['Set-Cookie'],
   maxAge: 86400 // 24 hours
@@ -45,37 +62,25 @@ app.use(express.json());
 
 // Session configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'default-secret-key',
+  secret: process.env.SESSION_SECRET || (() => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('SESSION_SECRET must be set in production');
+    }
+    return 'development-secret-key';
+  })(),
   store: new MemoryStore({
     checkPeriod: 86400000 // prune expired entries every 24h
   }),
-  name: 'thebeauty.sid',
   resave: false,
   saveUninitialized: false,
-  rolling: true, // Refresh session with each request
-  proxy: true, // Required for secure cookies behind a proxy/CDN
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    path: '/',
-    domain: process.env.NODE_ENV === 'production' ? '.thebeauty.netlify.app' : undefined,
-    partitioned: true
+    sameSite: 'none',
+    partitioned: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
-
-// Add session middleware to ensure session is always available
-app.use((req, res, next) => {
-  if (!req.session) {
-    console.error('Session not available');
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Session error' 
-    });
-  }
-  next();
-});
 
 // Initialize passport
 app.use(passport.initialize());
@@ -105,41 +110,37 @@ app.use((req, res, next) => {
   next();
 });
 
+// Define user type
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  created_at: Date;
+  password?: string; // Make password optional since we don't want to expose it in responses
+}
+
+// Create a typed database connection
+const sql = neon(process.env.DATABASE_URL);
+
 // Authentication routes
 app.post("/api/auth/login", async (req, res) => {
   try {
-    console.log('Login attempt - Body:', req.body);
     const { username, password } = req.body;
     
     // Validate input
     if (!username || !password) {
       return res.status(400).json({ 
         success: false,
-        message: "Missing credentials",
-        errors: {
-          username: !username ? "Username is required" : undefined,
-          password: !password ? "Password is required" : undefined
-        }
+        message: "Missing credentials"
       });
     }
 
-    if (!process.env.DATABASE_URL) {
-      console.error('DATABASE_URL is not set');
-      return res.status(500).json({ 
-        success: false,
-        message: "Server configuration error",
-        error: "Database connection not configured"
-      });
-    }
-
-    const sql = neon(process.env.DATABASE_URL);
-    
-    // Get user from database with password hash
     const result = await sql`
-      SELECT id, username, email, role, password, created_at 
+      SELECT id, username, email, role, created_at, password 
       FROM users 
       WHERE username = ${username}
-    `;
+    ` as User[];
     
     if (!result || result.length === 0) {
       return res.status(401).json({ 
@@ -151,7 +152,7 @@ app.post("/api/auth/login", async (req, res) => {
     const user = result[0];
     
     // Verify password
-    const passwordMatch = await comparePasswords(password, user.password);
+    const passwordMatch = await comparePasswords(password, user.password || '');
     if (!passwordMatch) {
       return res.status(401).json({ 
         success: false,
@@ -159,11 +160,16 @@ app.post("/api/auth/login", async (req, res) => {
       });
     }
     
-    // Remove password from user object before storing in session
-    const { password: _, ...userWithoutPassword } = user;
+    // Store user in session with proper typing (excluding password)
+    const sessionUser: User = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      created_at: user.created_at
+    };
     
-    // Store user in session
-    req.session.user = userWithoutPassword;
+    req.session.user = sessionUser;
     
     // Save session
     req.session.save((err) => {
@@ -174,21 +180,18 @@ app.post("/api/auth/login", async (req, res) => {
           message: "Error setting up session"
         });
       }
-
-      console.log('Login successful - Session:', req.session);
       
       res.status(200).json({
         success: true,
         message: "Login successful",
-        user: userWithoutPassword
+        user: req.session.user
       });
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ 
       success: false,
-      message: "Server error",
-      error: error instanceof Error ? error.message : "Unknown error"
+      message: "Server error"
     });
   }
 });
@@ -249,7 +252,7 @@ app.post("/api/auth/register", async (req, res) => {
     
     // Hash the password
     console.log('Hashing password for user:', username);
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword(password || '');
     
     // Insert new user
     console.log('Creating new user:', { username, email });
@@ -259,8 +262,8 @@ app.post("/api/auth/register", async (req, res) => {
       ) VALUES (
         ${username}, ${hashedPassword}, ${email}, ${fullName}, 
         ${phone || null}, ${role || 'customer'}, ${preferredLanguage || 'en'}
-      ) RETURNING id, username, email, full_name, phone, role, preferred_language
-    `;
+      ) RETURNING id, username, email, role, created_at
+    ` as User[];
     
     if (!newUser || newUser.length === 0) {
       throw new Error("Failed to create user");
@@ -268,7 +271,14 @@ app.post("/api/auth/register", async (req, res) => {
     
     // Set up session
     console.log('Setting up session for new user:', newUser[0]);
-    req.session.user = newUser[0];
+    const sessionUser: User = {
+      id: newUser[0].id,
+      username: newUser[0].username,
+      email: newUser[0].email,
+      role: newUser[0].role,
+      created_at: newUser[0].created_at
+    };
+    req.session.user = sessionUser;
     
     // Save session and handle response
     req.session.save((err) => {
@@ -287,8 +297,7 @@ app.post("/api/auth/register", async (req, res) => {
         sameSite: 'none',
         maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
-        domain: '.netlify.app',
-        path: '/'
+        partitioned: true
       });
       
       console.log('Registration successful for user:', newUser[0]);
@@ -332,7 +341,6 @@ app.get("/api/auth/session", async (req, res) => {
       httpOnly: true,
       sameSite: 'none',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: '/',
       partitioned: true
     });
     
@@ -376,8 +384,10 @@ app.post("/api/auth/logout", async (req, res) => {
       
       // Clear session cookie
       res.clearCookie('thebeauty.sid', {
-        domain: '.netlify.app',
-        path: '/'
+        secure: true,
+        sameSite: 'none',
+        httpOnly: true,
+        partitioned: true
       });
       
       console.log('Session destroyed successfully');
@@ -399,7 +409,6 @@ app.post("/api/auth/logout", async (req, res) => {
 // Salon routes
 app.get("/api/salons", async (req, res) => {
   try {
-    const sql = neon(process.env.DATABASE_URL);
     const salons = await sql`
       SELECT s.*, 
              u.username as owner_name,
@@ -424,7 +433,6 @@ app.get("/api/salons", async (req, res) => {
 app.get("/api/salons/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const sql = neon(process.env.DATABASE_URL);
     
     // Fetch salon details
     const [salon] = await sql`
@@ -481,7 +489,6 @@ app.get("/api/salons/:id", async (req, res) => {
 // Service routes
 app.get("/api/services", async (req, res) => {
   try {
-    const sql = neon(process.env.DATABASE_URL);
     const services = await sql`
       SELECT 
         s.id,
@@ -524,6 +531,10 @@ app.post("/api/bookings", async (req, res) => {
     const { salonId, serviceId, datetime, notes } = req.body;
     const userId = req.session.user.id;
 
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set');
+    }
+
     const sql = neon(process.env.DATABASE_URL);
     
     // Create booking
@@ -554,7 +565,6 @@ app.post("/api/bookings", async (req, res) => {
 app.get('/api/services/salon/:salonId', async (req, res) => {
   try {
     const { salonId } = req.params;
-    const sql = neon(process.env.DATABASE_URL!);
     const services = await sql`SELECT * FROM services WHERE salon_id = ${salonId}`;
     res.json(services);
   } catch (error) {
@@ -571,7 +581,6 @@ app.get('/api/services/salon/:salonId', async (req, res) => {
 app.get('/api/reviews', async (req, res) => {
   try {
     const { salonId } = req.query;
-    const sql = neon(process.env.DATABASE_URL!);
     
     let reviews;
     if (salonId) {
@@ -609,7 +618,6 @@ app.get('/api/reviews', async (req, res) => {
 app.post('/api/reviews', async (req, res) => {
   try {
     const { salonId, userId, rating, comment } = req.body;
-    const sql = neon(process.env.DATABASE_URL!);
     
     const review = await sql`
       INSERT INTO reviews (salon_id, user_id, rating, comment)
@@ -632,7 +640,6 @@ app.post('/api/reviews', async (req, res) => {
 app.get('/api/bookings/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const sql = neon(process.env.DATABASE_URL!);
     
     const bookings = await sql`
       SELECT b.*, s.name as salon_name, sv.name as service_name
@@ -676,8 +683,6 @@ app.get('/api/env-test', (req, res) => {
 // Comprehensive test endpoint
 app.get('/api/test', async (req, res) => {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
-    
     // Test database connection
     const dbTest = await sql`SELECT 1`;
     
@@ -743,9 +748,6 @@ app.get('/api/test', async (req, res) => {
   }
 });
 
-// Database connection
-const sql = neon(process.env.DATABASE_URL!);
-
 // Test database connection
 app.get('/api/test-db', async (req, res) => {
   try {
@@ -769,22 +771,244 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
-// Add Sentry error handler before error middleware
-app.use(Sentry.Handlers.errorHandler());
+// Search endpoint
+app.get("/api/search", async (req, res) => {
+  try {
+    const {
+      q: searchTerm,
+      serviceType,
+      ladiesOnly,
+      privateRoom,
+      hijabFriendly,
+      sortBy = 'rating',
+      sortOrder = 'desc',
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    // Build search query
+    let query = sql`
+      SELECT 
+        s.*,
+        u.username as owner_name,
+        (SELECT COUNT(*) FROM reviews r WHERE r.salon_id = s.id) as review_count,
+        (SELECT AVG(rating) FROM reviews r WHERE r.salon_id = s.id) as average_rating,
+        (SELECT COUNT(*) FROM services sv WHERE sv.salon_id = s.id) as service_count
+      FROM salons s
+      LEFT JOIN users u ON s.owner_id = u.id
+      WHERE 1=1
+    `;
+
+    // Add search term condition
+    if (searchTerm) {
+      query = sql`${query} AND (
+        s.name_en ILIKE ${`%${searchTerm}%`} OR
+        s.name_ar ILIKE ${`%${searchTerm}%`} OR
+        s.description_en ILIKE ${`%${searchTerm}%`} OR
+        s.description_ar ILIKE ${`%${searchTerm}%`}
+      )`;
+    }
+
+    // Add filter conditions
+    if (serviceType && serviceType !== 'all') {
+      query = sql`${query} AND EXISTS (
+        SELECT 1 FROM services sv 
+        WHERE sv.salon_id = s.id 
+        AND sv.category = ${serviceType}
+      )`;
+    }
+
+    if (ladiesOnly === 'true') {
+      query = sql`${query} AND s.ladies_only = true`;
+    }
+
+    if (privateRoom === 'true') {
+      query = sql`${query} AND s.private_rooms = true`;
+    }
+
+    if (hijabFriendly === 'true') {
+      query = sql`${query} AND s.hijab_friendly = true`;
+    }
+
+    // Add sorting
+    const sortField = sortBy === 'rating' ? 'average_rating' : 'created_at';
+    query = sql`${query} ORDER BY ${sql(sortField)} ${sql(sortOrder === 'desc' ? 'DESC' : 'ASC')}`;
+
+    // Add pagination
+    const offset = (Number(page) - 1) * Number(limit);
+    query = sql`${query} LIMIT ${limit} OFFSET ${offset}`;
+
+    // Execute query
+    const results = await query;
+
+    // Get total count for pagination
+    const countQuery = sql`
+      SELECT COUNT(*) as total
+      FROM salons s
+      WHERE 1=1
+      ${searchTerm ? sql`AND (
+        s.name_en ILIKE ${`%${searchTerm}%`} OR
+        s.name_ar ILIKE ${`%${searchTerm}%`} OR
+        s.description_en ILIKE ${`%${searchTerm}%`} OR
+        s.description_ar ILIKE ${`%${searchTerm}%`}
+      )` : sql``}
+      ${ladiesOnly === 'true' ? sql`AND s.ladies_only = true` : sql``}
+      ${privateRoom === 'true' ? sql`AND s.private_rooms = true` : sql``}
+      ${hijabFriendly === 'true' ? sql`AND s.hijab_friendly = true` : sql``}
+    `;
+
+    const [{ total }] = await countQuery;
+
+    // Log search for analytics
+    if (searchTerm) {
+      await sql`
+        INSERT INTO search_logs (term, filters, results_count)
+        VALUES (${searchTerm}, ${JSON.stringify(req.query)}, ${results.length})
+      `;
+    }
+
+    res.json({
+      success: true,
+      data: results,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to perform search",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
+
+// Search suggestions endpoint
+app.get("/api/search/suggestions", async (req, res) => {
+  try {
+    const { q: searchTerm } = req.query;
+    
+    if (!searchTerm || typeof searchTerm !== 'string') {
+      return res.json([]);
+    }
+
+    // Search in salons
+    const salonResults = await sql`
+      SELECT id, name_en as name, 'salon' as type
+      FROM salons
+      WHERE name_en ILIKE ${`%${searchTerm}%`} OR name_ar ILIKE ${`%${searchTerm}%`}
+      LIMIT 5
+    `;
+
+    // Search in services
+    const serviceResults = await sql`
+      SELECT id, name_en as name, 'service' as type
+      FROM services
+      WHERE name_en ILIKE ${`%${searchTerm}%`} OR name_ar ILIKE ${`%${searchTerm}%`}
+      LIMIT 5
+    `;
+
+    // Combine and sort results
+    const results = [...salonResults, ...serviceResults]
+      .sort((a, b) => {
+        // Prioritize exact matches
+        const aExact = a.name.toLowerCase() === searchTerm.toLowerCase();
+        const bExact = b.name.toLowerCase() === searchTerm.toLowerCase();
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+        
+        // Then prioritize salons over services
+        if (a.type === 'salon' && b.type === 'service') return -1;
+        if (a.type === 'service' && b.type === 'salon') return 1;
+        
+        return 0;
+      })
+      .slice(0, 10); // Limit total results
+
+    res.json(results);
+  } catch (error) {
+    console.error('Search suggestions error:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch suggestions",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
 
 // Error handling middleware
-app.use((err: Error, req: any, res: any, next: any) => {
+interface ErrorResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+  code?: string;
+}
+
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // Log error to Sentry
+  Sentry.captureException(err);
+  
   console.error('Server error:', err);
-  res.status(500).json({
+  
+  const errorResponse: ErrorResponse = {
     success: false,
-    message: "An unexpected error occurred",
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
-  });
+    message: process.env.NODE_ENV === 'production' 
+      ? "An unexpected error occurred" 
+      : err.message
+  };
+
+  if (process.env.NODE_ENV === 'development') {
+    errorResponse.error = err.message;
+    errorResponse.code = err.name;
+  }
+
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    res.status(400).json({
+      ...errorResponse,
+      message: "Validation error",
+      error: err.message
+    });
+  } else if (err.name === 'UnauthorizedError') {
+    res.status(401).json({
+      ...errorResponse,
+      message: "Unauthorized",
+      error: err.message
+    });
+  } else {
+    res.status(500).json(errorResponse);
+  }
 });
 
 const serverlessHandler = serverless(app);
 
 // Export the handler function
-export const handler: Handler = async (event, context) => {
-  return await serverlessHandler(event, context);
+export const handler: Handler = async (event: HandlerEvent, context: HandlerContext): Promise<HandlerResponse> => {
+  try {
+    const result = await serverlessHandler(event, context);
+    if (typeof result === 'object' && result !== null) {
+      return {
+        statusCode: (result as any).statusCode || 200,
+        body: (result as any).body,
+        headers: (result as any).headers
+      };
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify(result)
+    };
+  } catch (error) {
+    console.error('Handler error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        success: false,
+        message: 'Internal server error'
+      })
+    };
+  }
 }; 

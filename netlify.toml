@@ -1,11 +1,13 @@
 [build]
-  command = "cd client && npm install && npm run netlify-build"
+  command = "cd client && npm install && VITE_API_BASE_URL=https://thebeauty.netlify.app npm run netlify-build"
   publish = "client/dist"
 
 [build.environment]
   NODE_VERSION = "20"
   NODE_ENV = "production"
   VITE_API_BASE_URL = "https://thebeauty.netlify.app"
+  SESSION_SECRET = "your-secure-session-secret"
+  DATABASE_URL = "your-database-url"
 
 [functions]
   directory = "netlify/functions"
@@ -35,10 +37,15 @@
   for = "/*"
   [headers.values]
     Access-Control-Allow-Credentials = "true"
-    Access-Control-Allow-Headers = "Content-Type, Authorization, Cookie"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, Cookie, X-Requested-With"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
     Access-Control-Allow-Origin = "https://thebeauty.netlify.app"
     Access-Control-Expose-Headers = "Set-Cookie"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Content-Security-Policy = "default-src 'self' https://thebeauty.netlify.app; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://thebeauty.netlify.app"
 
 [dev]
   framework = "vite"
