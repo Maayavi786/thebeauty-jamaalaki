@@ -157,7 +157,7 @@ const SalonDetails = () => {
   const { isLtr } = useLanguage();
   const [location] = useLocation();
   const { toast } = useToast();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   
   const pathParts = location.split('/');
   const salonId = parseInt(pathParts[pathParts.length - 1], 10);
