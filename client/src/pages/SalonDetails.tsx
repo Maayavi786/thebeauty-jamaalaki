@@ -23,7 +23,6 @@ import {
   Users 
 } from "lucide-react";
 import ServiceCard from "@/components/ServiceCard";
-import { API_BASE_URL } from "@/lib/config";
 import { apiRequest } from "@/lib/queryClient";
 
 // TypeScript Interfaces
