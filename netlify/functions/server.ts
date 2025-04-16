@@ -31,7 +31,9 @@ const MemoryStore = memorystore(session);
 
 // CORS configuration
 app.use(cors({
-  origin: ['https://thebeauty.netlify.app', 'http://localhost:5173'],
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://thebeauty.netlify.app' 
+    : 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
@@ -48,17 +50,18 @@ app.use(session({
     checkPeriod: 86400000 // prune expired entries every 24h
   }),
   name: 'thebeauty.sid',
-  resave: true,
+  resave: false,
   saveUninitialized: false,
   rolling: true, // Refresh session with each request
   proxy: true, // Required for secure cookies behind a proxy/CDN
   cookie: {
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     path: '/',
-    domain: 'netlify.app'
+    domain: process.env.NODE_ENV === 'production' ? '.thebeauty.netlify.app' : undefined,
+    partitioned: true
   }
 }));
 
@@ -70,7 +73,11 @@ app.use(passport.session());
 app.use((req, res, next) => {
   // Set CORS headers
   const origin = req.headers.origin;
-  if (origin && ['https://thebeauty.netlify.app', 'http://localhost:5173'].includes(origin)) {
+  const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? ['https://thebeauty.netlify.app'] 
+    : ['http://localhost:5173'];
+
+  if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');

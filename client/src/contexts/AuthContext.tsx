@@ -40,7 +40,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
           method: 'GET',
           credentials: 'include',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
           }
         });
         
@@ -64,6 +65,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
     };
 
     checkSession();
+    
+    // Set up periodic session check
+    const intervalId = setInterval(checkSession, 5 * 60 * 1000); // Check every 5 minutes
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
@@ -75,7 +81,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         },
         body: JSON.stringify({ username, password })
       });
