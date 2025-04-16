@@ -34,10 +34,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check session on mount and after login/logout
     const checkSession = async () => {
       try {
-        console.log('Checking session...');
         const response = await apiRequest('GET', '/api/auth/session');
         const data = await response.json();
         
@@ -60,55 +58,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      console.log('Attempting login...');
-      
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
-        body: JSON.stringify({ username, password })
-      });
-      
-      console.log('Login response:', response.status);
+      const response = await apiRequest('POST', '/api/auth/login', { username, password });
       const data = await response.json();
-      console.log('Login data:', data);
       
       if (!data.success) {
         throw new Error(data.error || data.message);
       }
       
       setUser(data.user);
-      
-      // Immediately check session after login
-      const sessionResponse = await fetch(`${API_BASE_URL}/api/auth/session`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        }
-      });
-      
-      const sessionData = await sessionResponse.json();
-      if (sessionData.success) {
-        setUser(sessionData.user);
-      }
-      
       toast({
-        title: 'Login Successful',
-        description: 'Welcome back to Jamaalaki!',
+        title: "Success",
+        description: "You have been logged in successfully",
       });
-      
       return true;
     } catch (error) {
       console.error('Login failed:', error);
       toast({
-        title: 'Login Failed',
-        description: error instanceof Error ? error.message : 'An unexpected error occurred',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Login failed",
+        variant: "destructive"
       });
       return false;
     } finally {
@@ -123,31 +91,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
       const data = await response.json();
       
       if (!data.success) {
-        if (data.errors) {
-          // Handle field-specific errors
-          const errorMessage = Object.entries(data.errors)
-            .map(([field, message]) => `${field}: ${message}`)
-            .join('\n');
-          throw new Error(errorMessage);
-        }
         throw new Error(data.error || data.message);
       }
       
       setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
       toast({
-        title: 'Registration Successful',
-        description: 'Welcome to Jamaalaki!',
+        title: "Success",
+        description: "Your account has been created successfully",
       });
-      
       return true;
     } catch (error) {
       console.error('Registration failed:', error);
       toast({
-        title: 'Registration Failed',
-        description: error instanceof Error ? error.message : 'An unexpected error occurred',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Registration failed",
+        variant: "destructive"
       });
       return false;
     } finally {
@@ -157,40 +115,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
 
   const logout = async () => {
     try {
-      console.log('Attempting logout...');
-      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Logout response:', response.status);
-      
+      setLoading(true);
+      await apiRequest('POST', '/api/auth/logout');
       setUser(null);
       toast({
-        title: 'Logged Out',
-        description: 'You have been successfully logged out.',
+        title: "Success",
+        description: "You have been logged out successfully",
       });
     } catch (error) {
       console.error('Logout failed:', error);
       toast({
-        title: 'Logout Failed',
-        description: 'Failed to log out. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const value = {
-    user,
-    loading,
-    login,
-    register,
-    logout,
-    isAuthenticated: !!user,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      isAuthenticated: !!user
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

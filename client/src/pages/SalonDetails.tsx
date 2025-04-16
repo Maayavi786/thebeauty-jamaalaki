@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import ServiceCard from "@/components/ServiceCard";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 // TypeScript Interfaces
 interface InfoItemProps {
@@ -156,6 +157,7 @@ const SalonDetails = () => {
   const { isLtr } = useLanguage();
   const [location] = useLocation();
   const { toast } = useToast();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   
   const pathParts = location.split('/');
   const salonId = parseInt(pathParts[pathParts.length - 1], 10);
@@ -176,6 +178,17 @@ const SalonDetails = () => {
 
     handleError(errors.salonError, "Failed to load salon details");
   }, [errors, toast, isLtr]);
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader2 className="h-8 w-8 animate-spin" aria-label={isLtr ? "Loading" : "جاري التحميل"} />
+        <p className="text-muted-foreground">
+          {isLtr ? "Loading..." : "جاري التحميل..."}
+        </p>
+      </div>
+    );
+  }
 
   if (!salonId) {
     return (
