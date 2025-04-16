@@ -99,6 +99,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
       
       setUser(data.user);
       
+      // Immediately check session after login
+      const sessionResponse = await fetch(`${API_BASE_URL}/api/auth/session`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      const sessionData = await sessionResponse.json();
+      if (sessionData.success) {
+        setUser(sessionData.user);
+      }
+      
       toast({
         title: 'Login Successful',
         description: 'Welcome back to Jamaalaki!',

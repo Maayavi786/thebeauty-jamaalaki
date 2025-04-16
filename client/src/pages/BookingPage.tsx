@@ -27,7 +27,7 @@ import { Salon, Service } from "@shared/schema";
 
 const BookingPage = () => {
   const { isLtr, isRtl } = useLanguage();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
   const [_, params] = useRoute<{ salonId: string, serviceId: string }>("/booking/:salonId/:serviceId");
   const [location, navigate] = useLocation();
   const { toast } = useToast();
@@ -95,7 +95,7 @@ const BookingPage = () => {
   
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !loading) {
       toast({
         title: isLtr ? "Authentication Required" : "مطلوب تسجيل الدخول",
         description: isLtr 
@@ -103,9 +103,10 @@ const BookingPage = () => {
           : "يرجى تسجيل الدخول لحجز موعد.",
         variant: "default",
       });
-      navigate(`/login?redirect=${encodeURIComponent(location)}`);
+      const redirectPath = encodeURIComponent(location);
+      navigate(`/login?redirect=${redirectPath}`);
     }
-  }, [isAuthenticated, location, navigate, toast, isLtr]);
+  }, [isAuthenticated, loading, location, navigate, toast, isLtr]);
   
   // Create pattern SVG background
   useEffect(() => {
@@ -121,6 +122,7 @@ const BookingPage = () => {
     };
   }, []);
   
+  // Handle booking submission
   const onSubmit = async (formData: z.infer<typeof formSchema>) => {
     if (!user || !salon || !service || !selectedDate || !selectedTime) {
       toast({
@@ -128,6 +130,41 @@ const BookingPage = () => {
         description: isLtr 
           ? "Please fill in all required fields." 
           : "يرجى ملء جميع الحقول المطلوبة.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verify session is still valid
+    try {
+      const sessionResponse = await fetch(`${API_BASE_URL}/api/auth/session`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      const sessionData = await sessionResponse.json();
+      if (!sessionData.success) {
+        toast({
+          title: isLtr ? "Session Expired" : "انتهت الجلسة",
+          description: isLtr 
+            ? "Your session has expired. Please log in again." 
+            : "انتهت صلاحية جلسة العمل. يرجى تسجيل الدخول مرة أخرى.",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+    } catch (error) {
+      console.error('Session check failed:', error);
+      toast({
+        title: isLtr ? "Session Error" : "خطأ في الجلسة",
+        description: isLtr 
+          ? "Failed to verify your session. Please try again." 
+          : "فشل التحقق من جلسة العمل. يرجى المحاولة مرة أخرى.",
         variant: "destructive",
       });
       return;

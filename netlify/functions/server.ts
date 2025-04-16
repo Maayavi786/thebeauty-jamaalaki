@@ -65,6 +65,18 @@ app.use(session({
   }
 }));
 
+// Add session middleware to ensure session is always available
+app.use((req, res, next) => {
+  if (!req.session) {
+    console.error('Session not available');
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Session error' 
+    });
+  }
+  next();
+});
+
 // Initialize passport
 app.use(passport.initialize());
 app.use(passport.session());
