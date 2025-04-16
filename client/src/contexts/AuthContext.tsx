@@ -3,6 +3,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from '@/lib/queryClient';
 import { User } from '@shared/schema';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5173';
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
