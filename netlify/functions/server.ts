@@ -10,6 +10,7 @@ import { hashPassword } from '../utils/passwordUtils';
 import memorystore from 'memorystore';
 import * as Sentry from "@sentry/node";
 import rateLimit from 'express-rate-limit';
+import bcrypt from 'bcrypt';
 
 // Define session types
 declare module 'express-session' {
@@ -61,26 +62,17 @@ app.use(cors({
 app.use(express.json());
 
 // Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || (() => {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('SESSION_SECRET must be set in production');
-    }
-    return 'development-secret-key';
-  })(),
-  store: new MemoryStore({
-    checkPeriod: 86400000 // prune expired entries every 24h
-  }),
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'none',
-    partitioned: true,
+    sameSite: 'lax' as const,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
-}));
+};
 
 // Initialize passport
 app.use(passport.initialize());
@@ -117,291 +109,116 @@ interface User {
   email: string;
   role: string;
   created_at: Date;
-  password?: string; // Make password optional since we don't want to expose it in responses
+  password?: string;
 }
 
 // Create a typed database connection
 const sql = neon(process.env.DATABASE_URL);
 
-// Authentication routes
-app.post("/api/auth/login", async (req, res) => {
+// Login route
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    // Validate input
+
     if (!username || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "Missing credentials"
+        message: 'Username and password are required'
       });
     }
 
     const result = await sql`
-      SELECT id, username, email, role, created_at, password 
-      FROM users 
+      SELECT * FROM users 
       WHERE username = ${username}
-    ` as User[];
-    
-    if (!result || result.length === 0) {
-      return res.status(401).json({ 
+    `;
+    const user = result[0] as User;
+
+    if (!user) {
+      return res.status(401).json({
         success: false,
-        message: "Invalid credentials"
+        message: 'Invalid credentials'
       });
     }
 
-    const user = result[0];
-    
-    // Verify password
-    const passwordMatch = await comparePasswords(password, user.password || '');
-    if (!passwordMatch) {
-      return res.status(401).json({ 
+    const isValidPassword = await bcrypt.compare(password, user.password || '');
+    if (!isValidPassword) {
+      return res.status(401).json({
         success: false,
-        message: "Invalid credentials"
+        message: 'Invalid credentials'
       });
     }
+
+    // Remove password from user object before storing in session
+    const { password: _, ...userWithoutPassword } = user;
     
-    // Store user in session with proper typing (excluding password)
-    const sessionUser: User = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      created_at: user.created_at
-    };
-    
-    req.session.user = sessionUser;
-    
-    // Save session
-    req.session.save((err) => {
-      if (err) {
-        console.error('Error saving session:', err);
-        return res.status(500).json({ 
-          success: false,
-          message: "Error setting up session"
-        });
-      }
-      
-      res.status(200).json({
-        success: true,
-        message: "Login successful",
-        user: req.session.user
-      });
+    req.session.user = userWithoutPassword;
+    await req.session.save();
+
+    res.json({
+      success: true,
+      user: userWithoutPassword
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Server error"
+      message: 'An error occurred during login'
     });
   }
 });
 
-// Registration route
-app.post("/api/auth/register", async (req, res) => {
+// Session check route
+app.get('/api/auth/session', async (req, res) => {
   try {
-    console.log('Registration attempt - Body:', req.body);
-    const { username, password, email, fullName, phone, role, preferredLanguage } = req.body;
-    
-    // Validate required fields
-    if (!username || !password || !email || !fullName) {
-      return res.status(400).json({ 
-        success: false,
-        message: "Missing required fields",
-        errors: {
-          username: !username ? "Username is required" : undefined,
-          password: !password ? "Password is required" : undefined,
-          email: !email ? "Email is required" : undefined,
-          fullName: !fullName ? "Full name is required" : undefined
-        }
-      });
-    }
-
-    if (!process.env.DATABASE_URL) {
-      console.error('DATABASE_URL is not set');
-      return res.status(500).json({ 
-        success: false,
-        message: "Server configuration error",
-        error: "Database connection not configured"
-      });
-    }
-
-    const sql = neon(process.env.DATABASE_URL);
-    
-    // Check if username or email already exists
-    console.log('Checking for existing user:', { username, email });
-    const existingUser = await sql`
-      SELECT * FROM users 
-      WHERE username = ${username} OR email = ${email}
-    `;
-    
-    if (existingUser && existingUser.length > 0) {
-      const errors: Record<string, string> = {};
-      if (existingUser.some(u => u.username === username)) {
-        errors.username = "Username already exists";
-      }
-      if (existingUser.some(u => u.email === email)) {
-        errors.email = "Email already exists";
-      }
-      
-      return res.status(400).json({ 
-        success: false,
-        message: "User already exists",
-        errors
-      });
-    }
-    
-    // Hash the password
-    console.log('Hashing password for user:', username);
-    const hashedPassword = await hashPassword(password || '');
-    
-    // Insert new user
-    console.log('Creating new user:', { username, email });
-    const newUser = await sql`
-      INSERT INTO users (
-        username, password, email, full_name, phone, role, preferred_language
-      ) VALUES (
-        ${username}, ${hashedPassword}, ${email}, ${fullName}, 
-        ${phone || null}, ${role || 'customer'}, ${preferredLanguage || 'en'}
-      ) RETURNING id, username, email, role, created_at
-    ` as User[];
-    
-    if (!newUser || newUser.length === 0) {
-      throw new Error("Failed to create user");
-    }
-    
-    // Set up session
-    console.log('Setting up session for new user:', newUser[0]);
-    const sessionUser: User = {
-      id: newUser[0].id,
-      username: newUser[0].username,
-      email: newUser[0].email,
-      role: newUser[0].role,
-      created_at: newUser[0].created_at
-    };
-    req.session.user = sessionUser;
-    
-    // Save session and handle response
-    req.session.save((err) => {
-      if (err) {
-        console.error("Error saving session:", err);
-        return res.status(500).json({ 
-          success: false,
-          message: "Session error",
-          error: "Failed to create session"
-        });
-      }
-      
-      // Set session cookie explicitly
-      res.cookie('thebeauty.sid', req.sessionID, {
-        secure: true,
-        sameSite: 'none',
-        maxAge: 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        partitioned: true
-      });
-      
-      console.log('Registration successful for user:', newUser[0]);
-      res.status(201).json({
-        success: true,
-        message: "Registration successful",
-        user: newUser[0]
-      });
-    });
-  } catch (err) {
-    console.error("Registration error:", err);
-    res.status(500).json({ 
-      success: false,
-      message: "Server error",
-      error: err instanceof Error ? err.message : "Unknown error occurred"
-    });
-  }
-});
-
-// Session endpoint
-app.get("/api/auth/session", async (req, res) => {
-  try {
-    console.log('Session check - Session ID:', req.sessionID);
-    console.log('Session check - Session:', req.session);
-    console.log('Session check - Cookies:', req.headers.cookie);
-    
     if (!req.session.user) {
-      console.log('No user in session');
-      return res.status(401).json({ 
-        success: false, 
-        message: "No active session" 
+      return res.json({
+        success: false,
+        message: 'No active session'
       });
     }
 
-    // Refresh session cookie
-    req.session.touch();
-    
-    // Set cookie explicitly
-    res.cookie('thebeauty.sid', req.sessionID, {
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      partitioned: true
-    });
-    
-    res.json({ 
-      success: true, 
-      user: req.session.user 
+    // Verify user still exists in database
+    const result = await sql`
+      SELECT * FROM users 
+      WHERE id = ${req.session.user.id}
+    `;
+    const user = result[0] as User;
+
+    if (!user) {
+      req.session.destroy(() => {});
+      return res.json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const { password: _, ...userWithoutPassword } = user;
+    res.json({
+      success: true,
+      user: userWithoutPassword
     });
   } catch (error) {
-    console.error("Error checking session:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Error checking session",
-      error: error instanceof Error ? error.message : "Unknown error"
+    console.error('Session check error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while checking session'
     });
   }
 });
 
-// Logout endpoint
-app.post("/api/auth/logout", async (req, res) => {
+// Logout route
+app.post('/api/auth/logout', async (req, res) => {
   try {
-    console.log('Logout attempt - Session ID:', req.sessionID);
-    
-    if (!req.session) {
-      console.log('No session to destroy');
-      return res.status(200).json({ 
-        success: true,
-        message: "Already logged out" 
-      });
-    }
-    
-    // Destroy session
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Error destroying session:", err);
-        return res.status(500).json({ 
-          success: false,
-          message: "Error logging out",
-          error: "Failed to destroy session"
-        });
-      }
-      
-      // Clear session cookie
-      res.clearCookie('thebeauty.sid', {
-        secure: true,
-        sameSite: 'none',
-        httpOnly: true,
-        partitioned: true
-      });
-      
-      console.log('Session destroyed successfully');
-      res.status(200).json({ 
-        success: true,
-        message: "Logged out successfully" 
-      });
+    req.session.destroy(() => {});
+    res.json({
+      success: true,
+      message: 'Logged out successfully'
     });
-  } catch (err) {
-    console.error("Logout error:", err);
-    res.status(500).json({ 
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
       success: false,
-      message: "Server error",
-      error: err instanceof Error ? err.message : "Unknown error"
+      message: 'An error occurred during logout'
     });
   }
 });
