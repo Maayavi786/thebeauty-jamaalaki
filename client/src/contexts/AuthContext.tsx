@@ -66,13 +66,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
       setLoading(true);
       const response = await apiRequest('POST', '/api/auth/login', { username, password });
       
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Login failed');
-      }
-      
       const data = await response.json();
-      if (!data.success) {
+      if (!response.ok || !data.success) {
         throw new Error(data.message || 'Login failed');
       }
       

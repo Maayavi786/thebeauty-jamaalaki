@@ -70,13 +70,20 @@ const sessionConfig = {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'lax' as const,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    partitioned: true // Add Partitioned attribute for Cloudflare
+  },
+  store: new MemoryStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  })
 };
 
 // Initialize passport
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Initialize session middleware
+app.use(session(sessionConfig));
 
 // Add middleware to ensure session cookie is set and handle CORS properly
 app.use((req, res, next) => {
@@ -131,20 +138,21 @@ app.post('/api/auth/login', async (req, res) => {
       SELECT * FROM users 
       WHERE username = ${username}
     `;
-    const user = result[0] as User;
-
-    if (!user) {
+    
+    if (!result || result.length === 0) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid username or password'
       });
     }
+
+    const user = result[0] as User;
 
     const isValidPassword = await bcrypt.compare(password, user.password || '');
     if (!isValidPassword) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid username or password'
       });
     }
 
@@ -162,7 +170,8 @@ app.post('/api/auth/login', async (req, res) => {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'An error occurred during login'
+      message: 'An error occurred during login',
+      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
     });
   }
 });
