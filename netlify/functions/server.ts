@@ -7,7 +7,7 @@ import passport from 'passport';
 import cors from 'cors';
 import { comparePasswords } from '../utils/passwordUtils';
 import { hashPassword } from '../utils/passwordUtils';
-import memorystore from 'memorystore';
+import pgSession from 'connect-pg-simple';
 import * as Sentry from "@sentry/node";
 import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcrypt';
@@ -25,9 +25,6 @@ if (!process.env.DATABASE_URL) {
 }
 
 const app = express();
-
-// Create MemoryStore
-const MemoryStore = memorystore(session);
 
 // Initialize Sentry
 Sentry.init({
@@ -73,17 +70,19 @@ const sessionConfig = {
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     partitioned: true // Add Partitioned attribute for Cloudflare
   },
-  store: new MemoryStore({
-    checkPeriod: 86400000 // prune expired entries every 24h
+  store: new (pgSession(session))({
+    conString: process.env.DATABASE_URL,
+    tableName: 'user_sessions',
+    createTableIfMissing: true
   })
 };
+
+// Initialize session middleware
+app.use(session(sessionConfig));
 
 // Initialize passport
 app.use(passport.initialize());
 app.use(passport.session());
-
-// Initialize session middleware
-app.use(session(sessionConfig));
 
 // Add middleware to ensure session cookie is set and handle CORS properly
 app.use((req, res, next) => {
