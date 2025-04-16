@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Salon, Service } from "@shared/schema";
+import { API_BASE_URL } from '../lib/config';
 
 const BookingPage = () => {
   const { isLtr, isRtl } = useLanguage();
