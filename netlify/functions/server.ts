@@ -11,14 +11,6 @@ import pgSession from 'connect-pg-simple';
 import * as Sentry from "@sentry/node";
 import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcrypt';
-import './types/express-session';
-
-// Define session types
-declare module 'express-session' {
-  interface SessionData {
-    user?: User;
-  }
-}
 
 // Ensure DATABASE_URL is defined
 if (!process.env.DATABASE_URL) {
