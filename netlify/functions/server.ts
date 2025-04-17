@@ -2,7 +2,7 @@ import { Handler, HandlerEvent, HandlerContext, HandlerResponse } from '@netlify
 import express from 'express';
 import serverless from 'serverless-http';
 import { neon } from '@neondatabase/serverless';
-import * as session from 'express-session';
+import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
 import { comparePasswords } from '../utils/passwordUtils';
@@ -93,7 +93,7 @@ const sessionConfig = {
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     partitioned: true // Add Partitioned attribute for Cloudflare
   },
-  store: new (pgSession(session as any))({
+  store: new (pgSession(session))({
     conString: process.env.DATABASE_URL,
     tableName: 'user_sessions',
     createTableIfMissing: true
