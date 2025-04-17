@@ -9,17 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@shared/schema": "file:../shared",
+    "@tanstack/react-query": "^4.29.12",
+    "i18next": "^23.10.1",
+    "lucide-react": "^0.320.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0",
-    "@tanstack/react-query": "^4.29.12",
-    "wouter": "^2.11.2",
-    "i18next": "^23.10.1",
-    "lucide-react": "^0.320.0",
-    "@shared/schema": "file:../shared"
+    "wouter": "^2.11.2"
   },
   "devDependencies": {
-    "vite": "^4.5.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vite": "^4.5.13"
   }
 }
