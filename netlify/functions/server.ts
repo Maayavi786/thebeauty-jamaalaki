@@ -113,6 +113,7 @@ interface User {
   id: number;
   username: string;
   email: string;
+  phone: string;
   role: string;
   created_at: Date;
   password?: string;
