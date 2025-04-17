@@ -12,6 +12,14 @@
   },
   "typeRoots": ["./types", "../node_modules/@types", "./node_modules/@types"],
   "types": ["node", "express", "express-session", "passport", "connect-pg-simple"],
-  "include": ["server.ts", "types/**/*.d.ts", "*.d.ts"],
+  "include": [
+    "server.ts",
+    "types/**/*.d.ts",
+    "*.d.ts",
+    "cors.d.ts",
+    "bcrypt.d.ts",
+    "express-rate-limit.d.ts",
+    "sentry__node.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

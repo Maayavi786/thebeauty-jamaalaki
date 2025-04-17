@@ -11,6 +11,7 @@ import pgSession from 'connect-pg-simple';
 import * as Sentry from "@sentry/node";
 import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcrypt';
+import './types/express-session';
 
 // Define session types
 declare module 'express-session' {
@@ -47,14 +48,29 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') || ['https://thebeauty.netlify.app', 'http://localhost:5173'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
-  exposedHeaders: ['Set-Cookie'],
-  maxAge: 86400 // 24 hours
-}));
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // Set CORS headers
+  const origin = req.headers.origin;
+  const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? ['https://thebeauty.netlify.app'] 
+    : ['http://localhost:5173'];
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With');
+    res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  }
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  next();
+});
 
 app.use(express.json());
 
@@ -85,7 +101,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Add middleware to ensure session cookie is set and handle CORS properly
-app.use((req, res, next) => {
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
   // Set CORS headers
   const origin = req.headers.origin;
   const allowedOrigins = process.env.NODE_ENV === 'production' 
@@ -102,7 +118,8 @@ app.use((req, res, next) => {
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
 
   next();
@@ -123,12 +140,12 @@ interface User {
 const sql = neon(process.env.DATABASE_URL);
 
 // Login route
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', async (req: express.Request, res: express.Response) => {
   try {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Username and password are required'
       });
@@ -140,7 +157,7 @@ app.post('/api/auth/login', async (req, res) => {
     `;
     
     if (!result || result.length === 0) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Invalid username or password'
       });
@@ -150,7 +167,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     const isValidPassword = await bcrypt.compare(password, user.password || '');
     if (!isValidPassword) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Invalid username or password'
       });
@@ -159,7 +176,7 @@ app.post('/api/auth/login', async (req, res) => {
     // Remove password from user object before storing in session
     const { password: _, ...userWithoutPassword } = user;
     
-    req.session.user = userWithoutPassword;
+    (req.session as any).user = userWithoutPassword;
     await req.session.save();
 
     res.json({
@@ -177,10 +194,10 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // Session check route
-app.get('/api/auth/session', async (req, res) => {
+app.get('/api/auth/session', async (req: express.Request, res: express.Response) => {
   try {
-    if (!req.session.user) {
-      return res.json({
+    if (!(req.session as any).user) {
+      res.json({
         success: false,
         message: 'No active session'
       });
@@ -189,13 +206,13 @@ app.get('/api/auth/session', async (req, res) => {
     // Verify user still exists in database
     const result = await sql`
       SELECT * FROM users 
-      WHERE id = ${req.session.user.id}
+      WHERE id = ${(req.session as any).user.id}
     `;
     const user = result[0] as User;
 
     if (!user) {
       req.session.destroy(() => {});
-      return res.json({
+      res.json({
         success: false,
         message: 'User not found'
       });
@@ -216,7 +233,7 @@ app.get('/api/auth/session', async (req, res) => {
 });
 
 // Logout route
-app.post('/api/auth/logout', async (req, res) => {
+app.post('/api/auth/logout', async (req: express.Request, res: express.Response) => {
   try {
     req.session.destroy(() => {});
     res.json({
@@ -233,7 +250,7 @@ app.post('/api/auth/logout', async (req, res) => {
 });
 
 // Salon routes
-app.get("/api/salons", async (req, res) => {
+app.get("/api/salons", async (req: express.Request, res: express.Response) => {
   try {
     const salons = await sql`
       SELECT s.*, 
@@ -256,7 +273,7 @@ app.get("/api/salons", async (req, res) => {
   }
 });
 
-app.get("/api/salons/:id", async (req, res) => {
+app.get("/api/salons/:id", async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
     
@@ -272,7 +289,7 @@ app.get("/api/salons/:id", async (req, res) => {
     `;
 
     if (!salon) {
-      return res.status(404).json({ 
+      res.status(404).json({ 
         success: false, 
         message: "Salon not found" 
       });
@@ -313,7 +330,7 @@ app.get("/api/salons/:id", async (req, res) => {
 });
 
 // Service routes
-app.get("/api/services", async (req, res) => {
+app.get("/api/services", async (req: express.Request, res: express.Response) => {
   try {
     const services = await sql`
       SELECT 
@@ -345,17 +362,17 @@ app.get("/api/services", async (req, res) => {
 });
 
 // Booking routes
-app.post("/api/bookings", async (req, res) => {
+app.post("/api/bookings", async (req: express.Request, res: express.Response) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ 
+    if (!(req.session as any).user) {
+      res.status(401).json({ 
         success: false, 
         message: "Please login to make a booking" 
       });
     }
 
     const { salonId, serviceId, datetime, notes } = req.body;
-    const userId = req.session.user.id;
+    const userId = (req.session as any).user.id;
 
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL environment variable is not set');
@@ -388,7 +405,7 @@ app.post("/api/bookings", async (req, res) => {
 });
 
 // Services by salon endpoint
-app.get('/api/services/salon/:salonId', async (req, res) => {
+app.get('/api/services/salon/:salonId', async (req: express.Request, res: express.Response) => {
   try {
     const { salonId } = req.params;
     const services = await sql`SELECT * FROM services WHERE salon_id = ${salonId}`;
@@ -404,7 +421,7 @@ app.get('/api/services/salon/:salonId', async (req, res) => {
 });
 
 // Reviews endpoint
-app.get('/api/reviews', async (req, res) => {
+app.get('/api/reviews', async (req: express.Request, res: express.Response) => {
   try {
     const { salonId } = req.query;
     
@@ -441,7 +458,7 @@ app.get('/api/reviews', async (req, res) => {
 });
 
 // Create review endpoint
-app.post('/api/reviews', async (req, res) => {
+app.post('/api/reviews', async (req: express.Request, res: express.Response) => {
   try {
     const { salonId, userId, rating, comment } = req.body;
     
@@ -463,7 +480,7 @@ app.post('/api/reviews', async (req, res) => {
 });
 
 // Add bookings endpoint
-app.get('/api/bookings/user/:userId', async (req, res) => {
+app.get('/api/bookings/user/:userId', async (req: express.Request, res: express.Response) => {
   try {
     const { userId } = req.params;
     
@@ -491,7 +508,7 @@ app.get('/api/bookings/user/:userId', async (req, res) => {
 });
 
 // Environment test endpoint
-app.get('/api/env-test', (req, res) => {
+app.get('/api/env-test', (req: express.Request, res: express.Response) => {
   res.json({
     status: 'success',
     env: {
@@ -507,7 +524,7 @@ app.get('/api/env-test', (req, res) => {
 });
 
 // Comprehensive test endpoint
-app.get('/api/test', async (req, res) => {
+app.get('/api/test', async (req: express.Request, res: express.Response) => {
   try {
     // Test database connection
     const dbTest = await sql`SELECT 1`;
@@ -575,7 +592,7 @@ app.get('/api/test', async (req, res) => {
 });
 
 // Test database connection
-app.get('/api/test-db', async (req, res) => {
+app.get('/api/test-db', async (req: express.Request, res: express.Response) => {
   try {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not set');
@@ -598,7 +615,7 @@ app.get('/api/test-db', async (req, res) => {
 });
 
 // Search endpoint
-app.get("/api/search", async (req, res) => {
+app.get("/api/search", async (req: express.Request, res: express.Response) => {
   try {
     const {
       q: searchTerm,
@@ -714,12 +731,12 @@ app.get("/api/search", async (req, res) => {
 });
 
 // Search suggestions endpoint
-app.get("/api/search/suggestions", async (req, res) => {
+app.get("/api/search/suggestions", async (req: express.Request, res: express.Response) => {
   try {
     const { q: searchTerm } = req.query;
     
     if (!searchTerm || typeof searchTerm !== 'string') {
-      return res.json([]);
+      res.json([]);
     }
 
     // Search in salons
