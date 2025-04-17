@@ -16,6 +16,16 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !email.includes('@')) {
+      toast({
+        title: isLtr ? "Invalid Email" : "بريد إلكتروني غير صالح",
+        description: isLtr
+          ? "Please enter a valid email address."
+          : "يرجى إدخال بريد إلكتروني صالح.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
     try {
       const response = await apiRequest("POST", "/auth/forgot-password", { email });
