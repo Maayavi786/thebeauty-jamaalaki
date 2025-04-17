@@ -177,7 +177,7 @@ app.post('/api/auth/login', async (req: express.Request, res: express.Response) 
     const { password: _, ...userWithoutPassword } = user;
     
     (req.session as any).user = userWithoutPassword;
-    await req.session.save();
+    await (req.session as any).save();
 
     res.json({
       success: true,
@@ -211,7 +211,7 @@ app.get('/api/auth/session', async (req: express.Request, res: express.Response)
     const user = result[0] as User;
 
     if (!user) {
-      req.session.destroy(() => {});
+      (req.session as any).destroy(() => {});
       res.json({
         success: false,
         message: 'User not found'
@@ -235,7 +235,7 @@ app.get('/api/auth/session', async (req: express.Request, res: express.Response)
 // Logout route
 app.post('/api/auth/logout', async (req: express.Request, res: express.Response) => {
   try {
-    req.session.destroy(() => {});
+    (req.session as any).destroy(() => {});
     res.json({
       success: true,
       message: 'Logged out successfully'
@@ -629,6 +629,7 @@ app.get("/api/search", async (req: express.Request, res: express.Response) => {
       limit = 10
     } = req.query;
 
+    const term = typeof searchTerm === 'string' ? searchTerm : '';
     // Build search query
     let query = sql`
       SELECT 
@@ -643,12 +644,12 @@ app.get("/api/search", async (req: express.Request, res: express.Response) => {
     `;
 
     // Add search term condition
-    if (searchTerm) {
+    if (term) {
       query = sql`${query} AND (
-        s.name_en ILIKE ${`%${searchTerm}%`} OR
-        s.name_ar ILIKE ${`%${searchTerm}%`} OR
-        s.description_en ILIKE ${`%${searchTerm}%`} OR
-        s.description_ar ILIKE ${`%${searchTerm}%`}
+        s.name_en ILIKE ${`%${term}%`} OR
+        s.name_ar ILIKE ${`%${term}%`} OR
+        s.description_en ILIKE ${`%${term}%`} OR
+        s.description_ar ILIKE ${`%${term}%`}
       )`;
     }
 
@@ -689,11 +690,11 @@ app.get("/api/search", async (req: express.Request, res: express.Response) => {
       SELECT COUNT(*) as total
       FROM salons s
       WHERE 1=1
-      ${searchTerm ? sql`AND (
-        s.name_en ILIKE ${`%${searchTerm}%`} OR
-        s.name_ar ILIKE ${`%${searchTerm}%`} OR
-        s.description_en ILIKE ${`%${searchTerm}%`} OR
-        s.description_ar ILIKE ${`%${searchTerm}%`}
+      ${term ? sql`AND (
+        s.name_en ILIKE ${`%${term}%`} OR
+        s.name_ar ILIKE ${`%${term}%`} OR
+        s.description_en ILIKE ${`%${term}%`} OR
+        s.description_ar ILIKE ${`%${term}%`}
       )` : sql``}
       ${ladiesOnly === 'true' ? sql`AND s.ladies_only = true` : sql``}
       ${privateRoom === 'true' ? sql`AND s.private_rooms = true` : sql``}
@@ -703,10 +704,10 @@ app.get("/api/search", async (req: express.Request, res: express.Response) => {
     const [{ total }] = await countQuery;
 
     // Log search for analytics
-    if (searchTerm) {
+    if (term) {
       await sql`
         INSERT INTO search_logs (term, filters, results_count)
-        VALUES (${searchTerm}, ${JSON.stringify(req.query)}, ${results.length})
+        VALUES (${term}, ${JSON.stringify(req.query)}, ${results.length})
       `;
     }
 
@@ -739,11 +740,12 @@ app.get("/api/search/suggestions", async (req: express.Request, res: express.Res
       res.json([]);
     }
 
+    const term = typeof searchTerm === 'string' ? searchTerm : '';
     // Search in salons
     const salonResults = await sql`
       SELECT id, name_en as name, 'salon' as type
       FROM salons
-      WHERE name_en ILIKE ${`%${searchTerm}%`} OR name_ar ILIKE ${`%${searchTerm}%`}
+      WHERE name_en ILIKE ${`%${term}%`} OR name_ar ILIKE ${`%${term}%`}
       LIMIT 5
     `;
 
@@ -751,7 +753,7 @@ app.get("/api/search/suggestions", async (req: express.Request, res: express.Res
     const serviceResults = await sql`
       SELECT id, name_en as name, 'service' as type
       FROM services
-      WHERE name_en ILIKE ${`%${searchTerm}%`} OR name_ar ILIKE ${`%${searchTerm}%`}
+      WHERE name_en ILIKE ${`%${term}%`} OR name_ar ILIKE ${`%${term}%`}
       LIMIT 5
     `;
 
@@ -759,8 +761,8 @@ app.get("/api/search/suggestions", async (req: express.Request, res: express.Res
     const results = [...salonResults, ...serviceResults]
       .sort((a, b) => {
         // Prioritize exact matches
-        const aExact = a.name.toLowerCase() === searchTerm.toLowerCase();
-        const bExact = b.name.toLowerCase() === searchTerm.toLowerCase();
+        const aExact = a.name.toLowerCase() === term.toLowerCase();
+        const bExact = b.name.toLowerCase() === term.toLowerCase();
         if (aExact && !bExact) return -1;
         if (!aExact && bExact) return 1;
         
