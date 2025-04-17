@@ -10,5 +10,8 @@
     "express-session": "^1.17.3",
     "passport": "^0.7.0",
     "cors": "^2.8.5"
+  },
+  "scripts": {
+    "build": "tsc ../functions/server.ts --outDir ../functions"
   }
-} 
+}

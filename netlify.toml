@@ -1,5 +1,5 @@
 [build]
-  command = "cd client && npm install && VITE_API_BASE_URL=https://thebeauty.netlify.app npm run netlify-build"
+  command = "cd client && npm install && VITE_API_BASE_URL=/api npm run netlify-build && cd ../netlify && npm install && npm run build"
   publish = "client/dist"
 
 [build.environment]
