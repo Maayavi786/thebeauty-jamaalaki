@@ -2,7 +2,7 @@ import { Handler, HandlerEvent, HandlerContext, HandlerResponse } from '@netlify
 import express from 'express';
 import serverless from 'serverless-http';
 import { neon } from '@neondatabase/serverless';
-import session from 'express-session';
+import * as session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
 import { comparePasswords } from '../utils/passwordUtils';
@@ -86,7 +86,7 @@ const sessionConfig = {
 };
 
 // Initialize session middleware
-app.use(session(sessionConfig));
+app.use(session.default(sessionConfig));
 
 // Initialize passport
 app.use(passport.initialize());
