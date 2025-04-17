@@ -12,6 +12,6 @@
     "cors": "^2.8.5"
   },
   "scripts": {
-    "build": "tsc ../functions/server.ts --outDir ../functions"
+    "build": "tsc --project functions/tsconfig.json"
   }
 }
