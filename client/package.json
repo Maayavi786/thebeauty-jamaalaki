@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@chakra-ui/react": "^3.16.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@shared/schema": "file:../shared",
     "@tanstack/react-query": "^4.29.12",
     "@vitejs/plugin-react": "^4.4.0",
