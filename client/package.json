@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@chakra-ui/react": "^3.16.0",
     "@shared/schema": "file:../shared",
     "@tanstack/react-query": "^4.29.12",
     "@vitejs/plugin-react": "^4.4.0",
