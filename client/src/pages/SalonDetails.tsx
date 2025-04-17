@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
@@ -25,6 +25,7 @@ import {
 import ServiceCard from "@/components/ServiceCard";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { Input } from "@/components/ui/input";
 
 // TypeScript Interfaces
 interface InfoItemProps {
@@ -133,7 +134,7 @@ const useSalonData = (salonId: number): SalonData => {
   } = useQuery({
     queryKey: ['salon', salonId],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/salons/${salonId}`);
+      const response = await apiRequest('GET', `/salons/${salonId}`);
       const data = await response.json();
       return data.success ? data.data : null;
     },
@@ -164,6 +165,20 @@ const SalonDetails = () => {
   
   const { salon, services, reviews, isLoading, errors } = useSalonData(salonId);
   
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  const filteredServices = React.useMemo(() => {
+    if (!services) return [];
+    if (!searchTerm.trim()) return services;
+    const term = searchTerm.trim().toLowerCase();
+    return services.filter(service =>
+      (service.nameEn && service.nameEn.toLowerCase().includes(term)) ||
+      (service.nameAr && service.nameAr.toLowerCase().includes(term)) ||
+      (service.descriptionEn && service.descriptionEn.toLowerCase().includes(term)) ||
+      (service.descriptionAr && service.descriptionAr.toLowerCase().includes(term))
+    );
+  }, [services, searchTerm]);
+
   useEffect(() => {
     const handleError = (error: unknown, defaultMessage: string) => {
       if (error) {
@@ -233,6 +248,17 @@ const SalonDetails = () => {
 
       {/* Salon Header */}
       <div className={`mb-8 ${isLtr ? 'text-left' : 'text-right'}`}>
+        {/* Salon Image */}
+        <img
+          src={salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`}
+          alt={isLtr ? salon?.nameEn : salon?.nameAr}
+          className="w-full h-56 object-cover rounded-lg mb-6 border"
+          onError={e => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`;
+          }}
+        />
         <h1 className="text-3xl font-bold mb-4">
           {isLtr ? salon.nameEn : salon.nameAr}
         </h1>
@@ -270,15 +296,31 @@ const SalonDetails = () => {
           {isLoading ? (
             <LoadingSkeleton isLtr={isLtr} />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {services?.map((service) => (
-                <ServiceCard 
-                  key={service.id} 
-                  service={service} 
-                  salonId={salonId}
+            <>
+              <div className="mb-6 max-w-xs">
+                <Input
+                  placeholder={isLtr ? "Search services..." : "ابحثي عن خدمة..."}
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full"
+                  aria-label={isLtr ? "Search services" : "ابحثي عن خدمة"}
                 />
-              ))}
-            </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredServices.map((service) => (
+                  <ServiceCard 
+                    key={service.id} 
+                    service={service} 
+                    salonId={salonId}
+                  />
+                ))}
+                {filteredServices.length === 0 && (
+                  <div className="col-span-full text-center text-muted-foreground py-8">
+                    {isLtr ? "No services found." : "لم يتم العثور على خدمات."}
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </TabsContent>
 

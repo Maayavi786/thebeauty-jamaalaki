@@ -1,0 +1,19 @@
+{
+  "name": "thebeauty-server",
+  "private": true,
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "drizzle-orm": "^0.30.7",
+    "@neondatabase/serverless": "^0.7.1",
+    "@netlify/functions": "^2.8.0",
+    "@shared/schema": "file:../shared"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  }
+}

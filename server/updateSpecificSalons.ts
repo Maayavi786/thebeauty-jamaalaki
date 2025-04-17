@@ -6,17 +6,23 @@ import { eq, or } from 'drizzle-orm';
 
 const storage = new DatabaseStorage();
 
+interface Salon {
+  id: number;
+  nameEn?: string;
+  [key: string]: any;
+}
+
 async function updateSpecificSalons() {
   try {
     console.log('Starting specific salon image update...');
     
     // Get specific salons by name
-    const specificSalons = await db.select().from(salons).where(
+    const specificSalons = await db.select().from(salons as any).where(
       or(
-        eq(salons.nameEn, 'Modern Cuts & Colors'),
-        eq(salons.nameEn, 'Chic & Shine'),
-        eq(salons.nameEn, 'Pure Bliss Salon'),
-        eq(salons.nameEn, 'Beauty Haven')
+        eq((salons as any).nameEn, 'Modern Cuts & Colors'),
+        eq((salons as any).nameEn, 'Chic & Shine'),
+        eq((salons as any).nameEn, 'Pure Bliss Salon'),
+        eq((salons as any).nameEn, 'Beauty Haven')
       )
     );
     
@@ -32,13 +38,15 @@ async function updateSpecificSalons() {
 
     // Update each salon with appropriate image
     for (const salon of specificSalons) {
-      const imageUrl = salonImages[salon.nameEn as keyof typeof salonImages];
-      
-      await db.update(salons)
-        .set({ imageUrl })
-        .where(eq(salons.id, salon.id));
-      
-      console.log(`Updated salon "${salon.nameEn}" (ID: ${salon.id}) with image: ${imageUrl}`);
+      if (salon && typeof salon === "object" && "id" in salon) {
+        const imageUrl = salonImages[(salon as Salon).nameEn as keyof typeof salonImages];
+        
+        await db.update(salons as any)
+          .set({ imageUrl })
+          .where(eq((salons as any).id, (salon as Salon).id));
+        
+        console.log(`Updated salon "${(salon as Salon).nameEn}" (ID: ${(salon as Salon).id}) with image: ${imageUrl}`);
+      }
     }
 
     console.log('Specific salon image update completed successfully');

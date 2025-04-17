@@ -1,8 +1,15 @@
 import 'dotenv/config';
 import { DatabaseStorage } from './storage.db';
 import { db } from './db';
-import { salons } from '../shared/schema';
 import { eq } from 'drizzle-orm';
+import { salons } from '../shared/schema';
+
+interface Salon {
+  id: number;
+  nameEn?: string;
+  isLadiesOnly?: boolean;
+  [key: string]: any;
+}
 
 const storage = new DatabaseStorage();
 
@@ -22,13 +29,15 @@ async function updateSalonImages() {
 
     // Update each salon with appropriate default image
     for (const salon of salonsWithoutImages) {
-      const imageUrl = salon.isLadiesOnly ? defaultImages.ladies : defaultImages.unisex;
-      
-      await db.update(salons)
-        .set({ imageUrl })
-        .where(eq(salons.id, salon.id));
-      
-      console.log(`Updated salon ${salon.id} with image: ${imageUrl}`);
+      if (salon && typeof salon === "object" && "id" in salon) {
+        const imageUrl = (salon as Salon).isLadiesOnly ? defaultImages.ladies : defaultImages.unisex;
+        
+        await db.update(salons as any)
+          .set({ imageUrl })
+          .where(eq((salons as any).id, (salon as Salon).id));
+        
+        console.log(`Updated salon "${(salon as Salon).nameEn}" (ID: ${(salon as Salon).id}) with image: ${imageUrl}`);
+      }
     }
 
     console.log('Salon image update completed successfully');

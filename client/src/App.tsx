@@ -27,7 +27,7 @@ function Router() {
       <Route path="/salons" component={Salons} />
       <Route path="/services" component={Services} />
       <Route path="/about" component={About} />
-      <Route path="/salon/:id" component={SalonDetails} />
+      <Route path="/salons/:id" component={SalonDetails} />
       <Route path="/booking/:salonId/:serviceId" component={BookingPage} />
       <Route path="/profile" component={Profile} />
       <Route path="/login" component={Login} />

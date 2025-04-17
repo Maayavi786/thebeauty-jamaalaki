@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
 
   const checkSession = async () => {
     try {
-      const response = await apiRequest('GET', '/api/auth/session');
+      const response = await apiRequest('GET', '/auth/session');
       if (!response.ok) {
         throw new Error('Session check failed');
       }
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await apiRequest('POST', '/api/auth/login', { username, password });
+      const response = await apiRequest('POST', '/auth/login', { username, password });
       
       const data = await response.json();
       if (!response.ok || !data.success) {
@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
   const register = async (userData: Partial<User>): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await apiRequest('POST', '/api/auth/register', userData);
+      const response = await apiRequest('POST', '/auth/register', userData);
       
       if (!response.ok) {
         const data = await response.json();
@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
   const logout = async () => {
     try {
       setLoading(true);
-      const response = await apiRequest('POST', '/api/auth/logout');
+      const response = await apiRequest('POST', '/auth/logout');
       
       if (!response.ok) {
         throw new Error('Logout failed');

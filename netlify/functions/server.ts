@@ -2,11 +2,10 @@ import { Handler, HandlerEvent, HandlerContext, HandlerResponse } from '@netlify
 import express from 'express';
 import serverless from 'serverless-http';
 import { neon } from '@neondatabase/serverless';
-import * as session from 'express-session';
+import session from 'express-session';
 import passport from 'passport';
 import cors from 'cors';
 import { comparePasswords } from '../utils/passwordUtils';
-import { hashPassword } from '../utils/passwordUtils';
 import pgSession from 'connect-pg-simple';
 import * as Sentry from "@sentry/node";
 import rateLimit from 'express-rate-limit';
@@ -18,6 +17,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 const app = express();
+app.set('trust proxy', 1); // Enable trust proxy for Netlify/Express-rate-limit
 
 // Initialize Sentry
 Sentry.init({
@@ -26,10 +26,25 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
+// Debug logging middleware to print incoming request paths
+app.use((req, res, next) => {
+  console.log('Request path:', req.path);
+  next();
+});
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
+  keyGenerator: (req) => {
+    // Prefer Netlify's x-nf-client-connection-ip, then x-forwarded-for, then req.ip, then fallback
+    return (
+      req.headers['x-nf-client-connection-ip'] as string ||
+      (Array.isArray(req.headers['x-forwarded-for']) ? req.headers['x-forwarded-for'][0] : req.headers['x-forwarded-for']) ||
+      req.ip ||
+      'localhost-dev'
+    );
+  },
   message: {
     success: false,
     message: "Too many requests, please try again later"
@@ -78,7 +93,7 @@ const sessionConfig = {
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     partitioned: true // Add Partitioned attribute for Cloudflare
   },
-  store: new (pgSession(session))({
+  store: new (pgSession(session as any))({
     conString: process.env.DATABASE_URL,
     tableName: 'user_sessions',
     createTableIfMissing: true
@@ -86,7 +101,18 @@ const sessionConfig = {
 };
 
 // Initialize session middleware
-app.use(session.default(sessionConfig));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "keyboard cat",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    },
+  })
+);
 
 // Initialize passport
 app.use(passport.initialize());
@@ -141,6 +167,7 @@ app.post('/api/auth/login', async (req: express.Request, res: express.Response) 
         success: false,
         message: 'Username and password are required'
       });
+      return;
     }
 
     const result = await sql`
@@ -153,6 +180,7 @@ app.post('/api/auth/login', async (req: express.Request, res: express.Response) 
         success: false,
         message: 'Invalid username or password'
       });
+      return;
     }
 
     const user = result[0] as User;
@@ -163,6 +191,7 @@ app.post('/api/auth/login', async (req: express.Request, res: express.Response) 
         success: false,
         message: 'Invalid username or password'
       });
+      return;
     }
 
     // Remove password from user object before storing in session
@@ -185,6 +214,40 @@ app.post('/api/auth/login', async (req: express.Request, res: express.Response) 
   }
 });
 
+// Register route
+app.post('/api/auth/register', async (req: express.Request, res: express.Response) => {
+  try {
+    const { username, email, password, phone } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Username, email, and password are required' });
+    }
+    // Check if user already exists
+    const existingUser = await sql`SELECT * FROM users WHERE username = ${username} OR email = ${email}`;
+    if (existingUser.length > 0) {
+      return res.status(409).json({ success: false, message: 'User already exists' });
+    }
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // Insert user into DB
+    const [user] = await sql`
+      INSERT INTO users (username, email, password, phone, role, created_at)
+      VALUES (${username}, ${email}, ${hashedPassword}, ${phone || ''}, 'user', NOW())
+      RETURNING id, username, email, phone, role, created_at
+    `;
+    // Optionally, auto-login after registration
+    (req.session as any).user = user;
+    await (req.session as any).save();
+    res.status(201).json({ success: true, user });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred during registration',
+      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+    });
+  }
+});
+
 // Session check route
 app.get('/api/auth/session', async (req: express.Request, res: express.Response) => {
   try {
@@ -193,6 +256,7 @@ app.get('/api/auth/session', async (req: express.Request, res: express.Response)
         success: false,
         message: 'No active session'
       });
+      return;
     }
 
     // Verify user still exists in database
@@ -208,6 +272,7 @@ app.get('/api/auth/session', async (req: express.Request, res: express.Response)
         success: false,
         message: 'User not found'
       });
+      return;
     }
 
     const { password: _, ...userWithoutPassword } = user;
@@ -215,12 +280,14 @@ app.get('/api/auth/session', async (req: express.Request, res: express.Response)
       success: true,
       user: userWithoutPassword
     });
+    return;
   } catch (error) {
     console.error('Session check error:', error);
     res.status(500).json({
       success: false,
       message: 'An error occurred while checking session'
     });
+    return;
   }
 });
 
@@ -241,19 +308,41 @@ app.post('/api/auth/logout', async (req: express.Request, res: express.Response)
   }
 });
 
+// --- Password reset endpoints ---
+import resetPasswordRoutes from './resetPasswordRoutes';
+app.use(resetPasswordRoutes);
+
 // Salon routes
 app.get("/api/salons", async (req: express.Request, res: express.Response) => {
   try {
     const salons = await sql`
-      SELECT s.*, 
-             u.username as owner_name,
-             (SELECT COUNT(*) FROM reviews r WHERE r.salon_id = s.id) as review_count,
-             (SELECT AVG(rating) FROM reviews r WHERE r.salon_id = s.id) as average_rating
+      SELECT
+        s.id,
+        s.owner_id AS "ownerId",
+        s.name_en AS "nameEn",
+        s.name_ar AS "nameAr",
+        s.description_en AS "descriptionEn",
+        s.description_ar AS "descriptionAr",
+        s.address,
+        s.city,
+        s.phone,
+        s.email,
+        s.rating,
+        s.image_url AS "imageUrl",
+        s.is_verified AS "isVerified",
+        s.is_ladies_only AS "isLadiesOnly",
+        s.has_private_rooms AS "hasPrivateRooms",
+        s.is_hijab_friendly AS "isHijabFriendly",
+        s.price_range AS "priceRange",
+        s.created_at AS "createdAt",
+        u.username as "ownerName",
+        (SELECT COUNT(*) FROM reviews r WHERE r.salon_id = s.id) as "reviewCount",
+        (SELECT AVG(rating) FROM reviews r WHERE r.salon_id = s.id) as "averageRating"
       FROM salons s
       LEFT JOIN users u ON s.owner_id = u.id
       ORDER BY s.created_at DESC
     `;
-    
+    res.set('Cache-Control', 'no-store');
     res.json({ success: true, data: salons });
   } catch (error) {
     console.error('Error fetching salons:', error);
@@ -271,10 +360,11 @@ app.get("/api/salons/:id", async (req: express.Request, res: express.Response) =
     
     // Fetch salon details
     const [salon] = await sql`
-      SELECT s.*, 
-             u.username as owner_name,
-             (SELECT COUNT(*) FROM reviews r WHERE r.salon_id = s.id) as review_count,
-             (SELECT AVG(rating) FROM reviews r WHERE r.salon_id = s.id) as average_rating
+      SELECT 
+        s.*,
+        u.username as owner_name,
+        (SELECT COUNT(*) FROM reviews r WHERE r.salon_id = s.id) as review_count,
+        (SELECT AVG(rating) FROM reviews r WHERE r.salon_id = s.id) as average_rating
       FROM salons s
       LEFT JOIN users u ON s.owner_id = u.id
       WHERE s.id = ${parseInt(id)}
@@ -296,13 +386,14 @@ app.get("/api/salons/:id", async (req: express.Request, res: express.Response) =
 
     // Fetch reviews for this salon
     const reviews = await sql`
-      SELECT r.*, u.username, u.full_name
+      SELECT r.*, u.username
       FROM reviews r
       JOIN users u ON r.user_id = u.id
       WHERE r.salon_id = ${parseInt(id)}
       ORDER BY r.created_at DESC
     `;
 
+    res.set('Cache-Control', 'no-store');
     res.json({
       success: true,
       data: {
@@ -350,6 +441,43 @@ app.get("/api/services", async (req: express.Request, res: express.Response) => 
       message: "Failed to fetch services",
       error: error instanceof Error ? error.message : "Unknown error" 
     });
+  }
+});
+
+app.get('/api/services/:id', async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params;
+    const [service] = await sql`SELECT * FROM services WHERE id = ${id}`;
+    if (!service) {
+      return res.status(404).json({ success: false, message: 'Service not found' });
+    }
+    res.json({ success: true, data: service });
+  } catch (error) {
+    console.error('Error fetching service:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch service',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Seed endpoint: Add a test service to a salon
+app.post('/api/services', async (req: express.Request, res: express.Response) => {
+  try {
+    const { salonId, nameEn, nameAr, descriptionEn, descriptionAr, duration, price, category, imageUrl } = req.body;
+    if (!salonId || !nameEn || !nameAr || !descriptionEn || !descriptionAr || !duration || !price || !category) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+    const [service] = await sql`
+      INSERT INTO services (salon_id, name_en, name_ar, description_en, description_ar, duration, price, category, image_url)
+      VALUES (${salonId}, ${nameEn}, ${nameAr}, ${descriptionEn}, ${descriptionAr}, ${duration}, ${price}, ${category}, ${imageUrl})
+      RETURNING *
+    `;
+    res.status(201).json({ success: true, data: service });
+  } catch (error) {
+    console.error('Error seeding service:', error);
+    res.status(500).json({ success: false, message: 'Failed to seed service', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
@@ -420,7 +548,7 @@ app.get('/api/reviews', async (req: express.Request, res: express.Response) => {
     let reviews;
     if (salonId) {
       reviews = await sql`
-        SELECT r.*, u.username, u.full_name
+        SELECT r.*, u.username
         FROM reviews r
         JOIN users u ON r.user_id = u.id
         WHERE r.salon_id = ${parseInt(salonId as string)}
@@ -428,7 +556,7 @@ app.get('/api/reviews', async (req: express.Request, res: express.Response) => {
       `;
     } else {
       reviews = await sql`
-        SELECT r.*, u.username, u.full_name
+        SELECT r.*, u.username
         FROM reviews r
         JOIN users u ON r.user_id = u.id
         ORDER BY r.created_at DESC
@@ -822,30 +950,4 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 const serverlessHandler = serverless(app);
-
-// Export the handler function
-export const handler: Handler = async (event: HandlerEvent, context: HandlerContext): Promise<HandlerResponse> => {
-  try {
-    const result = await serverlessHandler(event, context);
-    if (typeof result === 'object' && result !== null) {
-      return {
-        statusCode: (result as any).statusCode || 200,
-        body: (result as any).body,
-        headers: (result as any).headers
-      };
-    }
-    return {
-      statusCode: 200,
-      body: JSON.stringify(result)
-    };
-  } catch (error) {
-    console.error('Handler error:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        success: false,
-        message: 'Internal server error'
-      })
-    };
-  }
-}; 
+export const handler = serverlessHandler;

@@ -1,4 +1,4 @@
-# Jamaalaki - Salon Booking Platform
+# The Beauty Salon Booking Platform
 
 A modern web application for booking salon services in Saudi Arabia, built with React, Express, and TypeScript.
 

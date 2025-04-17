@@ -24,7 +24,7 @@ const Services = () => {
 
   // Fetch all services
   const { data: servicesResponse = { success: false, data: [] }, isLoading, error } = useQuery<ServicesResponse>({
-    queryKey: ['/api/services'],
+    queryKey: ['/services'],
   });
 
   // Filter options

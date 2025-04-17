@@ -15,7 +15,7 @@ const SalonCard = ({ salon }: SalonCardProps) => {
 
   return (
     <Link href={`/salons/${salon.id}`}>
-      <div className="luxury-card bg-background dark:bg-neutral-800/20 rounded-xl overflow-hidden shadow-lg border border-muted dark:border-neutral-800 hover:shadow-xl transition-all transform hover:-translate-y-1 cursor-pointer">
+      <div className="luxury-card bg-background dark:bg-neutral-800/20 rounded-xl overflow-hidden shadow-md border border-muted dark:border-neutral-800 transition-all duration-200 ease-in-out cursor-pointer hover:-translate-y-2 hover:shadow-xl">
         <div className="relative">
           <img 
             src={salon.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(salon.nameEn)}&background=D4AF37&color=fff&size=256`} 

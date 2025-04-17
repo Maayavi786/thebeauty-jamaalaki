@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Salon, Service } from "@shared/schema";
 import { API_BASE_URL } from '../lib/config';
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -39,15 +40,24 @@ const BookingPage = () => {
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   // Get time slots
   const timeSlots = getTimeSlots(9, 21, 30);
+  
+  // Add state and memo for search
+  const [searchTerm, setSearchTerm] = useState("");
+  const filteredTimeSlots = useMemo(() => {
+    if (!searchTerm.trim()) return timeSlots;
+    const term = searchTerm.trim();
+    return timeSlots.filter(slot => slot.includes(term));
+  }, [timeSlots, searchTerm]);
   
   // Fetch salon data with retry logic
   const { data: salon, isLoading: isSalonLoading, error: salonError } = useQuery<Salon>({
     queryKey: ['salon', params?.salonId],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/salons/${params?.salonId}`, {
+      const response = await fetch(`${API_BASE_URL}/salons/${params?.salonId}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch salon');
@@ -65,7 +75,7 @@ const BookingPage = () => {
   const { data: service, isLoading: isServiceLoading, error: serviceError } = useQuery<Service>({
     queryKey: ['service', params?.serviceId],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/services/${params?.serviceId}`, {
+      const response = await fetch(`${API_BASE_URL}/services/${params?.serviceId}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch service');
@@ -95,7 +105,7 @@ const BookingPage = () => {
   // Create booking mutation
   const createBooking = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/bookings', data);
+      const response = await apiRequest('POST', '/bookings', data);
       return response.json();
     },
     onSuccess: () => {
@@ -106,7 +116,7 @@ const BookingPage = () => {
           : "تم حجز موعدك بنجاح.",
         variant: "default",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/bookings/user/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/bookings/user/${user?.id}`] });
       navigate("/profile");
     },
     onError: (error) => {
@@ -166,7 +176,7 @@ const BookingPage = () => {
 
     // Verify session is still valid
     try {
-      const sessionResponse = await fetch(`${API_BASE_URL}/api/auth/session`, {
+      const sessionResponse = await fetch(`${API_BASE_URL}/auth/session`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -215,6 +225,7 @@ const BookingPage = () => {
     
     try {
       await createBooking.mutateAsync(bookingData);
+      setShowConfirmation(true); // Show confirmation overlay
     } catch (error) {
       console.error("Booking error:", error);
     }
@@ -270,6 +281,36 @@ const BookingPage = () => {
           : `احجزي موعدك لخدمة ${(service as Service).nameAr} في ${(salon as Salon).nameAr}`
         } />
       </Helmet>
+      
+      {showConfirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center">
+            <div className="flex flex-col items-center mb-4">
+              <svg className="w-16 h-16 text-green-500 mb-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <h2 className="text-2xl font-bold mb-2">{isLtr ? "Your booking is confirmed!" : "تم تأكيد الحجز!"}</h2>
+              <p className="text-gray-600 mb-4">{isLtr ? "Thank you for booking. Payment will be handled soon." : "شكرًا لحجزك. سيتم معالجة الدفع قريبًا."}</p>
+            </div>
+            <div className="text-left mb-4">
+              <div className="mb-2"><span className="font-semibold">{isLtr ? "Salon:" : "الصالون:"}</span> {isLtr ? salon?.nameEn : salon?.nameAr}</div>
+              <div className="mb-2"><span className="font-semibold">{isLtr ? "Service:" : "الخدمة:"}</span> {isLtr ? service?.nameEn : service?.nameAr}</div>
+              <div className="mb-2"><span className="font-semibold">{isLtr ? "Date:" : "التاريخ:"}</span> {selectedDate?.toLocaleDateString(isLtr ? 'en-US' : 'ar-SA')}</div>
+              <div className="mb-2"><span className="font-semibold">{isLtr ? "Time:" : "الوقت:"}</span> {selectedTime}</div>
+              <div className="mb-2"><span className="font-semibold">{isLtr ? "Total:" : "الإجمالي:"}</span> {formatPrice(service?.price)}</div>
+            </div>
+            <button
+              className="mt-4 px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition"
+              onClick={() => {
+                setShowConfirmation(false);
+                navigate("/");
+              }}
+            >
+              {isLtr ? "Return Home" : "العودة للرئيسية"}
+            </button>
+          </div>
+        </div>
+      )}
       
       <div className="container mx-auto px-4 py-8">
         <div className="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl overflow-hidden mb-20">
@@ -342,18 +383,33 @@ const BookingPage = () => {
                           <h3 className={`font-medium text-lg mb-3 ${isRtl ? 'font-tajawal' : ''}`}>
                             {isLtr ? "Select Appointment Time" : "اختر وقت الموعد"}
                           </h3>
+                          <div className="mb-6 max-w-xs">
+                            <Input
+                              placeholder={isLtr ? "Search time slots..." : "ابحثي عن وقت..."}
+                              value={searchTerm}
+                              onChange={e => setSearchTerm(e.target.value)}
+                              className="w-full"
+                              aria-label={isLtr ? "Search time slots" : "ابحثي عن وقت"}
+                            />
+                          </div>
                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                            {timeSlots.map((time) => (
-                              <Button
-                                key={time}
-                                type="button"
-                                variant={selectedTime === time ? "default" : "outline"}
-                                className={`text-sm ${selectedTime === time ? "bg-primary text-white" : ""}`}
-                                onClick={() => setSelectedTime(time)}
-                              >
-                                {time}
-                              </Button>
-                            ))}
+                            {filteredTimeSlots.length === 0 ? (
+                              <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
+                                {isLtr ? "No time slots match your search." : "لا يوجد أوقات تطابق بحثك."}
+                              </p>
+                            ) : (
+                              filteredTimeSlots.map((time: string) => (
+                                <Button
+                                  key={time}
+                                  type="button"
+                                  variant={selectedTime === time ? "default" : "outline"}
+                                  className={`text-sm ${selectedTime === time ? "bg-primary text-white" : ""}`}
+                                  onClick={() => setSelectedTime(time)}
+                                >
+                                  {time}
+                                </Button>
+                              ))
+                            )}
                           </div>
                         </div>
                         
@@ -395,14 +451,26 @@ const BookingPage = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center pb-3 border-b">
+                    <div className="mb-8 flex gap-6 items-center">
+                      {/* Salon Image */}
+                      <div className="w-32 h-32 flex-shrink-0">
+                        <img
+                          src={salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`}
+                          alt={isLtr ? salon?.nameEn : salon?.nameAr}
+                          className="w-full h-full object-cover rounded-xl border border-muted bg-white"
+                          onError={e => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null;
+                            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`;
+                          }}
+                        />
+                      </div>
                       <div>
-                        <p className={`${isRtl ? 'font-tajawal' : ''}`}>
-                          <span className="font-medium">{isLtr ? (salon as Salon).nameEn : (salon as Salon).nameAr}</span>
-                          <br />
-                          <span className="text-sm text-muted-foreground">
-                            {isLtr ? (salon as Salon).city.split(' | ')[0] : `${(salon as Salon).city.split(' | ')[0]} | ${(salon as Salon).city.split(' | ')[1]}`}
-                          </span>
+                        <p className={`font-medium text-lg ${isRtl ? 'font-tajawal' : ''}`}>
+                          {isLtr ? salon.nameEn : salon.nameAr}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {isLtr ? salon.city.split(' | ')[0] : `${salon.city.split(' | ')[0]} | ${salon.city.split(' | ')[1]}`}
                         </p>
                       </div>
                     </div>

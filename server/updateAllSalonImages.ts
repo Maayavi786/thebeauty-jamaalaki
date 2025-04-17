@@ -6,12 +6,18 @@ import { eq } from 'drizzle-orm';
 
 const storage = new DatabaseStorage();
 
+interface Salon {
+  id: number;
+  nameEn?: string;
+  [key: string]: any;
+}
+
 async function updateAllSalonImages() {
   try {
     console.log('Starting salon image update...');
     
     // Get all salons
-    const allSalons = await db.select().from(salons);
+    const allSalons = await db.select().from(salons as any);
     console.log(`Found ${allSalons.length} salons to update`);
 
     // Unique high-quality images for each salon (interior shots without people)
@@ -31,16 +37,18 @@ async function updateAllSalonImages() {
 
     // Update each salon with appropriate image
     for (const salon of allSalons) {
-      const imageUrl = salonImages[salon.nameEn as keyof typeof salonImages];
-      
-      if (imageUrl) {
-        await db.update(salons)
-          .set({ imageUrl })
-          .where(eq(salons.id, salon.id));
+      if (salon && typeof salon === "object" && "id" in salon) {
+        const imageUrl = salonImages[(salon as Salon).nameEn as keyof typeof salonImages];
         
-        console.log(`Updated salon "${salon.nameEn}" (ID: ${salon.id}) with image: ${imageUrl}`);
-      } else {
-        console.log(`No image found for salon "${salon.nameEn}" (ID: ${salon.id})`);
+        if (imageUrl) {
+          await db.update(salons as any)
+            .set({ imageUrl })
+            .where(eq((salons as any).id, (salon as Salon).id));
+          
+          console.log(`Updated salon "${(salon as Salon).nameEn}" (ID: ${(salon as Salon).id}) with image: ${imageUrl}`);
+        } else {
+          console.log(`No image found for salon "${(salon as Salon).nameEn}" (ID: ${(salon as Salon).id})`);
+        }
       }
     }
 

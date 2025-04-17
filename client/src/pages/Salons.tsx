@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
@@ -14,15 +14,17 @@ import { Loader2 } from "lucide-react";
 import { getIslamicPatternSvg } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/config";
+import { Input } from "@/components/ui/input";
 
 const Salons = () => {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common", "home"]);
   const { isLtr, isRtl } = useLanguage();
   const [location] = useLocation();
   const { toast } = useToast();
   
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [queryParams, setQueryParams] = useState<Record<string, any>>({});
+  const [searchTerm, setSearchTerm] = useState("");
   
   // Parse URL query parameters on initial load
   useEffect(() => {
@@ -62,9 +64,9 @@ const Salons = () => {
   
   // Fetch salons data
   const { data: salonsResponse, isLoading, error } = useQuery<{ success: boolean; data: Salon[] }>({
-    queryKey: ['/api/salons'],
+    queryKey: ['/salons'],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/salons`, {
+      const response = await fetch(`${API_BASE_URL}/salons`, {
         credentials: 'include',
       });
       if (!response.ok) {
@@ -168,7 +170,7 @@ const Salons = () => {
   };
   
   // Filter salons based on search term and service type
-  const filteredSalons: Salon[] = salonsResponse?.data ? salonsResponse.data.filter((salon: Salon) => {
+  const filteredSalons = salonsResponse?.data ? salonsResponse.data.filter((salon: Salon) => {
     let matchesSearch = true;
     let matchesService = true;
     
@@ -189,19 +191,29 @@ const Salons = () => {
     return matchesSearch && matchesService;
   }) : [];
   
+  const filteredSalonsBySearchTerm = useMemo(() => {
+    if (!salonsResponse?.data) return [];
+    if (!searchTerm.trim()) return filteredSalons;
+    const term = searchTerm.trim().toLowerCase();
+    return filteredSalons.filter((salon: any) =>
+      (salon.nameEn && salon.nameEn.toLowerCase().includes(term)) ||
+      (salon.nameAr && salon.nameAr.toLowerCase().includes(term)) ||
+      (salon.city && salon.city.toLowerCase().includes(term)) ||
+      (salon.descriptionEn && salon.descriptionEn.toLowerCase().includes(term)) ||
+      (salon.descriptionAr && salon.descriptionAr.toLowerCase().includes(term))
+    );
+  }, [salonsResponse, searchTerm, filteredSalons]);
+  
   return (
     <>
       <Helmet>
-        <title>{isLtr ? "Salons | Jamaalaki" : "الصالونات | جمالكِ"}</title>
-        <meta name="description" content={isLtr 
-          ? "Browse and filter luxury salons designed for women in Saudi Arabia"
-          : "تصفح وتصفية صالونات الرفاهية المصممة للنساء في المملكة العربية السعودية"
-        } />
+        <title>{isLtr ? t("salons", { ns: 'home' }) : t("salons", { ns: 'home' })}</title>
+        <meta name="description" content={t('salonsDescription', { ns: 'home' })} />
       </Helmet>
       
       <div className="container mx-auto px-4 py-8">
         <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
-          {t("salons")}
+          {t("salons", { ns: 'home' })}
         </h1>
         
         {/* Hero Section */}
@@ -215,12 +227,10 @@ const Salons = () => {
           ></div>
           <div className="relative z-10 py-20 px-6 text-center max-w-3xl mx-auto">
             <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${isRtl ? 'font-tajawal' : 'font-playfair'}`}>
-              {t('findYourPerfectSalon')}
+              {t('findYourPerfectSalon', { ns: 'common' })}
             </h1>
             <p className={`text-lg mb-8 text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-              {isRtl 
-                ? 'اكتشفي أفضل صالونات التجميل في المملكة العربية السعودية'
-                : 'Discover the best beauty salons in Saudi Arabia'}
+              {t('salonsDescription', { ns: 'home' })}
             </p>
             <div className="max-w-2xl mx-auto">
               <SearchBar onSearch={handleSearch} />
@@ -268,10 +278,21 @@ const Salons = () => {
           </div>
         )}
         
+        {/* Search bar */}
+        <div className="mb-6 max-w-xs">
+          <Input
+            placeholder={isLtr ? "Search salons..." : "ابحثي عن صالون..."}
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full"
+            aria-label={isLtr ? "Search salons" : "ابحثي عن صالون"}
+          />
+        </div>
+        
         {/* Results count */}
         <div className="mb-6">
           <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-            {filteredSalons.length} {isLtr ? "salons found" : "صالون تم العثور عليه"}
+            {t('salonsFound', { count: filteredSalonsBySearchTerm.length, ns: 'home' })}
           </p>
         </div>
         
@@ -288,14 +309,14 @@ const Salons = () => {
                 {t('refresh')}
               </Button>
             </div>
-          ) : filteredSalons.length > 0 ? (
-            filteredSalons.map((salon) => (
+          ) : filteredSalonsBySearchTerm.length > 0 ? (
+            filteredSalonsBySearchTerm.map((salon: any) => (
               <SalonCard key={salon.id} salon={salon} />
             ))
           ) : (
             <div className="text-center py-12">
               <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                {t('noSalonsFound')}
+                {t('noSalonsFound', { ns: 'home' })}
               </p>
             </div>
           )}

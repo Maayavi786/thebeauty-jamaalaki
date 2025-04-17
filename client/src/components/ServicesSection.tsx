@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { Scissors, Bath, Paintbrush, Wand2 } from "lucide-react";
 
 const ServicesSection = () => {
-  const { t } = useTranslation(["services", "common"]);
+  const { t } = useTranslation(["serviceTypes", "home", "common"]);
   const { isLtr, isRtl } = useLanguage();
   
   const services = [
@@ -13,29 +13,29 @@ const ServicesSection = () => {
       id: "spa",
       icon: <Bath className="text-xl" />,
       bgColor: "bg-accent",
-      title: t("spaAndMassage"),
-      description: t("spaAndMassageDesc")
+      title: t("spaAndMassage", { ns: "serviceTypes" }),
+      description: t("spaAndMassageDesc", { ns: "serviceTypes" })
     },
     {
       id: "haircuts",
       icon: <Scissors className="text-xl" />,
       bgColor: "bg-primary",
-      title: t("hairCut"),
-      description: t("hairCutDesc")
+      title: t("hairStyling", { ns: "serviceTypes" }),
+      description: t("hairStylingDesc", { ns: "serviceTypes" })
     },
     {
       id: "nails",
       icon: <Paintbrush className="text-xl" />,
       bgColor: "bg-secondary",
-      title: t("nailArt"),
-      description: t("nailArtDesc")
+      title: t("nailArt", { ns: "serviceTypes" }),
+      description: t("nailArtDesc", { ns: "serviceTypes" })
     },
     {
       id: "makeup",
       icon: <Wand2 className="text-xl" />,
       bgColor: "bg-accent/70",
-      title: t("makeup"),
-      description: t("makeupDesc")
+      title: t("makeup", { ns: "serviceTypes" }),
+      description: t("makeupDesc", { ns: "serviceTypes" })
     }
   ];
   
@@ -44,17 +44,14 @@ const ServicesSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h4 className="text-primary uppercase tracking-wider text-sm font-medium">
-            {t("services", { ns: "common" })}
+            {t("premiumServices", { ns: "home" })}
           </h4>
           <h3 className={`font-bold text-3xl mt-2 mb-4 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
-            {isLtr ? "Premium Beauty Services" : "خدمات التجميل المميزة"}
+            {t("premiumServices", { ns: "home" })}
           </h3>
           
           <p className={`text-muted-foreground max-w-xl mx-auto ${isRtl ? 'font-tajawal' : ''}`}>
-            {isLtr
-              ? "Discover our range of services designed to enhance your natural beauty"
-              : "اكتشفي مجموعة خدماتنا المصممة لتعزيز جمالك الطبيعي"
-            }
+            {t("servicesDescription", { ns: "home" })}
           </p>
         </div>
         
@@ -62,7 +59,7 @@ const ServicesSection = () => {
           {services.map(service => (
             <div 
               key={service.id}
-              className="bg-muted/30 dark:bg-neutral-800/20 rounded-xl p-6 text-center hover:shadow-lg transition-shadow"
+              className="bg-muted/30 dark:bg-neutral-800/20 rounded-xl p-6 text-center shadow-md transition-all duration-200 ease-in-out cursor-pointer hover:-translate-y-2 hover:shadow-xl"
             >
               <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${service.bgColor} text-white mb-4`}>
                 {service.icon}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
@@ -38,6 +38,7 @@ import {
   Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { API_BASE_URL } from "@/lib/config";
 
 const Profile = () => {
@@ -53,7 +54,7 @@ const Profile = () => {
   
   // Fetch user bookings
   const { data: bookings, isLoading: isBookingsLoading } = useQuery<Booking[]>({
-    queryKey: [`/api/bookings/user/${user?.id}`],
+    queryKey: [`/bookings/user/${user?.id}`],
     enabled: !!user,
   });
   
@@ -96,7 +97,7 @@ const Profile = () => {
       for (const salonId of salonIds) {
         try {
           if (!(salonId in salonsMap)) {
-            const response = await fetch(`${API_BASE_URL}/api/salons/${salonId}`);
+            const response = await fetch(`${API_BASE_URL}/salons/${salonId}`);
             if (response.ok) {
               const salon = await response.json();
               newSalonsMap[salonId] = salon;
@@ -117,7 +118,7 @@ const Profile = () => {
       for (const serviceId of serviceIds) {
         try {
           if (!(serviceId in servicesMap)) {
-            const response = await fetch(`${API_BASE_URL}/api/services/${serviceId}`);
+            const response = await fetch(`${API_BASE_URL}/services/${serviceId}`);
             if (response.ok) {
               const service = await response.json();
               newServicesMap[serviceId] = service;
@@ -138,8 +139,8 @@ const Profile = () => {
   // Handler for cancelling a booking
   const handleCancelBooking = async (bookingId: number) => {
     try {
-      await apiRequest('PATCH', `${API_BASE_URL}/api/bookings/${bookingId}/status`, { status: 'cancelled' });
-      queryClient.invalidateQueries({ queryKey: [`/api/bookings/user/${user?.id}`] });
+      await apiRequest('PATCH', `${API_BASE_URL}/bookings/${bookingId}/status`, { status: 'cancelled' });
+      queryClient.invalidateQueries({ queryKey: [`/bookings/user/${user?.id}`] });
       
       toast({
         title: isLtr ? "Booking Cancelled" : "تم إلغاء الحجز",
@@ -160,17 +161,34 @@ const Profile = () => {
     }
   };
   
+  // Add state and memo for search
+  const [searchTerm, setSearchTerm] = useState("");
+  const filteredBookings = useMemo(() => {
+    if (!bookings) return [];
+    if (!searchTerm.trim()) return bookings;
+    const term = searchTerm.trim().toLowerCase();
+    return bookings.filter((booking: any) => {
+      const salon = salonsMap[booking.salonId];
+      const service = servicesMap[booking.serviceId];
+      return (
+        (salon && ((salon.nameEn && salon.nameEn.toLowerCase().includes(term)) || (salon.nameAr && salon.nameAr.toLowerCase().includes(term)))) ||
+        (service && ((service.nameEn && service.nameEn.toLowerCase().includes(term)) || (service.nameAr && service.nameAr.toLowerCase().includes(term)))) ||
+        (booking.status && booking.status.toLowerCase().includes(term))
+      );
+    });
+  }, [bookings, searchTerm, salonsMap, servicesMap]);
+  
   if (!user) {
     return null; // Will be redirected via the useEffect
   }
   
   // Separate bookings into upcoming and past
   const now = new Date();
-  const upcomingBookings = bookings?.filter(booking => 
+  const upcomingBookings = filteredBookings.filter((booking: any) => 
     new Date(booking.datetime) > now && booking.status !== 'cancelled'
   ) || [];
   
-  const pastBookings = bookings?.filter(booking => 
+  const pastBookings = filteredBookings.filter((booking: any) => 
     new Date(booking.datetime) <= now || booking.status === 'cancelled'
   ) || [];
   
@@ -252,6 +270,16 @@ const Profile = () => {
           
           {/* Bookings Tabs */}
           <div className="lg:col-span-2">
+            <div className="mb-6 max-w-xs">
+              <Input
+                placeholder={isLtr ? "Search bookings..." : "ابحثي عن حجز..."}
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full"
+                aria-label={isLtr ? "Search bookings" : "ابحثي عن حجز"}
+              />
+            </div>
+            
             <Tabs defaultValue="upcoming">
               <TabsList className="w-full">
                 <TabsTrigger 
@@ -289,7 +317,7 @@ const Profile = () => {
                       </div>
                     ) : upcomingBookings.length > 0 ? (
                       <div className="space-y-4">
-                        {upcomingBookings.map((booking) => {
+                        {upcomingBookings.map((booking: any) => {
                           const salon = salonsMap[booking.salonId];
                           const service = servicesMap[booking.serviceId];
                           
@@ -380,7 +408,7 @@ const Profile = () => {
                       </div>
                     ) : pastBookings.length > 0 ? (
                       <div className="space-y-4">
-                        {pastBookings.map((booking) => {
+                        {pastBookings.map((booking: any) => {
                           const salon = salonsMap[booking.salonId];
                           const service = servicesMap[booking.serviceId];
                           

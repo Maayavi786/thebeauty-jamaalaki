@@ -86,6 +86,10 @@ const enTranslations = {
     appStore: 'App Store',
     getItOn: 'Get it on',
     googlePlay: 'Google Play',
+    salons: 'Salons',
+    salonsDescription: 'Discover the best beauty salons in Saudi Arabia',
+    salonsFound: '{{count}} salons found',
+    noSalonsFound: 'No salons found',
   },
   salon: {
     location: 'Location',
@@ -173,7 +177,7 @@ const enTranslations = {
     newsletter: 'Subscribe to our newsletter for exclusive offers and beauty tips.',
     emailPlaceholder: 'Email',
     subscribe: 'Subscribe',
-    allRightsReserved: '© 2023 The Beauty. All rights reserved. Developed by Aroos',
+    allRightsReserved: ' 2023 The Beauty. All rights reserved. Developed by Aroos',
   }
 };
 
@@ -262,6 +266,10 @@ const arTranslations = {
     appStore: 'متجر التطبيقات',
     getItOn: 'احصل عليه من',
     googlePlay: 'جوجل بلاي',
+    salons: 'الصالونات',
+    salonsDescription: 'اكتشفي أفضل صالونات التجميل في المملكة العربية السعودية',
+    salonsFound: '{{count}} صالون تم العثور عليه',
+    noSalonsFound: 'لم يتم العثور على صالونات',
   },
   salon: {
     location: 'الموقع',
@@ -349,7 +357,7 @@ const arTranslations = {
     newsletter: 'اشتركي في نشرتنا الإخبارية للحصول على عروض حصرية ونصائح للجمال.',
     emailPlaceholder: 'البريد الإلكتروني',
     subscribe: 'اشتراك',
-    allRightsReserved: ' جمالكِ. جميع الحقوق محفوظة 2023 ©.تم التطوير بواسطة محمد عروس . ',
+    allRightsReserved: ' جمالكِ. جميع الحقوق محفوظة 2023 .تم التطوير بواسطة محمد عروس . ',
   }
 };
 

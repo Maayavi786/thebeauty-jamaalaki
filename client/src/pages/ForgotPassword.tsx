@@ -1,0 +1,93 @@
+import { useState } from "react";
+import { Helmet } from "react-helmet";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+
+export default function ForgotPassword() {
+  const { isLtr } = useLanguage();
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await apiRequest("POST", "/auth/forgot-password", { email });
+      const data = await response.json();
+      if (data.success) {
+        setSent(true);
+        toast({
+          title: isLtr ? "Reset Email Sent" : "تم إرسال رابط إعادة التعيين",
+          description: isLtr
+            ? "Check your email for a password reset link."
+            : "تحقق من بريدك الإلكتروني لرابط إعادة تعيين كلمة المرور.",
+        });
+      } else {
+        toast({
+          title: isLtr ? "Error" : "خطأ",
+          description: data.message || (isLtr ? "Unable to send reset email." : "تعذر إرسال بريد إعادة التعيين."),
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: isLtr ? "Error" : "خطأ",
+        description: isLtr
+          ? "Something went wrong. Please try again."
+          : "حدث خطأ ما. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+      <Helmet>
+        <title>{isLtr ? "Forgot Password | The Beauty" : "نسيت كلمة المرور | جمالكِ"}</title>
+      </Helmet>
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-lg shadow-md p-8 space-y-6"
+        dir={isLtr ? "ltr" : "rtl"}
+      >
+        <h2 className="text-2xl font-bold mb-4 text-center">
+          {isLtr ? "Forgot Password" : "نسيت كلمة المرور"}
+        </h2>
+        <p className="mb-6 text-center text-muted-foreground">
+          {isLtr
+            ? "Enter your email and we'll send you a reset link."
+            : "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور."}
+        </p>
+        <Input
+          type="email"
+          placeholder={isLtr ? "Email address" : "البريد الإلكتروني"}
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+          className="mb-4"
+          aria-label={isLtr ? "Email address" : "البريد الإلكتروني"}
+        />
+        <Button type="submit" className="w-full" disabled={loading || sent}>
+          {loading ? (
+            <Loader2 className="animate-spin mr-2 h-5 w-5 inline" />
+          ) : null}
+          {sent
+            ? isLtr
+              ? "Email Sent"
+              : "تم إرسال البريد"
+            : isLtr
+            ? "Send Reset Link"
+            : "إرسال رابط إعادة التعيين"}
+        </Button>
+      </form>
+    </div>
+  );
+}
