@@ -11,6 +11,6 @@
     "resolveJsonModule": true
   },
   "types": ["node", "express", "express-session", "passport", "connect-pg-simple"],
-  "include": ["server.ts"],
+  "include": ["server.ts", "*.d.ts"],
   "exclude": ["node_modules"]
 }
