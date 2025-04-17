@@ -100,19 +100,8 @@ const sessionConfig = {
   })
 };
 
-// Initialize session middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "keyboard cat",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-    },
-  })
-);
+// Use the sessionConfig object for session middleware
+app.use(session(sessionConfig));
 
 // Initialize passport
 app.use(passport.initialize());
