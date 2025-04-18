@@ -1,8 +1,8 @@
 import 'dotenv/config';
-import { DatabaseStorage } from './storage.db';
-import { db } from './db';
+import { DatabaseStorage } from './storage.db.js';
+import { db } from './db.js';
 import { eq } from 'drizzle-orm';
-import { salons } from '../shared/schema';
+import { salons } from '../shared/schema.js';
 
 interface Salon {
   id: number;

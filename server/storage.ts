@@ -1,7 +1,7 @@
 import { 
   User, InsertUser, Salon, InsertSalon, Service, InsertService, 
   Booking, InsertBooking, Review, InsertReview 
-} from "@shared/schema";
+} from "../shared/schema.js";
 
 export interface IStorage {
   // User operations
@@ -539,7 +539,7 @@ export class MemStorage implements IStorage {
 }
 
 // Import the DatabaseStorage
-import { DatabaseStorage } from './storage.db';
+import { DatabaseStorage } from './storage.db.js';
 
 // Export an instance of DatabaseStorage instead of MemStorage
 export const storage = new DatabaseStorage();

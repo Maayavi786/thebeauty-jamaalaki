@@ -54,40 +54,44 @@ const BookingPage = () => {
   }, [timeSlots, searchTerm]);
   
   // Fetch salon data with retry logic
-  const { data: salon, isLoading: isSalonLoading, error: salonError } = useQuery<Salon>({
-    queryKey: ['salon', params?.salonId],
-    queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/salons/${params?.salonId}`, {
+  const { data: salon, isLoading: isSalonLoading, error: salonError } = useQuery<Salon>(
+    ['salon', params?.salonId],
+    async ({ queryKey }) => {
+      const salonId = queryKey[1];
+      const response = await fetch(`${API_BASE_URL}/salons/${salonId}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch salon');
       const data = await response.json();
       return data.success ? data.data : null;
     },
-    enabled: !!params?.salonId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-  });
+    {
+      enabled: !!params?.salonId,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    }
+  );
   
   // Fetch service data with retry logic
-  const { data: service, isLoading: isServiceLoading, error: serviceError } = useQuery<Service>({
-    queryKey: ['service', params?.serviceId],
-    queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/services/${params?.serviceId}`, {
+  const { data: service, isLoading: isServiceLoading, error: serviceError } = useQuery<Service>(
+    ['service', params?.serviceId],
+    async ({ queryKey }) => {
+      const serviceId = queryKey[1];
+      const response = await fetch(`${API_BASE_URL}/services/${serviceId}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch service');
       const data = await response.json();
       return data.success ? data.data : null;
     },
-    enabled: !!params?.serviceId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-  });
+    {
+      enabled: !!params?.serviceId,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    }
+  );
   
   // Create booking form schema
   const formSchema = z.object({
@@ -482,9 +486,9 @@ const BookingPage = () => {
                     <Button 
                       className={`w-full ${isRtl ? 'font-tajawal' : ''}`}
                       onClick={form.handleSubmit(onSubmit)}
-                      disabled={createBooking.isPending || !selectedDate || !selectedTime}
+                      disabled={createBooking.isLoading || !selectedDate || !selectedTime}
                     >
-                      {createBooking.isPending ? (
+                      {createBooking.isLoading ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
                         <CheckCircle2 className="w-4 h-4 mr-2" />

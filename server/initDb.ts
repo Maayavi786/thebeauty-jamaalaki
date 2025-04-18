@@ -1,13 +1,13 @@
-import { db } from './db';
+import { db } from './db.js';
 import { 
-  users as usersTable, salons, services
-} from '@shared/schema';
+  users as usersTable, salons, services, Salon
+} from '../shared/schema.js';
 import { sql, inArray, eq } from 'drizzle-orm';
-import { hashPassword } from './auth';
+import { hashPassword } from './auth.js';
 
-let isInitialized = false;
+let isInitialized: boolean = false;
 
-export async function initializeDatabase() {
+export async function initializeDatabase(): Promise<void> {
   if (isInitialized) {
     console.log("Database already initialized, skipping...");
     await updateGlamourGraceInfo();
@@ -19,7 +19,7 @@ export async function initializeDatabase() {
   try {
     // Check if we already have users using SQL directly
     const result = await db.execute(sql`SELECT COUNT(*) FROM users`);
-    const count = Number(result.rows[0]?.count || 0);
+    const count: number = Number(result.rows[0]?.count || 0);
     
     if (count > 0) {
       console.log("Database already has users, skipping initialization.");
@@ -30,9 +30,9 @@ export async function initializeDatabase() {
     console.log("Initializing database with sample data...");
 
     // Hash passwords for security
-    const adminPassword = await hashPassword('admin123');
-    const ownerPassword = await hashPassword('password123');
-    const customerPassword = await hashPassword('password123');
+    const adminPassword: string = await hashPassword('admin123');
+    const ownerPassword: string = await hashPassword('password123');
+    const customerPassword: string = await hashPassword('password123');
 
     // Add admin user
     const adminResult = await db.execute(sql`
@@ -40,7 +40,7 @@ export async function initializeDatabase() {
       VALUES ('admin', ${adminPassword}, 'admin@jamaalaki.sa', 'Admin User', '+966501234567', 'admin', 'en', NOW())
       RETURNING id
     `);
-    const adminId = adminResult.rows[0].id;
+    const adminId: number = Number(adminResult.rows[0]?.id);
 
     // Add salon owner
     const ownerResult = await db.execute(sql`
@@ -48,7 +48,7 @@ export async function initializeDatabase() {
       VALUES ('salonowner1', ${ownerPassword}, 'owner@elegancespa.sa', 'Sarah Al-Qahtani', '+966501234568', 'salon_owner', 'ar', NOW())
       RETURNING id
     `);
-    const ownerId = ownerResult.rows[0].id;
+    const ownerId: number = Number(ownerResult.rows[0]?.id);
 
     // Add customer
     await db.execute(sql`
@@ -68,7 +68,7 @@ export async function initializeDatabase() {
               'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1000&auto=format&fit=crop')
       RETURNING id
     `);
-    const salon1Id = salon1Result.rows[0].id;
+    const salon1Id: number = Number(salon1Result.rows[0]?.id);
 
     // Add second salon
     const salon2Result = await db.execute(sql`
@@ -82,7 +82,7 @@ export async function initializeDatabase() {
               'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80')
       RETURNING id
     `);
-    const salon2Id = salon2Result.rows[0].id;
+    const salon2Id: number = Number(salon2Result.rows[0]?.id);
 
     // Add Glamour & Grace Salon
     const glamourGraceResult = await db.execute(sql`
@@ -96,7 +96,7 @@ export async function initializeDatabase() {
               'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80')
       RETURNING id
     `);
-    const glamourGraceId = glamourGraceResult.rows[0].id;
+    const glamourGraceId: number = Number(glamourGraceResult.rows[0]?.id);
 
     // Add Pure Bliss Salon
     const pureBlissResult = await db.execute(sql`
@@ -110,7 +110,7 @@ export async function initializeDatabase() {
               'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1000&auto=format&fit=crop')
       RETURNING id
     `);
-    const pureBlissId = pureBlissResult.rows[0].id;
+    const pureBlissId: number = Number(pureBlissResult.rows[0]?.id);
 
     // Add services for first salon
     await db.execute(sql`
@@ -173,7 +173,7 @@ export async function initializeDatabase() {
   }
 }
 
-export async function updateSalonLocations() {
+export async function updateSalonLocations(): Promise<void> {
   console.log("Updating salon locations to Al Ahsa...");
   
   try {
@@ -196,19 +196,19 @@ export async function updateSalonLocations() {
   }
 }
 
-async function cleanupDuplicateSalons() {
+async function cleanupDuplicateSalons(): Promise<void> {
   console.log('Cleaning up duplicate salons...');
   try {
     // Get all salons
-    const allSalons = await db.select().from(salons);
+    const allSalons: Salon[] = await db.select().from(salons);
     
     // Create a map to track unique salons by name
-    const uniqueSalons = new Map();
-    const duplicates = [];
+    const uniqueSalons: Map<string, Salon> = new Map();
+    const duplicates: number[] = [];
     
     // Identify duplicates
     for (const salon of allSalons) {
-      const key = `${salon.nameEn}-${salon.address}`;
+      const key: string = `${salon.nameEn}-${salon.address}`;
       if (uniqueSalons.has(key)) {
         duplicates.push(salon.id);
       } else {
@@ -229,18 +229,18 @@ async function cleanupDuplicateSalons() {
   }
 }
 
-async function cleanupSalonDescriptions() {
+async function cleanupSalonDescriptions(): Promise<void> {
   console.log('Cleaning up salon descriptions...');
   try {
     // Get all salons
-    const allSalons = await db.select().from(salons);
+    const allSalons: Salon[] = await db.select().from(salons);
     
     // Update each salon's description
     for (const salon of allSalons) {
       // Remove repeated "in Al Ahsa" from English description
-      const cleanDescEn = salon.descriptionEn ? salon.descriptionEn.replace(/ in Al Ahsa/g, '') : '';
+      const cleanDescEn: string = salon.descriptionEn ? salon.descriptionEn.replace(/ in Al Ahsa/g, '') : '';
       // Remove repeated "في الأحساء" from Arabic description
-      const cleanDescAr = salon.descriptionAr ? salon.descriptionAr.replace(/ في الأحساء/g, '') : '';
+      const cleanDescAr: string = salon.descriptionAr ? salon.descriptionAr.replace(/ في الأحساء/g, '') : '';
       
       // Update the salon
       await db.update(salons)
@@ -257,7 +257,7 @@ async function cleanupSalonDescriptions() {
   }
 }
 
-async function updatePureBlissImage() {
+async function updatePureBlissImage(): Promise<void> {
   console.log('Updating Pure Bliss Salon image...');
   try {
     await db.update(salons)
@@ -272,7 +272,7 @@ async function updatePureBlissImage() {
   }
 }
 
-async function updateDuplicateImages() {
+async function updateDuplicateImages(): Promise<void> {
   console.log('Updating duplicate salon images...');
   try {
     // Update Chic & Shine image
@@ -295,7 +295,7 @@ async function updateDuplicateImages() {
   }
 }
 
-async function updateGlamourGraceInfo() {
+async function updateGlamourGraceInfo(): Promise<void> {
   console.log('Updating Glamour & Grace salon information...');
   try {
     await db.update(salons)

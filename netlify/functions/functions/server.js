@@ -75,6 +75,7 @@ const limiter = (0, express_rate_limit_1.default)({
             'localhost-dev');
     },
     message: {
+        status: 429,
         success: false,
         message: "Too many requests, please try again later"
     }

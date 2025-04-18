@@ -1,11 +1,11 @@
 import type { Express, Request, Response } from "express";
-import { IStorage } from "./storage";
+import { IStorage } from "./storage.js";
 import { 
   insertUserSchema, insertSalonSchema, insertServiceSchema, 
   insertBookingSchema, insertReviewSchema, loginSchema, User 
-} from "@shared/schema";
+} from "../shared/schema.js";
 import { ZodError } from "zod";
-import { hashPassword, comparePasswords } from "./auth";
+import { hashPassword, comparePasswords } from "./auth.js";
 import { Session } from "express-session";
 import { Router } from 'express';
 import { neon } from '@neondatabase/serverless';

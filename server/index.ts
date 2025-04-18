@@ -1,21 +1,22 @@
 import 'dotenv/config';
-import express, { type Request, Response, NextFunction } from "express";
+import express from "express";
+import type { Request, Response, NextFunction } from "express";
 import { createServer } from "http";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { registerRoutes } from "./routes.js";
+import { setupVite, serveStatic, log } from "./vite.mjs";
 import session from "express-session";
 import passport from "passport";
-import { env } from "./config";
+import { env } from "./config.js";
 import cors from "cors";
-import { initializeDatabase } from './initDb';
-import { DatabaseStorage } from './storage.db';
+import { initializeDatabase } from './initDb.js';
+import { DatabaseStorage } from './storage.db.js';
 import pgSession from 'connect-pg-simple';
 
 const app = express();
 
 // Enable CORS with credentials
 app.use(cors({
-  origin: "http://localhost:5173", // Frontend URL
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ["https://thebeauty.netlify.app"], // Production frontend domain(s)
   credentials: true
 }));
 
@@ -34,7 +35,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     secure: true, // Always use secure cookies
-    sameSite: 'lax', // Use 'lax' in development, 'strict' in production
+    sameSite: 'none', // Use 'none' for cross-site cookies in production
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     httpOnly: true, // Prevent client-side JavaScript access
   },
@@ -47,15 +48,16 @@ app.use(passport.session());
 // Initialize storage
 const storage = new DatabaseStorage();
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
+  res.json = function (bodyJson: Record<string, any>, ...args: any[]) {
     capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
+    // FIX: Only pass a single argument to res.json
+    return originalResJson.call(res, bodyJson);
   };
 
   res.on("finish", () => {
@@ -78,7 +80,7 @@ app.use((req, res, next) => {
 });
 
 // Add this before your other routes
-app.get('/api/env-test', (req, res) => {
+app.get('/api/env-test', (req: Request, res: Response) => {
   // Return only non-sensitive information
   res.json({
     status: 'success',
@@ -109,7 +111,7 @@ async function main() {
     await registerRoutes(app, storage);
 
     // Error handling middleware
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    app.use((err: any, req: Request, res: Response, next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
 

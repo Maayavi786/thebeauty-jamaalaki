@@ -1,7 +1,7 @@
 import 'dotenv/config';
-import { DatabaseStorage } from './storage.db';
-import { db } from './db';
-import { salons } from '../shared/schema';
+import { DatabaseStorage } from './storage.db.js';
+import { db } from './db.js';
+import { salons } from '../shared/schema.js';
 import { eq } from 'drizzle-orm';
 
 const storage = new DatabaseStorage();

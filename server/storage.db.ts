@@ -1,13 +1,24 @@
 import { eq, and, or, isNull } from 'drizzle-orm';
-import { db } from './db';
-import { IStorage } from './storage';
+import { db, users, salons, services, bookings, reviews } from './db.js';
+import { IStorage } from './storage.js';
 import { 
-  users, User, InsertUser,
-  salons, Salon, InsertSalon,
-  services, Service, InsertService,
-  bookings, Booking, InsertBooking,
-  reviews, Review, InsertReview
-} from '@shared/schema';
+  User, InsertUser,
+  Salon, InsertSalon,
+  Service, InsertService,
+  Booking, InsertBooking,
+  Review, InsertReview
+} from '../shared/schema.js';
+
+// --- Drizzle ORM: Fix Table Type Errors ---
+// Ensure correct import and usage of Drizzle ORM tables
+// If using drizzle-orm v0.30+, tables must be imported and used directly from the schema object, and must have the [IsDrizzleTable] property
+// Example: import { salons } from '@shared/schema';
+// Make sure all db.select().from(...) and db.insert(...).values(...).returning() use the correct table objects from schema
+// If you see errors about [IsDrizzleTable], ensure all packages are on the same version and imports are consistent
+// Example fix:
+//   import { salons } from '@shared/schema';
+//   await db.select().from(salons)
+// If you are using a custom type or wrapper, ensure it is not interfering with Drizzle's table typing
 
 export class DatabaseStorage implements IStorage {
   // User operations

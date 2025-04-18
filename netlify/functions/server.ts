@@ -46,6 +46,7 @@ const limiter = rateLimit({
     );
   },
   message: {
+    status: 429,
     success: false,
     message: "Too many requests, please try again later"
   }
@@ -55,29 +56,26 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
-app.use((req, res, next) => {
-  // Set CORS headers
-  const origin = req.headers.origin;
-  const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? ['https://thebeauty.netlify.app'] 
-    : ['http://localhost:5173'];
+const isNetlify = process.env.NETLIFY === 'true';
+const allowedOrigins = isNetlify
+  ? ['https://thebeauty.netlify.app']
+  : [/^http:\/\/localhost(:\d+)?$/, /^http:\/\/127\.0\.0\.1(:\d+)?$/];
 
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With');
-    res.header('Access-Control-Expose-Headers', 'Set-Cookie');
-  }
-
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  next();
-});
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.some(o =>
+        typeof o === 'string' ? o === origin : o.test(origin)
+      )
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 
 app.use(express.json());
 
@@ -87,9 +85,9 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: isNetlify,
     httpOnly: true,
-    sameSite: 'none' as const, // Netlify/production cross-origin requires 'none'
+    sameSite: isNetlify ? 'none' as 'none' : 'lax' as 'lax',
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     partitioned: true // Add Partitioned attribute for Cloudflare
   },
@@ -103,40 +101,24 @@ const sessionConfig = {
 // Use the sessionConfig object for session middleware
 app.use(session(sessionConfig));
 
-// --- Ensure req.session is typed ---
-// (Handled by import of types/express-session)
-
 // Initialize passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Add middleware to ensure session cookie is set and handle CORS properly
+// Add middleware to log session info and headers for debugging
 app.use((req, res, next) => {
-  // Set CORS headers
-  const origin = req.headers.origin;
-  const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? ['https://thebeauty.netlify.app'] 
-    : ['http://localhost:5173'];
-
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With');
-    res.header('Access-Control-Expose-Headers', 'Set-Cookie');
-  }
-
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
+  console.log('--- REQUEST DEBUG ---');
+  console.log('Session ID:', req.sessionID);
+  console.log('Session user:', (req.session as any).user);
+  console.log('Request headers:', req.headers);
+  // Monkey patch res.json to log set-cookie
+  const originalJson = res.json;
+  res.json = function (...args: any[]) {
+    console.log('Response set-cookie:', res.getHeader('set-cookie'));
+    return originalJson.apply(this, args);
+  };
   next();
 });
-
-// Add a fallback for req.session typing in routes if needed
-// Example: (req.session as any).user = ...
 
 // Define user type
 interface User {
@@ -199,6 +181,8 @@ app.post('/api/auth/login', async (req, res) => {
       success: true,
       user: userWithoutPassword
     });
+    // Log Set-Cookie header for debugging
+    console.log('Set-Cookie header after login:', res.getHeader('Set-Cookie'));
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
@@ -600,7 +584,7 @@ app.get('/api/bookings/user/:userId', async (req, res) => {
     const { userId } = req.params;
     
     const bookings = await sql`
-      SELECT b.*, s.name as salon_name, sv.name as service_name
+      SELECT b.*, s.name_en as salon_name, sv.name_en as service_name
       FROM bookings b
       LEFT JOIN salons s ON b.salon_id = s.id
       LEFT JOIN services sv ON b.service_id = sv.id
@@ -901,20 +885,13 @@ app.get("/api/search/suggestions", async (req, res) => {
 });
 
 // Error handling middleware
-interface ErrorResponse {
-  success: boolean;
-  message: string;
-  error?: string;
-  code?: string;
-}
-
 app.use((err, req, res, next) => {
   // Log error to Sentry
   Sentry.captureException(err);
   
   console.error('Server error:', err);
   
-  const errorResponse: ErrorResponse = {
+  const errorResponse = {
     success: false,
     message: process.env.NODE_ENV === 'production' 
       ? "An unexpected error occurred" 
