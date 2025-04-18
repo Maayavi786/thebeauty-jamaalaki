@@ -40,4 +40,4 @@ router.post('/api/auth/reset-password', async (req, res) => {
     resetTokens.delete(token);
     res.json({ success: true });
 });
-exports.default = router;
+export default router;
