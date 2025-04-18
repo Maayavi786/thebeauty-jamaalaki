@@ -22,8 +22,8 @@
     "preinstall": "npx npm-force-resolutions"
   },
   "resolutions": {
-    "@types/express": "^4.17.21",
-    "@types/express-serve-static-core": "^4.19.6"
+    "@types/express": "4.17.21",
+    "@types/express-serve-static-core": "4.19.6"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
