@@ -4,13 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // Add backend endpoints for forgot/reset password
-const express_1 = __importDefault(require("express"));
+const express_1 = require("express");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const crypto_1 = __importDefault(require("crypto"));
 const serverless_1 = require("@neondatabase/serverless");
 const databaseUrl = process.env.DATABASE_URL || '';
 const sql = (0, serverless_1.neon)(databaseUrl);
-const router = express_1.default.Router();
+const router = (0, express_1.Router)();
 // In-memory store for tokens (replace with DB/Redis in production)
 const resetTokens = new Map();
 // Request reset

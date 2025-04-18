@@ -46,8 +46,6 @@ const connect_pg_simple_1 = __importDefault(require("connect-pg-simple"));
 const Sentry = __importStar(require("@sentry/node"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
-// TypeScript module augmentation for express-session
-require("../types/express-session");
 // Ensure DATABASE_URL is defined
 if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL environment variable is not set');

@@ -1,5 +1,5 @@
 // Add backend endpoints for forgot/reset password
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { neon } from '@neondatabase/serverless';
@@ -13,7 +13,7 @@ const router: Router = Router();
 const resetTokens: Map<string, { userId: number; expires: number }> = new Map();
 
 // Request reset
-router.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
+router.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ success: false, message: 'Email required' });
   const [user] = await sql`SELECT * FROM users WHERE email = ${email}`;
@@ -26,7 +26,7 @@ router.post('/api/auth/forgot-password', async (req: Request, res: Response) => 
 });
 
 // Reset password
-router.post('/api/auth/reset-password', async (req: Request, res: Response) => {
+router.post('/api/auth/reset-password', async (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) return res.status(400).json({ success: false, message: 'Token and password required' });
   const data = resetTokens.get(token);
