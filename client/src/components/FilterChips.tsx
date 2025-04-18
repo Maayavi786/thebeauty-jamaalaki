@@ -25,7 +25,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({
   const { isRtl } = useLanguage();
   
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className={`flex flex-wrap gap-2 ${isRtl ? 'flex-row-reverse justify-end' : 'flex-row justify-start'} items-center`}>
       {options.map((option) => {
         const isSelected = selectedFilters.includes(option.id);
         
@@ -36,13 +36,13 @@ export const FilterChips: React.FC<FilterChipsProps> = ({
             className={`
               cursor-pointer transition-all py-2 px-4
               ${isRtl ? 'font-tajawal' : ''}
-              ${option.color ? `bg-${option.color}-100 text-${option.color}-800 border-${option.color}-300` : ''}
+              ${option.color ? `bg-[${option.color}] text-black border-[${option.color}]` : ''}
               ${isSelected ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-primary/10'}
             `}
             onClick={() => toggleFilter(option.id)}
           >
             {isCheckbox && isSelected && (
-              <Check className="mr-1 h-3 w-3" />
+              <Check className={`h-3 w-3 ${isRtl ? 'ml-1' : 'mr-1'}`} />
             )}
             {option.label}
           </Badge>

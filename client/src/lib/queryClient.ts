@@ -44,8 +44,8 @@ export const apiRequest = async (method: string, endpoint: string, data?: any) =
     if (error instanceof Error) {
       const apiError = error as ApiError;
       if (apiError.status === 401) {
-        // Handle unauthorized error
-        window.location.href = '/login';
+        // Remove automatic redirect to login. Let UI handle booking errors.
+        // window.location.href = '/login';
       }
       throw apiError;
     }

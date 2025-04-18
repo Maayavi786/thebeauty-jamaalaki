@@ -51,22 +51,22 @@ const Header = () => {
           {/* Navigation for Desktop */}
           <nav className="hidden md:flex space-x-6 rtl:space-x-reverse">
             <Link href="/">
-              <span className={`font-medium hover:text-primary transition-colors cursor-pointer ${location === "/" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}>
+              <span className={`text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors cursor-pointer ${location === "/" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}> 
                 {isLtr ? "Home" : "الرئيسية"}
               </span>
             </Link>
             <Link href="/salons">
-              <span className={`font-medium hover:text-primary transition-colors cursor-pointer ${location === "/salons" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}>
+              <span className={`text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors cursor-pointer ${location === "/salons" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}> 
                 {isLtr ? "Salons" : "الصالونات"}
               </span>
             </Link>
             <Link href="/services">
-              <span className={`font-medium hover:text-primary transition-colors cursor-pointer ${location === "/services" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}>
+              <span className={`text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors cursor-pointer ${location === "/services" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}> 
                 {isLtr ? "Services" : "الخدمات"}
               </span>
             </Link>
             <Link href="/about">
-              <span className={`font-medium hover:text-primary transition-colors cursor-pointer ${location === "/about" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}>
+              <span className={`text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors cursor-pointer ${location === "/about" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}> 
                 {isLtr ? "About" : "من نحن"}
               </span>
             </Link>
@@ -80,7 +80,7 @@ const Header = () => {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="p-2 rounded-full hover:bg-primary hover:bg-opacity-10 transition-colors">
+                  <Button variant="ghost" size="icon" className="text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors">
                     <User className="h-5 w-5 text-primary" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -98,9 +98,9 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <Link href="/login">
-                <div className={`text-primary p-2 rounded-full hover:bg-primary hover:bg-opacity-10 transition-colors cursor-pointer ${isRtl ? 'font-tajawal' : ''}`}>
-                  <User className="h-5 w-5" />
-                </div>
+                <Button variant="ghost" size="icon" className="text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors">
+                  <User className="h-5 w-5 text-primary" />
+                </Button>
               </Link>
             )}
 
@@ -108,7 +108,7 @@ const Header = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden text-primary"
+              className="text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors lg:hidden"
               onClick={toggleMenu}
             >
               <Menu className="h-6 w-6" />
@@ -125,7 +125,7 @@ const Header = () => {
               <h3 className={`font-bold text-xl text-primary ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
                 {isLtr ? "The Beauty" : "جمالكِ"}
               </h3>
-              <Button variant="ghost" size="icon" onClick={closeMenu}>
+              <Button variant="ghost" size="icon" className="text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors" onClick={closeMenu}>
                 <X className="h-6 w-6" />
               </Button>
             </div>

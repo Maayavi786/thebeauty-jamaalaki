@@ -24,7 +24,7 @@ const FeaturedFilters = () => {
   return (
     <section className="py-10 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className={`flex flex-wrap justify-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
           {filters.map(filter => (
             <div 
               key={filter.id}

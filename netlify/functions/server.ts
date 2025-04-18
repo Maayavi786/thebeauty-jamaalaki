@@ -89,7 +89,7 @@ const sessionConfig = {
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'lax' as const,
+    sameSite: 'none' as const, // Netlify/production cross-origin requires 'none'
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     partitioned: true // Add Partitioned attribute for Cloudflare
   },
@@ -102,6 +102,9 @@ const sessionConfig = {
 
 // Use the sessionConfig object for session middleware
 app.use(session(sessionConfig));
+
+// --- Ensure req.session is typed ---
+// (Handled by import of types/express-session)
 
 // Initialize passport
 app.use(passport.initialize());
@@ -131,6 +134,9 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 
   next();
 });
+
+// Add a fallback for req.session typing in routes if needed
+// Example: (req.session as any).user = ...
 
 // Define user type
 interface User {

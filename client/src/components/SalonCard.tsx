@@ -76,7 +76,7 @@ const SalonCard = ({ salon }: SalonCardProps) => {
           </div>
           
           <Button variant="outline" className="w-full">
-            {t("viewDetails")}
+            {isLtr ? "View Details" : "عرض التفاصيل"}
           </Button>
         </div>
       </div>

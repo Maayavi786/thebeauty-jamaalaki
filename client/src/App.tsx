@@ -48,7 +48,19 @@ function App() {
   }, [language, dir]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div
+      className="flex flex-col min-h-screen bg-[#FAF6F2] dark:bg-[#18181A]"
+      style={{
+        backgroundImage: `
+          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+          url('/assets/luxury-motif-floral.svg'),
+          linear-gradient(180deg, #201A23 0%, #18181A 100%)
+        `,
+        backgroundBlendMode: 'normal',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+    >
       <Helmet
         htmlAttributes={{ lang: language, dir: dir }}
         titleTemplate="%s | Jamaalaki"

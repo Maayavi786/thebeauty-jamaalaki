@@ -174,40 +174,8 @@ const BookingPage = () => {
       return;
     }
 
-    // Verify session is still valid
-    try {
-      const sessionResponse = await fetch(`${API_BASE_URL}/auth/session`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        }
-      });
-      
-      const sessionData = await sessionResponse.json();
-      if (!sessionData.success) {
-        toast({
-          title: isLtr ? "Session Expired" : "انتهت الجلسة",
-          description: isLtr 
-            ? "Your session has expired. Please log in again." 
-            : "انتهت صلاحية جلسة العمل. يرجى تسجيل الدخول مرة أخرى.",
-          variant: "destructive",
-        });
-        navigate('/login');
-        return;
-      }
-    } catch (error) {
-      console.error('Session check failed:', error);
-      toast({
-        title: isLtr ? "Session Error" : "خطأ في الجلسة",
-        description: isLtr 
-          ? "Failed to verify your session. Please try again." 
-          : "فشل التحقق من جلسة العمل. يرجى المحاولة مرة أخرى.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Removed session expired check and popup completely for smoother UX
+    // (If user is not authenticated, the booking will fail server-side and handled by booking error toast)
     
     // Create datetime from selected date and time
     const [hours, minutes] = selectedTime.split(':').map(Number);
@@ -299,15 +267,9 @@ const BookingPage = () => {
               <div className="mb-2"><span className="font-semibold">{isLtr ? "Time:" : "الوقت:"}</span> {selectedTime}</div>
               <div className="mb-2"><span className="font-semibold">{isLtr ? "Total:" : "الإجمالي:"}</span> {formatPrice(service?.price)}</div>
             </div>
-            <button
-              className="mt-4 px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition"
-              onClick={() => {
-                setShowConfirmation(false);
-                navigate("/");
-              }}
-            >
-              {isLtr ? "Return Home" : "العودة للرئيسية"}
-            </button>
+            <Button className="w-full mt-2" onClick={() => setShowConfirmation(false)}>
+              {isLtr ? "Close" : "إغلاق"}
+            </Button>
           </div>
         </div>
       )}

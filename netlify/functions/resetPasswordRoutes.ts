@@ -1,5 +1,5 @@
 // Add backend endpoints for forgot/reset password
-import express from 'express';
+import { Router, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { neon } from '@neondatabase/serverless';
@@ -7,13 +7,13 @@ import { neon } from '@neondatabase/serverless';
 const databaseUrl = process.env.DATABASE_URL || '';
 const sql = neon(databaseUrl);
 
-const router = express.Router();
+const router: Router = Router();
 
 // In-memory store for tokens (replace with DB/Redis in production)
-const resetTokens = new Map();
+const resetTokens: Map<string, { userId: number; expires: number }> = new Map();
 
 // Request reset
-router.post('/api/auth/forgot-password', async (req, res) => {
+router.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ success: false, message: 'Email required' });
   const [user] = await sql`SELECT * FROM users WHERE email = ${email}`;
@@ -26,7 +26,7 @@ router.post('/api/auth/forgot-password', async (req, res) => {
 });
 
 // Reset password
-router.post('/api/auth/reset-password', async (req, res) => {
+router.post('/api/auth/reset-password', async (req: Request, res: Response) => {
   const { token, password } = req.body;
   if (!token || !password) return res.status(400).json({ success: false, message: 'Token and password required' });
   const data = resetTokens.get(token);
