@@ -55,7 +55,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
-app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((req, res, next) => {
   // Set CORS headers
   const origin = req.headers.origin;
   const allowedOrigins = process.env.NODE_ENV === 'production' 
@@ -111,7 +111,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Add middleware to ensure session cookie is set and handle CORS properly
-app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((req, res, next) => {
   // Set CORS headers
   const origin = req.headers.origin;
   const allowedOrigins = process.env.NODE_ENV === 'production' 
@@ -153,7 +153,7 @@ interface User {
 const sql = neon(process.env.DATABASE_URL);
 
 // Login route
-app.post('/api/auth/login', async (req: express.Request, res: express.Response) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -210,7 +210,7 @@ app.post('/api/auth/login', async (req: express.Request, res: express.Response) 
 });
 
 // Register route
-app.post('/api/auth/register', async (req: express.Request, res: express.Response) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, email, password, phone } = req.body;
     if (!username || !email || !password) {
@@ -244,7 +244,7 @@ app.post('/api/auth/register', async (req: express.Request, res: express.Respons
 });
 
 // Session check route
-app.get('/api/auth/session', async (req: express.Request, res: express.Response) => {
+app.get('/api/auth/session', async (req, res) => {
   try {
     if (!(req.session as any).user) {
       res.json({
@@ -287,7 +287,7 @@ app.get('/api/auth/session', async (req: express.Request, res: express.Response)
 });
 
 // Logout route
-app.post('/api/auth/logout', async (req: express.Request, res: express.Response) => {
+app.post('/api/auth/logout', async (req, res) => {
   try {
     (req.session as any).destroy(() => {});
     res.json({
@@ -308,7 +308,7 @@ import resetPasswordRoutes from './resetPasswordRoutes';
 app.use(resetPasswordRoutes);
 
 // Salon routes
-app.get("/api/salons", async (req: express.Request, res: express.Response) => {
+app.get("/api/salons", async (req, res) => {
   try {
     const salons = await sql`
       SELECT
@@ -349,7 +349,7 @@ app.get("/api/salons", async (req: express.Request, res: express.Response) => {
   }
 });
 
-app.get("/api/salons/:id", async (req: express.Request, res: express.Response) => {
+app.get("/api/salons/:id", async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -408,7 +408,7 @@ app.get("/api/salons/:id", async (req: express.Request, res: express.Response) =
 });
 
 // Service routes
-app.get("/api/services", async (req: express.Request, res: express.Response) => {
+app.get("/api/services", async (req, res) => {
   try {
     const services = await sql`
       SELECT 
@@ -439,7 +439,7 @@ app.get("/api/services", async (req: express.Request, res: express.Response) => 
   }
 });
 
-app.get('/api/services/:id', async (req: express.Request, res: express.Response) => {
+app.get('/api/services/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [service] = await sql`SELECT * FROM services WHERE id = ${id}`;
@@ -458,7 +458,7 @@ app.get('/api/services/:id', async (req: express.Request, res: express.Response)
 });
 
 // Seed endpoint: Add a test service to a salon
-app.post('/api/services', async (req: express.Request, res: express.Response) => {
+app.post('/api/services', async (req, res) => {
   try {
     const { salonId, nameEn, nameAr, descriptionEn, descriptionAr, duration, price, category, imageUrl } = req.body;
     if (!salonId || !nameEn || !nameAr || !descriptionEn || !descriptionAr || !duration || !price || !category) {
@@ -477,7 +477,7 @@ app.post('/api/services', async (req: express.Request, res: express.Response) =>
 });
 
 // Booking routes
-app.post("/api/bookings", async (req: express.Request, res: express.Response) => {
+app.post("/api/bookings", async (req, res) => {
   try {
     if (!(req.session as any).user) {
       res.status(401).json({ 
@@ -520,7 +520,7 @@ app.post("/api/bookings", async (req: express.Request, res: express.Response) =>
 });
 
 // Services by salon endpoint
-app.get('/api/services/salon/:salonId', async (req: express.Request, res: express.Response) => {
+app.get('/api/services/salon/:salonId', async (req, res) => {
   try {
     const { salonId } = req.params;
     const services = await sql`SELECT * FROM services WHERE salon_id = ${salonId}`;
@@ -536,7 +536,7 @@ app.get('/api/services/salon/:salonId', async (req: express.Request, res: expres
 });
 
 // Reviews endpoint
-app.get('/api/reviews', async (req: express.Request, res: express.Response) => {
+app.get('/api/reviews', async (req, res) => {
   try {
     const { salonId } = req.query;
     
@@ -573,7 +573,7 @@ app.get('/api/reviews', async (req: express.Request, res: express.Response) => {
 });
 
 // Create review endpoint
-app.post('/api/reviews', async (req: express.Request, res: express.Response) => {
+app.post('/api/reviews', async (req, res) => {
   try {
     const { salonId, userId, rating, comment } = req.body;
     
@@ -595,7 +595,7 @@ app.post('/api/reviews', async (req: express.Request, res: express.Response) => 
 });
 
 // Add bookings endpoint
-app.get('/api/bookings/user/:userId', async (req: express.Request, res: express.Response) => {
+app.get('/api/bookings/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -623,7 +623,7 @@ app.get('/api/bookings/user/:userId', async (req: express.Request, res: express.
 });
 
 // Environment test endpoint
-app.get('/api/env-test', (req: express.Request, res: express.Response) => {
+app.get('/api/env-test', (req, res) => {
   res.json({
     status: 'success',
     env: {
@@ -639,7 +639,7 @@ app.get('/api/env-test', (req: express.Request, res: express.Response) => {
 });
 
 // Comprehensive test endpoint
-app.get('/api/test', async (req: express.Request, res: express.Response) => {
+app.get('/api/test', async (req, res) => {
   try {
     // Test database connection
     const dbTest = await sql`SELECT 1`;
@@ -707,7 +707,7 @@ app.get('/api/test', async (req: express.Request, res: express.Response) => {
 });
 
 // Test database connection
-app.get('/api/test-db', async (req: express.Request, res: express.Response) => {
+app.get('/api/test-db', async (req, res) => {
   try {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not set');
@@ -730,7 +730,7 @@ app.get('/api/test-db', async (req: express.Request, res: express.Response) => {
 });
 
 // Search endpoint
-app.get("/api/search", async (req: express.Request, res: express.Response) => {
+app.get("/api/search", async (req, res) => {
   try {
     const {
       q: searchTerm,
@@ -847,7 +847,7 @@ app.get("/api/search", async (req: express.Request, res: express.Response) => {
 });
 
 // Search suggestions endpoint
-app.get("/api/search/suggestions", async (req: express.Request, res: express.Response) => {
+app.get("/api/search/suggestions", async (req, res) => {
   try {
     const { q: searchTerm } = req.query;
     
@@ -908,7 +908,7 @@ interface ErrorResponse {
   code?: string;
 }
 
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err, req, res, next) => {
   // Log error to Sentry
   Sentry.captureException(err);
   
