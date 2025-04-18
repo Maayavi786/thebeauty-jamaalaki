@@ -134,7 +134,7 @@ const useSalonData = (salonId: number): SalonData => {
   } = useQuery({
     queryKey: ['salon', salonId],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/salons/${salonId}`);
+      const response = await apiRequest('GET', `/api/salons/${salonId}`);
       const data = await response.json();
       return data.success ? data.data : null;
     },

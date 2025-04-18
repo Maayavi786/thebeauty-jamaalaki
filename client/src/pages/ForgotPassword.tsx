@@ -28,15 +28,15 @@ export default function ForgotPassword() {
     }
     setLoading(true);
     try {
-      const response = await apiRequest("POST", "/auth/forgot-password", { email });
+      const response = await apiRequest("POST", "/api/auth/forgot-password", { email });
       const data = await response.json();
       if (data.success) {
         setSent(true);
         toast({
-          title: isLtr ? "Reset Email Sent" : "تم إرسال رابط إعادة التعيين",
+          title: isLtr ? "Email Sent" : "تم إرسال البريد",
           description: isLtr
-            ? "Check your email for a password reset link."
-            : "تحقق من بريدك الإلكتروني لرابط إعادة تعيين كلمة المرور.",
+            ? "A password reset link has been sent to your email."
+            : "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.",
         });
       } else {
         toast({

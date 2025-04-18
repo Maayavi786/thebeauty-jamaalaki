@@ -63,10 +63,13 @@ const Salons = () => {
   }, [location]);
   
   // Fetch salons data
-  const { data: salonsResponse, isLoading, error } = useQuery<{ success: boolean; data: Salon[] }>({
-    queryKey: ['/salons'],
+  const { data: salonsResponse = { success: false, data: [] }, isLoading, error } = useQuery<{
+    success: boolean; 
+    data: Salon[] 
+  }>({
+    queryKey: ['/api/salons'],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/salons`, {
+      const response = await fetch(`${API_BASE_URL}/api/salons`, {
         credentials: 'include',
       });
       if (!response.ok) {

@@ -13,7 +13,7 @@ const FeaturedSalons = () => {
   
   // Fetch all salons
   const { data: salons, isLoading } = useQuery<Salon[]>({
-    queryKey: ['/salons'],
+    queryKey: ['/api/salons'],
   });
   
   // State for featured salons

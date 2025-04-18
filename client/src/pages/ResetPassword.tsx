@@ -44,12 +44,12 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      const response = await apiRequest("POST", "/auth/reset-password", { token, password });
+      const response = await apiRequest("POST", "/api/auth/reset-password", { password, token });
       const data = await response.json();
       if (data.success) {
         setSuccess(true);
         toast({
-          title: isLtr ? "Password Reset" : "تمت إعادة تعيين كلمة المرور",
+          title: isLtr ? "Password Reset" : "تمت إعادة التعيين",
           description: isLtr
             ? "Your password has been updated."
             : "تم تحديث كلمة مرورك.",

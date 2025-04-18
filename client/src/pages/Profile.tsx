@@ -54,7 +54,7 @@ const Profile = () => {
   
   // Fetch user bookings
   const { data: bookings, isLoading: isBookingsLoading } = useQuery<Booking[]>({
-    queryKey: [`/bookings/user/${user?.id}`],
+    queryKey: [`/api/bookings/user/${user?.id}`],
     enabled: !!user,
   });
   
@@ -97,7 +97,7 @@ const Profile = () => {
       for (const salonId of salonIds) {
         try {
           if (!(salonId in salonsMap)) {
-            const response = await fetch(`${API_BASE_URL}/salons/${salonId}`);
+            const response = await fetch(`${API_BASE_URL}/api/salons/${salonId}`);
             if (response.ok) {
               const salon = await response.json();
               newSalonsMap[salonId] = salon;
@@ -118,7 +118,7 @@ const Profile = () => {
       for (const serviceId of serviceIds) {
         try {
           if (!(serviceId in servicesMap)) {
-            const response = await fetch(`${API_BASE_URL}/services/${serviceId}`);
+            const response = await fetch(`${API_BASE_URL}/api/services/${serviceId}`);
             if (response.ok) {
               const service = await response.json();
               newServicesMap[serviceId] = service;
@@ -139,8 +139,8 @@ const Profile = () => {
   // Handler for cancelling a booking
   const handleCancelBooking = async (bookingId: number) => {
     try {
-      await apiRequest('PATCH', `${API_BASE_URL}/bookings/${bookingId}/status`, { status: 'cancelled' });
-      queryClient.invalidateQueries({ queryKey: [`/bookings/user/${user?.id}`] });
+      await apiRequest('PATCH', `${API_BASE_URL}/api/bookings/${bookingId}/status`, { status: 'cancelled' });
+      queryClient.invalidateQueries({ queryKey: [`/api/bookings/user/${user?.id}`] });
       
       toast({
         title: isLtr ? "Booking Cancelled" : "تم إلغاء الحجز",

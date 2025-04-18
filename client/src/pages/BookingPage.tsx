@@ -109,7 +109,7 @@ const BookingPage = () => {
   // Create booking mutation
   const createBooking = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/bookings', data);
+      const response = await apiRequest('POST', '/api/bookings', data);
       return response.json();
     },
     onSuccess: () => {
