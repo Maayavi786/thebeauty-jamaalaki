@@ -10,6 +10,6 @@
     "moduleResolution": "node",
     "resolveJsonModule": true
   },
-  "include": ["functions/**/*.ts"],
+  "include": ["functions/**/*.ts", "functions/server.ts"],
   "exclude": ["node_modules"]
 }

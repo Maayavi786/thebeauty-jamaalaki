@@ -18,7 +18,12 @@
     "db:push": "drizzle-kit push",
     "validate-env": "tsx validate_env.ts",
     "migrate": "tsx server/scripts/run_migrations.ts",
-    "seed": "tsx server/scripts/seed_data.ts"
+    "seed": "tsx server/scripts/seed_data.ts",
+    "preinstall": "npx npm-force-resolutions"
+  },
+  "resolutions": {
+    "@types/express": "^4.17.21",
+    "@types/express-serve-static-core": "^4.19.6"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -128,6 +133,7 @@
     "esbuild": "^0.25.2",
     "glob": "^11.0.1",
     "netlify-cli": "^17.17.0",
+    "npm-force-resolutions": "^0.0.10",
     "postcss": "^8.4.47",
     "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.14",

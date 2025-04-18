@@ -7,7 +7,15 @@ import connectPgSimple from 'connect-pg-simple';
 import * as Sentry from '@sentry/node';
 import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcrypt';
+// @ts-ignore
 import resetPasswordRoutes from './resetPasswordRoutes';
+
+// Extend Session type for user property
+declare module 'express-session' {
+  interface SessionData {
+    user?: any;
+  }
+}
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set');
@@ -33,12 +41,10 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   keyGenerator: (req) => {
-    return (
-      req.headers['x-nf-client-connection-ip'] ||
+    const ip = req.headers['x-nf-client-connection-ip'] ||
       (Array.isArray(req.headers['x-forwarded-for']) ? req.headers['x-forwarded-for'][0] : req.headers['x-forwarded-for']) ||
-      req.ip ||
-      'localhost-dev'
-    );
+      req.ip || 'localhost-dev';
+    return typeof ip === 'string' ? ip : Array.isArray(ip) ? ip[0] : 'localhost-dev';
   },
   message: {
     status: 429,
@@ -70,7 +76,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // Session
-const sessionConfig = {
+const sessionConfig: session.SessionOptions = {
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
@@ -481,7 +487,7 @@ app.get('/api/search/suggestions', async (req, res) => {
 });
 
 // --- Error Handling ---
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, req: any, res: any, next: any) => {
   Sentry.captureException(err);
   console.error('Server error:', err);
   const errorResponse: any = {
