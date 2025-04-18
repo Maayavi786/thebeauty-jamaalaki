@@ -9,6 +9,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["./**/*.ts"],
+  "include": [
+    "./**/*.ts",
+    "../functions_nondeploy/types",
+    "functions"
+  ],
   "exclude": ["dist"]
 }
