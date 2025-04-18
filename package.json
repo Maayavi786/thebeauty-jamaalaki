@@ -137,7 +137,7 @@
     "drizzle-kit": "^0.19.1",
     "esbuild": "^0.25.2",
     "glob": "^11.0.1",
-    "netlify-cli": "^17.17.0",
+    "netlify-cli": "^16.1.0",
     "npm-force-resolutions": "^0.0.10",
     "postcss": "^8.4.47",
     "rimraf": "^6.0.1",
