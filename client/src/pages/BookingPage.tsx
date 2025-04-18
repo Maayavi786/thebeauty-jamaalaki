@@ -25,7 +25,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Salon, Service } from "@shared/schema";
-import { API_BASE_URL } from '../lib/config';
+import { config } from "@/lib/config";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { BookingSkeleton } from "@/components/Skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -55,11 +55,11 @@ const BookingPage = () => {
   
   // Use default query client for salons and services
   const { data: salon, isLoading: isSalonLoading } = useQuery({
-    queryKey: [`/api/salons/${params?.salonId}`],
+    queryKey: [config.api.endpoints.salons + `/${params?.salonId}`],
   });
 
   const { data: service, isLoading: isServiceLoading } = useQuery({
-    queryKey: [`/api/services/${params?.serviceId}`],
+    queryKey: [config.api.endpoints.services + `/${params?.serviceId}`],
   });
   
   // Create booking form schema
@@ -78,7 +78,7 @@ const BookingPage = () => {
   // Create booking mutation
   const createBooking = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/bookings', data);
+      const response = await apiRequest('POST', config.api.endpoints.bookings, data);
       return response.json();
     },
     onSuccess: () => {

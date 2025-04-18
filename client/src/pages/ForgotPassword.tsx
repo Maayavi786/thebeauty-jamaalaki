@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { config } from "@/lib/config";
 
 export default function ForgotPassword() {
   const { isLtr } = useLanguage();
@@ -28,7 +29,7 @@ export default function ForgotPassword() {
     }
     setLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/auth/forgot-password", { email });
+      const response = await apiRequest("POST", config.api.endpoints.auth + "/forgot-password", { email });
       const data = await response.json();
       if (data.success) {
         setSent(true);

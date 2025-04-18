@@ -90,7 +90,7 @@ const sessionConfig: session.SessionOptions = {
   store: new (connectPgSimple(session))({
     conString: process.env.DATABASE_URL,
     tableName: 'user_sessions',
-    createTableIfMissing: true,
+    createTableIfMissing: false, // Prevents file system error on Netlify
   }),
 };
 app.use(session(sessionConfig));

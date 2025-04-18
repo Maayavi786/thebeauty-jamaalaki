@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { getIslamicPatternSvg } from '@/lib/utils';
+import { config } from '@/lib/config';
 
 interface ServicesResponse {
   success: boolean;
@@ -24,7 +25,7 @@ const Services = () => {
 
   // Use default query client for services
   const { data: servicesResponse = { success: false, data: [] }, isLoading, error } = useQuery({
-    queryKey: ['/api/services'],
+    queryKey: [config.api.endpoints.services],
   });
 
   // Filter options

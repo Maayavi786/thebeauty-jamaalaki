@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { API_BASE_URL } from "@/lib/config";
+import { config } from "@/lib/config";
 
 const Profile = () => {
   const { t } = useTranslation(["profile", "common"]);
@@ -54,7 +54,7 @@ const Profile = () => {
   
   // Use default query client for user bookings
   const { data: bookings, isLoading: isBookingsLoading } = useQuery({
-    queryKey: [`/api/bookings/user/${user?.id}`],
+    queryKey: [`${config.api.endpoints.bookings}/user/${user?.id}`],
     enabled: !!user,
   });
   
@@ -98,7 +98,7 @@ const Profile = () => {
         try {
           if (!(salonId in salonsMap)) {
             // Use default query client for fetching salon details
-            const response = await apiRequest('GET', `/api/salons/${salonId}`);
+            const response = await apiRequest('GET', `${config.api.endpoints.salons}/${salonId}`);
             if (response.ok) {
               const salon = await response.json();
               newSalonsMap[salonId] = salon;
@@ -120,7 +120,7 @@ const Profile = () => {
         try {
           if (!(serviceId in servicesMap)) {
             // Use default query client for fetching service details
-            const response = await apiRequest('GET', `/api/services/${serviceId}`);
+            const response = await apiRequest('GET', `${config.api.endpoints.services}/${serviceId}`);
             if (response.ok) {
               const service = await response.json();
               newServicesMap[serviceId] = service;
@@ -141,8 +141,8 @@ const Profile = () => {
   // Handler for cancelling a booking
   const handleCancelBooking = async (bookingId: number) => {
     try {
-      await apiRequest('PATCH', `/api/bookings/${bookingId}/status`, { status: 'cancelled' });
-      queryClient.invalidateQueries({ queryKey: [`/api/bookings/user/${user?.id}`] });
+      await apiRequest('PATCH', `${config.api.endpoints.bookings}/${bookingId}/status`, { status: 'cancelled' });
+      queryClient.invalidateQueries({ queryKey: [`${config.api.endpoints.bookings}/user/${user?.id}`] });
       
       toast({
         title: isLtr ? "Booking Cancelled" : "تم إلغاء الحجز",

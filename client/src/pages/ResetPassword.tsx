@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { config } from "@/lib/config";
 
 export default function ResetPassword() {
   const { isLtr } = useLanguage();
@@ -44,7 +45,7 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/auth/reset-password", { password, token });
+      const response = await apiRequest("POST", config.api.endpoints.auth + "/reset-password", { password, token });
       const data = await response.json();
       if (data.success) {
         setSuccess(true);

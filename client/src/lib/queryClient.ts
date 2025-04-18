@@ -23,8 +23,15 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+function normalizeEndpoint(endpoint: string): string {
+  // Remove any leading /api or double /api
+  return endpoint.replace(/^\/+api(\/|$)/, '/');
+}
+
 export const apiRequest = async (method: string, endpoint: string, data?: any) => {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const normalizedEndpoint = normalizeEndpoint(endpoint);
+  const url = `${API_BASE_URL}${normalizedEndpoint}`;
+  console.log('apiRequest URL:', url, 'endpoint:', endpoint, 'normalizedEndpoint:', normalizedEndpoint, 'API_BASE_URL:', API_BASE_URL);
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache'

@@ -25,6 +25,7 @@ import {
 import ServiceCard from "@/components/ServiceCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
+import { config } from "@/lib/config";
 
 // TypeScript Interfaces
 interface InfoItemProps {
@@ -131,7 +132,7 @@ const useSalonData = (salonId: number): SalonData => {
     isLoading: isSalonLoading, 
     error: salonError 
   } = useQuery({
-    queryKey: [`/api/salons/${salonId}`],
+    queryKey: [`${config.api.endpoints.salons}/${salonId}`],
     retry: false
   });
 

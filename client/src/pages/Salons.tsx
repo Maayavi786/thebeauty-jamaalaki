@@ -13,8 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { getIslamicPatternSvg } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { API_BASE_URL } from "@/lib/config";
+import { config } from "@/lib/config";
 import { Input } from "@/components/ui/input";
+import { apiRequest } from "@/lib/api"; // Import apiRequest
 
 const Salons = () => {
   const { t } = useTranslation(["common", "home"]);
@@ -64,8 +65,12 @@ const Salons = () => {
   
   // Use default query client for salons
   const { data: salonsResponse = { success: false, data: [] }, isLoading, error } = useQuery({
-    queryKey: ['/api/salons'],
-    // Remove custom queryFn to use default from queryClient.ts
+    queryKey: [config.api.endpoints.salons],
+    queryFn: async () => {
+      // Always use apiRequest to ensure correct URL and credentials
+      const response = await apiRequest('GET', config.api.endpoints.salons);
+      return response.json();
+    },
   });
   
   // Handle errors

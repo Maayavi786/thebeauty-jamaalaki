@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { Salon } from "@shared/schema";
 import SalonCard from "@/components/SalonCard";
 import { Loader2 } from "lucide-react";
+import { config } from "@/lib/config"; // Assuming config is imported from here
 
 const FeaturedSalons = () => {
   const { t } = useTranslation("common");
@@ -13,7 +14,7 @@ const FeaturedSalons = () => {
   
   // Use default query client for featured salons
   const { data: salons, isLoading } = useQuery({
-    queryKey: ['/api/salons'],
+    queryKey: [config.api.endpoints.salons],
   });
   
   // State for featured salons
