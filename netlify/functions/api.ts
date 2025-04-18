@@ -81,9 +81,9 @@ const sessionConfig: session.SessionOptions = {
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production' ? true : false,
     httpOnly: true,
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000,
     partitioned: true,
   },
@@ -275,12 +275,19 @@ app.post('/api/services', async (req, res) => {
 // --- Booking Routes ---
 app.post('/api/bookings', async (req, res) => {
   try {
+    // Debug: log session and user
+    console.log('Booking request session:', req.session);
     if (!req.session.user) {
       res.status(401).json({ success: false, message: 'Please login to make a booking' });
       return;
     }
     const { salonId, serviceId, datetime, notes } = req.body;
+    // Defensive: check for user id
     const userId = req.session.user.id;
+    if (!userId) {
+      res.status(400).json({ success: false, message: 'User ID missing from session' });
+      return;
+    }
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL environment variable is not set');
     }
@@ -296,7 +303,7 @@ app.post('/api/bookings', async (req, res) => {
 app.get('/api/bookings/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const bookings = await sql`SELECT b.*, s.name as salon_name, sv.name as service_name FROM bookings b LEFT JOIN salons s ON b.salon_id = s.id LEFT JOIN services sv ON b.service_id = sv.id WHERE b.user_id = ${userId} ORDER BY b.created_at DESC`;
+    const bookings = await sql`SELECT b.*, s.name_en as salon_name, sv.name_en as service_name FROM bookings b LEFT JOIN salons s ON b.salon_id = s.id LEFT JOIN services sv ON b.service_id = sv.id WHERE b.user_id = ${userId} ORDER BY b.created_at DESC`;
     res.json({ success: true, bookings });
   } catch (error) {
     console.error('Error fetching user bookings:', error);

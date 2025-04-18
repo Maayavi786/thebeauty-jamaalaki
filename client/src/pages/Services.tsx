@@ -22,8 +22,8 @@ const Services = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
 
-  // Fetch all services
-  const { data: servicesResponse = { success: false, data: [] }, isLoading, error } = useQuery<ServicesResponse>({
+  // Use default query client for services
+  const { data: servicesResponse = { success: false, data: [] }, isLoading, error } = useQuery({
     queryKey: ['/api/services'],
   });
 

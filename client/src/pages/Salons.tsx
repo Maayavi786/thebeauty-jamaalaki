@@ -62,21 +62,10 @@ const Salons = () => {
     setSelectedFilters(booleanFilters);
   }, [location]);
   
-  // Fetch salons data
-  const { data: salonsResponse = { success: false, data: [] }, isLoading, error } = useQuery<{
-    success: boolean; 
-    data: Salon[] 
-  }>({
+  // Use default query client for salons
+  const { data: salonsResponse = { success: false, data: [] }, isLoading, error } = useQuery({
     queryKey: ['/api/salons'],
-    queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/salons`, {
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch salons: ${response.statusText}`);
-      }
-      return response.json();
-    }
+    // Remove custom queryFn to use default from queryClient.ts
   });
   
   // Handle errors

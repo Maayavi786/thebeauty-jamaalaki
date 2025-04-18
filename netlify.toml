@@ -1,11 +1,14 @@
 [build]
-  command = "cd client && npm install && VITE_API_BASE_URL=/api npm run build && cd ../netlify && npm install && npm run build"
+  command = "cd client && npm install && npm run build && cd ../netlify && npm install && npm run build"
   publish = "client/dist"
 
 [build.environment]
   NODE_VERSION = "20"
   NODE_ENV = "production"
-  VITE_API_BASE_URL = "/api" # Use relative API calls for Netlify Functions
+  # For local development, use the .env.development file instead of overriding VITE_API_BASE_URL here.
+  # VITE_API_BASE_URL = "/api"
+  # Set this to the local API URL for dev, or leave unset to use .env.development
+  # VITE_API_BASE_URL = "http://localhost:8888"
   SESSION_SECRET = "" # Set this in Netlify UI, never commit secrets
   DATABASE_URL = "" # Set this in Netlify UI, never commit secrets
 
@@ -21,17 +24,6 @@
   to = "/.netlify/functions/api/:splat"
   status = 200
   force = true
-
-[[redirects]]
-  from = "/api/bookings/*"
-  to = "/.netlify/functions/server/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
 
 [[redirects]]
   from = "/*"

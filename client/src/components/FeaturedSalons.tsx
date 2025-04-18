@@ -11,8 +11,8 @@ const FeaturedSalons = () => {
   const { t } = useTranslation("common");
   const { isLtr, isRtl } = useLanguage();
   
-  // Fetch all salons
-  const { data: salons, isLoading } = useQuery<Salon[]>({
+  // Use default query client for featured salons
+  const { data: salons, isLoading } = useQuery({
     queryKey: ['/api/salons'],
   });
   

@@ -52,8 +52,8 @@ const Profile = () => {
   const [salonsMap, setSalonsMap] = useState<Record<number, Salon>>({});
   const [servicesMap, setServicesMap] = useState<Record<number, Service>>({});
   
-  // Fetch user bookings
-  const { data: bookings, isLoading: isBookingsLoading } = useQuery<Booking[]>({
+  // Use default query client for user bookings
+  const { data: bookings, isLoading: isBookingsLoading } = useQuery({
     queryKey: [`/api/bookings/user/${user?.id}`],
     enabled: !!user,
   });
@@ -93,11 +93,12 @@ const Profile = () => {
     const fetchSalonDetails = async () => {
       const salonIds = [...new Set(bookings.map(booking => booking.salonId))];
       const newSalonsMap: Record<number, Salon> = {};
-      
+
       for (const salonId of salonIds) {
         try {
           if (!(salonId in salonsMap)) {
-            const response = await fetch(`${API_BASE_URL}/api/salons/${salonId}`);
+            // Use default query client for fetching salon details
+            const response = await apiRequest('GET', `/api/salons/${salonId}`);
             if (response.ok) {
               const salon = await response.json();
               newSalonsMap[salonId] = salon;
@@ -107,18 +108,19 @@ const Profile = () => {
           console.error(`Error fetching salon ${salonId}:`, error);
         }
       }
-      
+
       setSalonsMap(prev => ({ ...prev, ...newSalonsMap }));
     };
     
     const fetchServiceDetails = async () => {
       const serviceIds = [...new Set(bookings.map(booking => booking.serviceId))];
       const newServicesMap: Record<number, Service> = {};
-      
+
       for (const serviceId of serviceIds) {
         try {
           if (!(serviceId in servicesMap)) {
-            const response = await fetch(`${API_BASE_URL}/api/services/${serviceId}`);
+            // Use default query client for fetching service details
+            const response = await apiRequest('GET', `/api/services/${serviceId}`);
             if (response.ok) {
               const service = await response.json();
               newServicesMap[serviceId] = service;
@@ -128,7 +130,7 @@ const Profile = () => {
           console.error(`Error fetching service ${serviceId}:`, error);
         }
       }
-      
+
       setServicesMap(prev => ({ ...prev, ...newServicesMap }));
     };
     
@@ -139,7 +141,7 @@ const Profile = () => {
   // Handler for cancelling a booking
   const handleCancelBooking = async (bookingId: number) => {
     try {
-      await apiRequest('PATCH', `${API_BASE_URL}/api/bookings/${bookingId}/status`, { status: 'cancelled' });
+      await apiRequest('PATCH', `/api/bookings/${bookingId}/status`, { status: 'cancelled' });
       queryClient.invalidateQueries({ queryKey: [`/api/bookings/user/${user?.id}`] });
       
       toast({

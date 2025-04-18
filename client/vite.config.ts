@@ -11,14 +11,14 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, '../shared')
     }
   },
-  server: {
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_BASE_URL || 'http://localhost:5000',
-        changeOrigin: true,
-      },
-    },
-  },
+  // server: {
+  //   proxy: {
+  //     '/api': {
+  //       target: process.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  //       changeOrigin: true,
+  //     },
+  //   },
+  // },
   build: {
     chunkSizeWarningLimit: 1000,
     rollupOptions: {

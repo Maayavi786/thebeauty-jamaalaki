@@ -23,7 +23,6 @@ import {
   Users 
 } from "lucide-react";
 import ServiceCard from "@/components/ServiceCard";
-import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 
@@ -127,24 +126,23 @@ const LoadingSkeleton = ({ isLtr }: { isLtr: boolean }) => (
 );
 
 const useSalonData = (salonId: number): SalonData => {
-  const {
-    data: salonResponse,
-    isLoading: isSalonLoading,
-    error: salonError
+  const { 
+    data: salonResponse, 
+    isLoading: isSalonLoading, 
+    error: salonError 
   } = useQuery({
-    queryKey: ['salon', salonId],
-    queryFn: async () => {
-      const response = await apiRequest('GET', `/api/salons/${salonId}`);
-      const data = await response.json();
-      return data.success ? data.data : null;
-    },
+    queryKey: [`/api/salons/${salonId}`],
     retry: false
   });
 
+  const salon = salonResponse || null;
+  const services = salonResponse?.services || null;
+  const reviews = salonResponse?.reviews || null;
+
   return {
-    salon: salonResponse || null,
-    services: salonResponse?.services || null,
-    reviews: salonResponse?.reviews || null,
+    salon,
+    services,
+    reviews,
     isLoading: isSalonLoading,
     errors: {
       salonError,

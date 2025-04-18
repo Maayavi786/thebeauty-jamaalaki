@@ -53,45 +53,14 @@ const BookingPage = () => {
     return timeSlots.filter(slot => slot.includes(term));
   }, [timeSlots, searchTerm]);
   
-  // Fetch salon data with retry logic
-  const { data: salon, isLoading: isSalonLoading, error: salonError } = useQuery<Salon>(
-    ['salon', params?.salonId],
-    async ({ queryKey }) => {
-      const salonId = queryKey[1];
-      const response = await fetch(`${API_BASE_URL}/salons/${salonId}`, {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch salon');
-      const data = await response.json();
-      return data.success ? data.data : null;
-    },
-    {
-      enabled: !!params?.salonId,
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
-  );
-  
-  // Fetch service data with retry logic
-  const { data: service, isLoading: isServiceLoading, error: serviceError } = useQuery<Service>(
-    ['service', params?.serviceId],
-    async ({ queryKey }) => {
-      const serviceId = queryKey[1];
-      const response = await fetch(`${API_BASE_URL}/services/${serviceId}`, {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch service');
-      const data = await response.json();
-      return data.success ? data.data : null;
-    },
-    {
-      enabled: !!params?.serviceId,
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
-  );
+  // Use default query client for salons and services
+  const { data: salon, isLoading: isSalonLoading } = useQuery({
+    queryKey: [`/api/salons/${params?.salonId}`],
+  });
+
+  const { data: service, isLoading: isServiceLoading } = useQuery({
+    queryKey: [`/api/services/${params?.serviceId}`],
+  });
   
   // Create booking form schema
   const formSchema = z.object({
@@ -207,25 +176,6 @@ const BookingPage = () => {
     return <BookingSkeleton />;
   }
   
-  if (salonError || serviceError) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <Alert variant="destructive" className="max-w-2xl mx-auto">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>
-            {isLtr ? "Error Loading Data" : "خطأ في تحميل البيانات"}
-          </AlertTitle>
-          <AlertDescription>
-            {isLtr 
-              ? "Failed to load booking information. Please try again later."
-              : "فشل في تحميل معلومات الحجز. يرجى المحاولة مرة أخرى لاحقًا."
-            }
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-  
   if (!salon || !service) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -238,7 +188,7 @@ const BookingPage = () => {
             : "الخدمة التي تحاولين حجزها غير موجودة أو تمت إزالتها."
           }
         </p>
-      </div>
+    </div>
     );
   }
   
@@ -436,7 +386,11 @@ const BookingPage = () => {
                           {isLtr ? salon.nameEn : salon.nameAr}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {isLtr ? salon.city.split(' | ')[0] : `${salon.city.split(' | ')[0]} | ${salon.city.split(' | ')[1]}`}
+                          {salon && typeof salon.city === 'string' && salon.city.includes(' | ')
+                            ? (isLtr
+                                ? salon.city.split(' | ')[0]
+                                : `${salon.city.split(' | ')[0]} | ${salon.city.split(' | ')[1]}`)
+                            : (salon && salon.city ? salon.city : '')}
                         </p>
                       </div>
                     </div>
