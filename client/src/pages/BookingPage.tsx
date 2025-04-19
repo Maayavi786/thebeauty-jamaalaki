@@ -24,12 +24,11 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Salon, Service } from "@shared/schema";
+import { Service } from "@shared/schema";
 import { config } from "@/lib/config";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { BookingSkeleton } from "@/components/Skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
 const BookingPage = () => {
   const { isLtr, isRtl } = useLanguage();
