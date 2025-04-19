@@ -456,6 +456,17 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
     }
   });
 
+  // DEBUG: Dump all reviews for manual verification
+  app.get("/api/debug/reviews", async (req: Request, res: Response) => {
+    try {
+      const allReviews = await storage.getAllReviews();
+      res.status(200).json({ success: true, data: allReviews });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
 }
 
 export default router;
