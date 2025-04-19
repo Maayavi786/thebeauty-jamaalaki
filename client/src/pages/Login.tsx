@@ -89,17 +89,24 @@ const Login = () => {
   };
   
   return (
-    <>
+    <div
+      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A] flex items-center justify-center"
+      style={{
+        backgroundImage: `
+          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+          url('/assets/luxury-motif-floral.svg'),
+          linear-gradient(180deg, #201A23 0%, #18181A 100%)
+        `,
+        backgroundBlendMode: 'normal',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+      dir={isLtr ? 'ltr' : 'rtl'}
+    >
       <Helmet>
-        <title>
-          {isLtr ? "Login | The Beauty" : "تسجيل الدخول | جمالكِ"}
-        </title>
-        <meta name="description" content={isLtr 
-          ? "Sign in to your The Beauty account"
-          : "تسجيل الدخول إلى حسابك في جمالكِ"
-        } />
+        <title>{isLtr ? 'Login' : 'تسجيل الدخول'} | Jamaalaki</title>
+        <meta name="description" content={isLtr ? 'Login to your Jamaalaki account' : 'تسجيل الدخول إلى حساب جمالكي'} />
       </Helmet>
-      
       <div className="container mx-auto px-4 py-16 flex justify-center">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
@@ -189,7 +196,7 @@ const Login = () => {
           </CardFooter>
         </Card>
       </div>
-    </>
+    </div>
   );
 };
 

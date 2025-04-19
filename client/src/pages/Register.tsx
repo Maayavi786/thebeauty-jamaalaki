@@ -109,17 +109,24 @@ const Register = () => {
   };
   
   return (
-    <>
+    <div
+      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A] flex items-center justify-center"
+      style={{
+        backgroundImage: `
+          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+          url('/assets/luxury-motif-floral.svg'),
+          linear-gradient(180deg, #201A23 0%, #18181A 100%)
+        `,
+        backgroundBlendMode: 'normal',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+      dir={isLtr ? 'ltr' : 'rtl'}
+    >
       <Helmet>
-        <title>
-          {isLtr ? "Register | The Beauty" : "التسجيل | جمالكِ"}
-        </title>
-        <meta name="description" content={isLtr 
-          ? "Create a new account on The Beauty"
-          : "إنشاء حساب جديد في جمالكِ"
-        } />
+        <title>{isLtr ? 'Register' : 'تسجيل حساب'} | Jamaalaki</title>
+        <meta name="description" content={isLtr ? 'Create your Jamaalaki account' : 'إنشاء حسابك في جمالكي'} />
       </Helmet>
-      
       <div className="container mx-auto px-4 py-16 flex justify-center">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
@@ -273,7 +280,7 @@ const Register = () => {
           </CardFooter>
         </Card>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -195,17 +195,24 @@ const Profile = () => {
   }
   
   return (
-    <>
+    <div
+      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A]"
+      style={{
+        backgroundImage: `
+          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+          url('/assets/luxury-motif-floral.svg'),
+          linear-gradient(180deg, #201A23 0%, #18181A 100%)
+        `,
+        backgroundBlendMode: 'normal',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+      dir={isLtr ? 'ltr' : 'rtl'}
+    >
       <Helmet>
-        <title>
-          {isLtr ? "My Profile | The Beauty" : "ملفي الشخصي | جمالكِ"}
-        </title>
-        <meta name="description" content={isLtr 
-          ? "Manage your profile, bookings, and loyalty points"
-          : "إدارة ملفك الشخصي والحجوزات ونقاط الولاء"
-        } />
+        <title>{isLtr ? 'Profile' : 'الملف الشخصي'} | Jamaalaki</title>
+        <meta name="description" content={isLtr ? 'View and manage your profile and bookings' : 'عرض وإدارة ملفك الشخصي وحجوزاتك'} />
       </Helmet>
-      
       <section className="min-h-screen py-12 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
         <div className="container mx-auto px-4 py-8">
           <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
@@ -474,7 +481,7 @@ const Profile = () => {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 

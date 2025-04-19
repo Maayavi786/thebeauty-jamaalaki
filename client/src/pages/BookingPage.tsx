@@ -199,17 +199,254 @@ const BookingPage = () => {
   }
   
   return (
-    <ErrorBoundary>
+    <div
+      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A]"
+      style={{
+        backgroundImage: `
+          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+          url('/assets/luxury-motif-floral.svg'),
+          linear-gradient(180deg, #201A23 0%, #18181A 100%)
+        `,
+        backgroundBlendMode: 'normal',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+      dir={isLtr ? 'ltr' : 'rtl'}
+    >
       <Helmet>
-        <title>
-          {isLtr ? "Book Appointment | The Beauty" : "حجز موعد | جمالكِ"}
-        </title>
-        <meta name="description" content={isLtr 
-          ? `Book your appointment for ${(service as Service).nameEn} at ${(salon as Salon).nameEn}`
-          : `احجزي موعدك لخدمة ${(service as Service).nameAr} في ${(salon as Salon).nameAr}`
-        } />
+        <title>{isLtr ? 'Booking' : 'الحجز'} | Jamaalaki</title>
+        <meta name="description" content={isLtr ? 'Book your luxury salon appointment' : 'احجزي موعد صالون فاخر'} />
       </Helmet>
-      
+      <ErrorBoundary>
+        <div className="container mx-auto px-4 py-8">
+          <div className="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl overflow-hidden mb-20">
+            <div 
+              className="absolute inset-0 opacity-20"
+              style={{ 
+                backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(getIslamicPatternSvg('#ffffff'))}")`, 
+                backgroundSize: '300px' 
+              }}
+            ></div>
+            <div className="relative z-10">
+              <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
+                {isLtr ? "Book Appointment" : "حجز موعد"}
+              </h1>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Booking Form */}
+                <div className="lg:col-span-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
+                        {isLtr ? "Booking Details" : "تفاصيل الحجز"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                          {/* Service Information */}
+                          <div className="bg-muted/30 p-4 rounded-lg mb-6">
+                            <h3 className={`font-medium text-lg mb-3 ${isRtl ? 'font-tajawal' : ''}`}>
+                              {isLtr ? "Service Details" : "تفاصيل الخدمة"}
+                            </h3>
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>
+                                  {isLtr ? (service as Service).nameEn : (service as Service).nameAr}
+                                </p>
+                                <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
+                                  {isLtr ? "Duration" : "المدة"}: {(service as Service).duration} {isLtr ? "minutes" : "دقيقة"}
+                                </p>
+                              </div>
+                              <p className="text-primary font-medium">
+                                {formatPrice((service as Service).price)}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Date Selection */}
+                          <div>
+                            <h3 className={`font-medium text-lg mb-3 ${isRtl ? 'font-tajawal' : ''}`}>
+                              {isLtr ? "Select Appointment Date" : "اختر تاريخ الموعد"}
+                            </h3>
+                            <div className="bg-muted/30 p-4 rounded-lg flex flex-col items-center">
+                              <Calendar
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={setSelectedDate}
+                                className="rounded-md bg-background"
+                                disabled={(date) => {
+                                  const today = new Date();
+                                  today.setHours(0, 0, 0, 0);
+                                  return date < today;
+                                }}
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Time Selection */}
+                          <div>
+                            <h3 className={`font-medium text-lg mb-3 ${isRtl ? 'font-tajawal' : ''}`}>
+                              {isLtr ? "Select Appointment Time" : "اختر وقت الموعد"}
+                            </h3>
+                            <div className="mb-6 max-w-xs">
+                              <Input
+                                placeholder={isLtr ? "Search time slots..." : "ابحثي عن وقت..."}
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="w-full"
+                                aria-label={isLtr ? "Search time slots" : "ابحثي عن وقت"}
+                              />
+                            </div>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                              {filteredTimeSlots.length === 0 ? (
+                                <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
+                                  {isLtr ? "No time slots match your search." : "لا يوجد أوقات تطابق بحثك."}
+                                </p>
+                              ) : (
+                                filteredTimeSlots.map((time: string) => (
+                                  <Button
+                                    key={time}
+                                    type="button"
+                                    variant={selectedTime === time ? "default" : "outline"}
+                                    className={`text-sm ${selectedTime === time ? "bg-primary text-white" : ""}`}
+                                    onClick={() => setSelectedTime(time)}
+                                  >
+                                    {time}
+                                  </Button>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Notes */}
+                          <FormField
+                            control={form.control}
+                            name="notes"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className={`${isRtl ? 'font-tajawal' : ''}`}>
+                                  {isLtr ? "Additional Notes" : "ملاحظات إضافية"}
+                                </FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder={isLtr 
+                                      ? "Any special requests or information" 
+                                      : "أي طلبات خاصة أو معلومات"
+                                    }
+                                    className="resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </form>
+                      </Form>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                {/* Booking Summary */}
+                <div className="lg:col-span-1">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
+                        {isLtr ? "Booking Summary" : "ملخص الحجز"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="mb-8 flex gap-6 items-center">
+                        {/* Salon Image */}
+                        <div className="w-32 h-32 flex-shrink-0">
+                          <img
+                            src={salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`}
+                            alt={isLtr ? salon?.nameEn : salon?.nameAr}
+                            className="w-full h-full object-cover rounded-xl border border-muted bg-white"
+                            onError={e => {
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null;
+                              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`;
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <p className={`font-medium text-lg ${isRtl ? 'font-tajawal' : ''}`}>
+                            {isLtr ? salon.nameEn : salon.nameAr}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {salon && typeof salon.city === 'string' && salon.city.includes(' | ')
+                              ? (isLtr
+                                  ? salon.city.split(' | ')[0]
+                                  : `${salon.city.split(' | ')[0]} | ${salon.city.split(' | ')[1]}`)
+                              : (salon && salon.city ? salon.city : '')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pb-3 border-b">
+                        <div className={`${isRtl ? 'font-tajawal' : ''}`}>
+                          <p className="font-medium">{isLtr ? (service as Service).nameEn : (service as Service).nameAr}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {(service as Service).duration} {isLtr ? "minutes" : "دقيقة"}
+                          </p>
+                        </div>
+                        <p className="text-primary font-medium">
+                          {formatPrice((service as Service).price)}
+                        </p>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pb-3 border-b">
+                        <div className="flex items-center">
+                          <CalendarIcon className="w-4 h-4 mr-2 text-muted-foreground" />
+                          <p className={`${isRtl ? 'font-tajawal' : ''}`}>
+                            {isLtr ? "Date" : "التاريخ"}
+                          </p>
+                        </div>
+                        <p className={`${isRtl ? 'font-tajawal' : ''}`}>
+                          {selectedDate ? selectedDate.toLocaleDateString(isLtr ? 'en-US' : 'ar-SA') : ""}
+                        </p>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pb-3 border-b">
+                        <div className="flex items-center">
+                          <Clock className="w-4 h-4 mr-2 text-muted-foreground" />
+                          <p className={`${isRtl ? 'font-tajawal' : ''}`}>
+                            {isLtr ? "Time" : "الوقت"}
+                          </p>
+                        </div>
+                        <p className={`${isRtl ? 'font-tajawal' : ''}`}>{selectedTime || ""}</p>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-2 text-lg font-bold">
+                        <p className={`${isRtl ? 'font-tajawal' : ''}`}>
+                          {isLtr ? "Total Amount" : "المبلغ الإجمالي"}
+                        </p>
+                        <p className="text-primary">{formatPrice((service as Service).price)}</p>
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button 
+                        className={`w-full ${isRtl ? 'font-tajawal' : ''}`}
+                        onClick={form.handleSubmit(onSubmit)}
+                        disabled={createBooking.isLoading || !selectedDate || !selectedTime}
+                      >
+                        {createBooking.isLoading ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                        )}
+                        {isLtr ? "Confirm Booking" : "تأكيد الحجز"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ErrorBoundary>
       {showConfirmation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center">
@@ -233,236 +470,7 @@ const BookingPage = () => {
           </div>
         </div>
       )}
-      
-      <div className="container mx-auto px-4 py-8">
-        <div className="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl overflow-hidden mb-20">
-          <div 
-            className="absolute inset-0 opacity-20"
-            style={{ 
-              backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(getIslamicPatternSvg('#ffffff'))}")`, 
-              backgroundSize: '300px' 
-            }}
-          ></div>
-          <div className="relative z-10">
-            <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
-              {isLtr ? "Book Appointment" : "حجز موعد"}
-            </h1>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Booking Form */}
-              <div className="lg:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
-                      {isLtr ? "Booking Details" : "تفاصيل الحجز"}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        {/* Service Information */}
-                        <div className="bg-muted/30 p-4 rounded-lg mb-6">
-                          <h3 className={`font-medium text-lg mb-3 ${isRtl ? 'font-tajawal' : ''}`}>
-                            {isLtr ? "Service Details" : "تفاصيل الخدمة"}
-                          </h3>
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>
-                                {isLtr ? (service as Service).nameEn : (service as Service).nameAr}
-                              </p>
-                              <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                                {isLtr ? "Duration" : "المدة"}: {(service as Service).duration} {isLtr ? "minutes" : "دقيقة"}
-                              </p>
-                            </div>
-                            <p className="text-primary font-medium">
-                              {formatPrice((service as Service).price)}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Date Selection */}
-                        <div>
-                          <h3 className={`font-medium text-lg mb-3 ${isRtl ? 'font-tajawal' : ''}`}>
-                            {isLtr ? "Select Appointment Date" : "اختر تاريخ الموعد"}
-                          </h3>
-                          <div className="bg-muted/30 p-4 rounded-lg flex flex-col items-center">
-                            <Calendar
-                              mode="single"
-                              selected={selectedDate}
-                              onSelect={setSelectedDate}
-                              className="rounded-md bg-background"
-                              disabled={(date) => {
-                                const today = new Date();
-                                today.setHours(0, 0, 0, 0);
-                                return date < today;
-                              }}
-                            />
-                          </div>
-                        </div>
-                        
-                        {/* Time Selection */}
-                        <div>
-                          <h3 className={`font-medium text-lg mb-3 ${isRtl ? 'font-tajawal' : ''}`}>
-                            {isLtr ? "Select Appointment Time" : "اختر وقت الموعد"}
-                          </h3>
-                          <div className="mb-6 max-w-xs">
-                            <Input
-                              placeholder={isLtr ? "Search time slots..." : "ابحثي عن وقت..."}
-                              value={searchTerm}
-                              onChange={e => setSearchTerm(e.target.value)}
-                              className="w-full"
-                              aria-label={isLtr ? "Search time slots" : "ابحثي عن وقت"}
-                            />
-                          </div>
-                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                            {filteredTimeSlots.length === 0 ? (
-                              <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                                {isLtr ? "No time slots match your search." : "لا يوجد أوقات تطابق بحثك."}
-                              </p>
-                            ) : (
-                              filteredTimeSlots.map((time: string) => (
-                                <Button
-                                  key={time}
-                                  type="button"
-                                  variant={selectedTime === time ? "default" : "outline"}
-                                  className={`text-sm ${selectedTime === time ? "bg-primary text-white" : ""}`}
-                                  onClick={() => setSelectedTime(time)}
-                                >
-                                  {time}
-                                </Button>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Notes */}
-                        <FormField
-                          control={form.control}
-                          name="notes"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className={`${isRtl ? 'font-tajawal' : ''}`}>
-                                {isLtr ? "Additional Notes" : "ملاحظات إضافية"}
-                              </FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder={isLtr 
-                                    ? "Any special requests or information" 
-                                    : "أي طلبات خاصة أو معلومات"
-                                  }
-                                  className="resize-none"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              {/* Booking Summary */}
-              <div className="lg:col-span-1">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
-                      {isLtr ? "Booking Summary" : "ملخص الحجز"}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="mb-8 flex gap-6 items-center">
-                      {/* Salon Image */}
-                      <div className="w-32 h-32 flex-shrink-0">
-                        <img
-                          src={salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`}
-                          alt={isLtr ? salon?.nameEn : salon?.nameAr}
-                          className="w-full h-full object-cover rounded-xl border border-muted bg-white"
-                          onError={e => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`;
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <p className={`font-medium text-lg ${isRtl ? 'font-tajawal' : ''}`}>
-                          {isLtr ? salon.nameEn : salon.nameAr}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {salon && typeof salon.city === 'string' && salon.city.includes(' | ')
-                            ? (isLtr
-                                ? salon.city.split(' | ')[0]
-                                : `${salon.city.split(' | ')[0]} | ${salon.city.split(' | ')[1]}`)
-                            : (salon && salon.city ? salon.city : '')}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center pb-3 border-b">
-                      <div className={`${isRtl ? 'font-tajawal' : ''}`}>
-                        <p className="font-medium">{isLtr ? (service as Service).nameEn : (service as Service).nameAr}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {(service as Service).duration} {isLtr ? "minutes" : "دقيقة"}
-                        </p>
-                      </div>
-                      <p className="text-primary font-medium">
-                        {formatPrice((service as Service).price)}
-                      </p>
-                    </div>
-                    
-                    <div className="flex justify-between items-center pb-3 border-b">
-                      <div className="flex items-center">
-                        <CalendarIcon className="w-4 h-4 mr-2 text-muted-foreground" />
-                        <p className={`${isRtl ? 'font-tajawal' : ''}`}>
-                          {isLtr ? "Date" : "التاريخ"}
-                        </p>
-                      </div>
-                      <p className={`${isRtl ? 'font-tajawal' : ''}`}>
-                        {selectedDate ? selectedDate.toLocaleDateString(isLtr ? 'en-US' : 'ar-SA') : ""}
-                      </p>
-                    </div>
-                    
-                    <div className="flex justify-between items-center pb-3 border-b">
-                      <div className="flex items-center">
-                        <Clock className="w-4 h-4 mr-2 text-muted-foreground" />
-                        <p className={`${isRtl ? 'font-tajawal' : ''}`}>
-                          {isLtr ? "Time" : "الوقت"}
-                        </p>
-                      </div>
-                      <p className={`${isRtl ? 'font-tajawal' : ''}`}>{selectedTime || ""}</p>
-                    </div>
-                    
-                    <div className="flex justify-between items-center pt-2 text-lg font-bold">
-                      <p className={`${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr ? "Total Amount" : "المبلغ الإجمالي"}
-                      </p>
-                      <p className="text-primary">{formatPrice((service as Service).price)}</p>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      className={`w-full ${isRtl ? 'font-tajawal' : ''}`}
-                      onClick={form.handleSubmit(onSubmit)}
-                      disabled={createBooking.isLoading || !selectedDate || !selectedTime}
-                    >
-                      {createBooking.isLoading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                      )}
-                      {isLtr ? "Confirm Booking" : "تأكيد الحجز"}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </ErrorBoundary>
+    </div>
   );
 };
 

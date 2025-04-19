@@ -254,7 +254,20 @@ const SalonDetails = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div
+      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A]"
+      style={{
+        backgroundImage: `
+          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+          url('/assets/luxury-motif-floral.svg'),
+          linear-gradient(180deg, #201A23 0%, #18181A 100%)
+        `,
+        backgroundBlendMode: 'normal',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+      dir={isLtr ? 'ltr' : 'rtl'}
+    >
       <Helmet>
         <title>{isLtr ? salon.nameEn : salon.nameAr} | {isLtr ? "Salon Details" : "تفاصيل الصالون"}</title>
       </Helmet>

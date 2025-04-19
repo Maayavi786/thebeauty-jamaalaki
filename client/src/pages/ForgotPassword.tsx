@@ -60,45 +60,60 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-      <Helmet>
-        <title>{isLtr ? "Forgot Password | The Beauty" : "نسيت كلمة المرور | جمالكِ"}</title>
-      </Helmet>
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-lg shadow-md p-8 space-y-6"
-        dir={isLtr ? "ltr" : "rtl"}
-      >
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          {isLtr ? "Forgot Password" : "نسيت كلمة المرور"}
-        </h2>
-        <p className="mb-6 text-center text-muted-foreground">
-          {isLtr
-            ? "Enter your email and we'll send you a reset link."
-            : "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور."}
-        </p>
-        <Input
-          type="email"
-          placeholder={isLtr ? "Email address" : "البريد الإلكتروني"}
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-          className="mb-4"
-          aria-label={isLtr ? "Email address" : "البريد الإلكتروني"}
-        />
-        <Button type="submit" className="w-full" disabled={loading || sent}>
-          {loading ? (
-            <Loader2 className="animate-spin mr-2 h-5 w-5 inline" />
-          ) : null}
-          {sent
-            ? isLtr
-              ? "Email Sent"
-              : "تم إرسال البريد"
-            : isLtr
-            ? "Send Reset Link"
-            : "إرسال رابط إعادة التعيين"}
-        </Button>
-      </form>
+    <div
+      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A] flex items-center justify-center"
+      style={{
+        backgroundImage: `
+          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+          url('/assets/luxury-motif-floral.svg'),
+          linear-gradient(180deg, #201A23 0%, #18181A 100%)
+        `,
+        backgroundBlendMode: 'normal',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+      dir={isLtr ? 'ltr' : 'rtl'}
+    >
+      <div className="flex flex-col items-center justify-center">
+        <Helmet>
+          <title>{isLtr ? "Forgot Password | The Beauty" : "نسيت كلمة المرور | جمالكِ"}</title>
+        </Helmet>
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-lg shadow-md p-8 space-y-6"
+          dir={isLtr ? "ltr" : "rtl"}
+        >
+          <h2 className="text-2xl font-bold mb-4 text-center">
+            {isLtr ? "Forgot Password" : "نسيت كلمة المرور"}
+          </h2>
+          <p className="mb-6 text-center text-muted-foreground">
+            {isLtr
+              ? "Enter your email and we'll send you a reset link."
+              : "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور."}
+          </p>
+          <Input
+            type="email"
+            placeholder={isLtr ? "Email address" : "البريد الإلكتروني"}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            className="mb-4"
+            aria-label={isLtr ? "Email address" : "البريد الإلكتروني"}
+          />
+          <Button type="submit" className="w-full" disabled={loading || sent}>
+            {loading ? (
+              <Loader2 className="animate-spin mr-2 h-5 w-5 inline" />
+            ) : null}
+            {sent
+              ? isLtr
+                ? "Email Sent"
+                : "تم إرسال البريد"
+              : isLtr
+              ? "Send Reset Link"
+              : "إرسال رابط إعادة التعيين"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

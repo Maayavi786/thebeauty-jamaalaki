@@ -202,12 +202,24 @@ const Salons = () => {
   }, [salonsResponse, searchTerm, filteredSalons]);
   
   return (
-    <>
+    <div
+      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A]"
+      style={{
+        backgroundImage: `
+          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+          url('/assets/luxury-motif-floral.svg'),
+          linear-gradient(180deg, #201A23 0%, #18181A 100%)
+        `,
+        backgroundBlendMode: 'normal',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+      dir={isLtr ? 'ltr' : 'rtl'}
+    >
       <Helmet>
-        <title>{isLtr ? t("salons", { ns: 'home' }) : t("salons", { ns: 'home' })}</title>
-        <meta name="description" content={t('salonsDescription', { ns: 'home' })} />
+        <title>{isLtr ? 'Salons' : 'الصالونات'} | Jamaalaki</title>
+        <meta name="description" content={isLtr ? 'Browse and book luxury salons in Saudi Arabia' : 'تصفحي واحجزي صالونات فاخرة في السعودية'} />
       </Helmet>
-      
       <div className="container mx-auto px-4 py-8">
         <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
           {t("salons", { ns: 'home' })}
@@ -319,7 +331,7 @@ const Salons = () => {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

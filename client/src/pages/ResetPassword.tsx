@@ -76,49 +76,64 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-      <Helmet>
-        <title>{isLtr ? "Reset Password | The Beauty" : "إعادة تعيين كلمة المرور | جمالكِ"}</title>
-      </Helmet>
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-lg shadow-md p-8 space-y-6"
-        dir={isLtr ? "ltr" : "rtl"}
-      >
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          {isLtr ? "Reset Password" : "إعادة تعيين كلمة المرور"}
-        </h2>
-        <Input
-          type="password"
-          placeholder={isLtr ? "New password" : "كلمة المرور الجديدة"}
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          className="mb-4"
-          aria-label={isLtr ? "New password" : "كلمة المرور الجديدة"}
-        />
-        <Input
-          type="password"
-          placeholder={isLtr ? "Confirm password" : "تأكيد كلمة المرور"}
-          value={confirmPassword}
-          onChange={e => setConfirmPassword(e.target.value)}
-          required
-          className="mb-4"
-          aria-label={isLtr ? "Confirm password" : "تأكيد كلمة المرور"}
-        />
-        <Button type="submit" className="w-full" disabled={loading || success}>
-          {loading ? (
-            <Loader2 className="animate-spin mr-2 h-5 w-5 inline" />
-          ) : null}
-          {success
-            ? isLtr
-              ? "Password Reset"
-              : "تمت إعادة التعيين"
-            : isLtr
-            ? "Reset Password"
-            : "إعادة تعيين كلمة المرور"}
-        </Button>
-      </form>
+    <div
+      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A] flex items-center justify-center"
+      style={{
+        backgroundImage: `
+          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+          url('/assets/luxury-motif-floral.svg'),
+          linear-gradient(180deg, #201A23 0%, #18181A 100%)
+        `,
+        backgroundBlendMode: 'normal',
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+      dir={isLtr ? 'ltr' : 'rtl'}
+    >
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+        <Helmet>
+          <title>{isLtr ? "Reset Password | The Beauty" : "إعادة تعيين كلمة المرور | جمالكِ"}</title>
+        </Helmet>
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-lg shadow-md p-8 space-y-6"
+          dir={isLtr ? "ltr" : "rtl"}
+        >
+          <h2 className="text-2xl font-bold mb-4 text-center">
+            {isLtr ? "Reset Password" : "إعادة تعيين كلمة المرور"}
+          </h2>
+          <Input
+            type="password"
+            placeholder={isLtr ? "New password" : "كلمة المرور الجديدة"}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            className="mb-4"
+            aria-label={isLtr ? "New password" : "كلمة المرور الجديدة"}
+          />
+          <Input
+            type="password"
+            placeholder={isLtr ? "Confirm password" : "تأكيد كلمة المرور"}
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            required
+            className="mb-4"
+            aria-label={isLtr ? "Confirm password" : "تأكيد كلمة المرور"}
+          />
+          <Button type="submit" className="w-full" disabled={loading || success}>
+            {loading ? (
+              <Loader2 className="animate-spin mr-2 h-5 w-5 inline" />
+            ) : null}
+            {success
+              ? isLtr
+                ? "Password Reset"
+                : "تمت إعادة التعيين"
+              : isLtr
+              ? "Reset Password"
+              : "إعادة تعيين كلمة المرور"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
