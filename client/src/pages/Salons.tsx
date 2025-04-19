@@ -214,13 +214,14 @@ const Salons = () => {
         backgroundRepeat: 'repeat',
         backgroundSize: 'auto',
       }}
-      dir={isLtr ? 'ltr' : 'rtl'}
+      dir={isRtl ? 'rtl' : 'ltr'}
     >
       <Helmet>
-        <title>{isLtr ? 'Salons' : 'الصالونات'} | Jamaalaki</title>
-        <meta name="description" content={isLtr ? 'Browse and book luxury salons in Saudi Arabia' : 'تصفحي واحجزي صالونات فاخرة في السعودية'} />
+        <title>{isRtl ? 'صالونات' : 'Salons'} | Jamaalaki</title>
+        <meta name="description" content={isRtl ? 'اكتشفي أفضل صالونات التجميل' : 'Discover the best beauty salons'} />
       </Helmet>
-      <div className="container mx-auto px-4 py-8">
+      <div className={`container mx-auto py-12 px-4 ${isRtl ? 'font-tajawal' : ''}`}
+        style={{ background: 'transparent' }}>
         <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
           {t("salons", { ns: 'home' })}
         </h1>
