@@ -343,7 +343,7 @@ const SalonDetails = () => {
             <CardContent className="p-6">
               <p className={`mb-4 ${isLtr ? 'text-left' : 'text-right'}`}>
                 {/* Show salon description, fallback to placeholder if missing */}
-                {salon?.descriptionEn || salon?.descriptionAr || (isLtr ? 'No description available.' : 'لا يوجد وصف.')}
+                {salon?.descriptionEn || salon?.description_en || salon?.descriptionAr || salon?.description_ar || (isLtr ? 'No description available.' : 'لا يوجد وصف.')}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <InfoItem 
