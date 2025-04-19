@@ -255,7 +255,7 @@ const SalonDetails = () => {
 
   return (
     <div
-      className="min-h-screen pattern-bg"
+      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
       dir={isLtr ? 'ltr' : 'rtl'}
     >
       <Helmet>

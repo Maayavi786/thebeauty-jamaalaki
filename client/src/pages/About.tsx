@@ -28,7 +28,7 @@ const About = () => {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 pattern-bg"
+      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <div className={`container mx-auto py-12 px-4 ${isRtl ? 'font-tajawal' : ''}`}>
