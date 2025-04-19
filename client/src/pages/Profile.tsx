@@ -53,10 +53,11 @@ const Profile = () => {
   const [servicesMap, setServicesMap] = useState<Record<number, Service>>({});
   
   // Use default query client for user bookings
-  const { data: bookings, isLoading: isBookingsLoading } = useQuery({
+  const { data: bookingsResponse, isLoading: isBookingsLoading } = useQuery({
     queryKey: [`${config.api.endpoints.bookings}/user/${user?.id}`],
     enabled: !!user,
   });
+  const bookings = Array.isArray(bookingsResponse?.data) ? bookingsResponse.data : [];
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -166,10 +167,9 @@ const Profile = () => {
   // Add state and memo for search
   const [searchTerm, setSearchTerm] = useState("");
   const filteredBookings = useMemo(() => {
-    if (!bookings) return [];
     if (!searchTerm.trim()) return bookings;
     const term = searchTerm.trim().toLowerCase();
-    return bookings.filter((booking: any) => {
+    return Array.isArray(bookings) ? bookings.filter((booking: any) => {
       const salon = salonsMap[booking.salonId];
       const service = servicesMap[booking.serviceId];
       return (
@@ -177,22 +177,22 @@ const Profile = () => {
         (service && ((service.nameEn && service.nameEn.toLowerCase().includes(term)) || (service.nameAr && service.nameAr.toLowerCase().includes(term)))) ||
         (booking.status && booking.status.toLowerCase().includes(term))
       );
-    });
-  }, [bookings, searchTerm, salonsMap, servicesMap]);
-  
+    }) : [];
+  }, [bookings, searchTerm, salonsMap, servicesMap, isLtr]);
+
+  const upcomingBookings = Array.isArray(filteredBookings) ? filteredBookings.filter((booking: any) => {
+    const now = new Date();
+    return new Date(booking.datetime) > now && booking.status !== 'cancelled'
+  }) : [];
+
+  const pastBookings = Array.isArray(filteredBookings) ? filteredBookings.filter((booking: any) => {
+    const now = new Date();
+    return new Date(booking.datetime) <= now || booking.status === 'cancelled'
+  }) : [];
+
   if (!user) {
     return null; // Will be redirected via the useEffect
   }
-  
-  // Separate bookings into upcoming and past
-  const now = new Date();
-  const upcomingBookings = filteredBookings.filter((booking: any) => 
-    new Date(booking.datetime) > now && booking.status !== 'cancelled'
-  ) || [];
-  
-  const pastBookings = filteredBookings.filter((booking: any) => 
-    new Date(booking.datetime) <= now || booking.status === 'cancelled'
-  ) || [];
   
   return (
     <>
