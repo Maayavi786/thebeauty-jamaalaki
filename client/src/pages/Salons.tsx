@@ -15,7 +15,7 @@ import { getIslamicPatternSvg } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { config } from "@/lib/config";
 import { Input } from "@/components/ui/input";
-import { apiRequest } from "@/lib/api"; // Import apiRequest
+import { apiRequest } from "@/lib/queryClient"; // Import apiRequest
 
 const Salons = () => {
   const { t } = useTranslation(["common", "home"]);
