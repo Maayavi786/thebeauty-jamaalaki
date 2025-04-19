@@ -203,17 +203,7 @@ const Salons = () => {
   
   return (
     <div
-      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A]"
-      style={{
-        backgroundImage: `
-          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
-          url('/assets/luxury-motif-floral.svg'),
-          linear-gradient(180deg, #201A23 0%, #18181A 100%)
-        `,
-        backgroundBlendMode: 'normal',
-        backgroundRepeat: 'repeat',
-        backgroundSize: 'auto',
-      }}
+      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <Helmet>
@@ -222,10 +212,7 @@ const Salons = () => {
       </Helmet>
       <div className={`container mx-auto py-12 px-4 ${isRtl ? 'font-tajawal' : ''}`}
         style={{ background: 'transparent' }}>
-        <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
-          {t("salons", { ns: 'home' })}
-        </h1>
-        
+        <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>{t("salons", { ns: 'home' })}</h1>
         {/* Hero Section */}
         <div className="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl mb-20">
           <div 
@@ -236,18 +223,13 @@ const Salons = () => {
             }}
           ></div>
           <div className="relative z-10 py-20 px-6 text-center max-w-3xl mx-auto">
-            <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${isRtl ? 'font-tajawal' : 'font-playfair'}`}>
-              {t('findYourPerfectSalon', { ns: 'common' })}
-            </h1>
-            <p className={`text-lg mb-8 text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-              {t('salonsDescription', { ns: 'home' })}
-            </p>
+            <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${isRtl ? 'font-tajawal' : 'font-playfair'}`}>{t('findYourPerfectSalon', { ns: 'common' })}</h1>
+            <p className={`text-lg mb-8 text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{t('salonsDescription', { ns: 'home' })}</p>
             <div className="max-w-2xl mx-auto">
               <SearchBar onSearch={handleSearch} />
             </div>
           </div>
         </div>
-
         {/* Filters Section */}
         <div className="mb-12 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-6">
           <div className="mb-8 overflow-x-auto">
@@ -266,14 +248,12 @@ const Salons = () => {
             />
           </div>
         </div>
-        
         {/* Active filters */}
         {selectedFilters.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {selectedFilters.map(filter => {
               const option = filterOptions.find(opt => opt.id === filter);
               if (!option) return null;
-              
               return (
                 <Badge 
                   key={filter} 
@@ -287,7 +267,6 @@ const Salons = () => {
             })}
           </div>
         )}
-        
         {/* Search bar */}
         <div className="mb-6 max-w-xs">
           <Input
@@ -298,14 +277,10 @@ const Salons = () => {
             aria-label={isLtr ? "Search salons" : "ابحثي عن صالون"}
           />
         </div>
-        
         {/* Results count */}
         <div className="mb-6">
-          <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-            {t('salonsFound', { count: filteredSalonsBySearchTerm.length, ns: 'home' })}
-          </p>
+          <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{t('salonsFound', { count: filteredSalonsBySearchTerm.length, ns: 'home' })}</p>
         </div>
-        
         {/* Salons Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
           {isLoading ? (
@@ -315,9 +290,7 @@ const Salons = () => {
           ) : error ? (
             <div className="text-center py-12">
               <p className="text-red-500 mb-4">{t('errorLoadingSalons')}</p>
-              <Button onClick={() => window.location.reload()} variant="outline">
-                {t('refresh')}
-              </Button>
+              <Button onClick={() => window.location.reload()} variant="outline">{t('refresh')}</Button>
             </div>
           ) : filteredSalonsBySearchTerm.length > 0 ? (
             filteredSalonsBySearchTerm.map((salon: any) => (
@@ -325,9 +298,7 @@ const Salons = () => {
             ))
           ) : (
             <div className="text-center py-12">
-              <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                {t('noSalonsFound', { ns: 'home' })}
-              </p>
+              <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{t('noSalonsFound', { ns: 'home' })}</p>
             </div>
           )}
         </div>
