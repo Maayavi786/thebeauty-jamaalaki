@@ -195,7 +195,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getReviewsBySalon(salonId: number): Promise<Review[]> {
-    return await db.select().from(reviews).where(eq(reviews.salonId, salonId));
+    // DEBUG: Log what is being queried
+    console.log('Fetching reviews for salonId:', salonId);
+    const result = await db.select().from(reviews).where(eq(reviews.salonId, salonId));
+    console.log('Reviews found:', result);
+    return result;
   }
 
   async createReview(reviewData: InsertReview): Promise<Review> {
