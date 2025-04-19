@@ -254,8 +254,16 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
       if (!salon) {
         return res.status(404).json({ message: "Salon not found" });
       }
-      
-      res.status(200).json(salon);
+      // Fetch services and reviews for the salon
+      const [services, reviews] = await Promise.all([
+        storage.getServicesBySalon(salon.id),
+        storage.getReviewsBySalon(salon.id),
+      ]);
+      res.status(200).json({
+        ...salon,
+        services,
+        reviews,
+      });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
