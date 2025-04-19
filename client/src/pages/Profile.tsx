@@ -195,282 +195,277 @@ const Profile = () => {
   }
   
   return (
-    <div
-      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
-      dir={isRtl ? 'rtl' : 'ltr'}
-    >
-      <Helmet>
-        <title>{isLtr ? 'Profile' : 'الملف الشخصي'} | Jamaalaki</title>
-        <meta name="description" content={isLtr ? 'View and manage your profile and bookings' : 'عرض وإدارة ملفك الشخصي وحجوزاتك'} />
-      </Helmet>
-      <section className="min-h-screen py-12 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
-        <div className="container mx-auto px-4 py-8">
-          <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
-            {isLtr ? "My Profile" : "ملفي الشخصي"}
-          </h1>
+    <div className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
+      <div className="container mx-auto py-12 px-4">
+        <Helmet>
+          <title>{isLtr ? 'Profile' : 'الملف الشخصي'} | Jamaalaki</title>
+          <meta name="description" content={isLtr ? 'View and manage your profile and bookings' : 'عرض وإدارة ملفك الشخصي وحجوزاتك'} />
+        </Helmet>
+        <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
+          {isLtr ? "My Profile" : "ملفي الشخصي"}
+        </h1>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* User Profile Card */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
+                  {isLtr ? "Personal Information" : "المعلومات الشخصية"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                    <User className="w-12 h-12 text-primary" />
+                  </div>
+                  <h3 className={`text-xl font-bold ${isRtl ? 'font-tajawal' : ''}`}>
+                    {user.fullName}
+                  </h3>
+                  <p className="text-muted-foreground">@{user.username}</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h4 className={`text-sm font-medium text-muted-foreground mb-1 ${isRtl ? 'font-tajawal' : ''}`}>
+                      {isLtr ? "Email" : "البريد الإلكتروني"}
+                    </h4>
+                    <p>{user.email}</p>
+                  </div>
+                  
+                  {user.phone && (
+                    <div>
+                      <h4 className={`text-sm font-medium text-muted-foreground mb-1 ${isRtl ? 'font-tajawal' : ''}`}>
+                        {isLtr ? "Phone" : "رقم الهاتف"}
+                      </h4>
+                      <p>{user.phone}</p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <h4 className={`text-sm font-medium text-muted-foreground mb-1 ${isRtl ? 'font-tajawal' : ''}`}>
+                      {isLtr ? "Loyalty Points" : "نقاط الولاء"}
+                    </h4>
+                    <div className="flex items-center">
+                      <Award className="w-5 h-5 text-primary mr-2" />
+                      <p className="font-medium">{user.loyaltyPoints} {isLtr ? "points" : "نقطة"}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <Button 
+                  className={`w-full mt-6 ${isRtl ? 'font-tajawal' : ''}`}
+                  variant="outline"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  {isLtr ? "Update Profile" : "تحديث الملف الشخصي"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* User Profile Card */}
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
-                    {isLtr ? "Personal Information" : "المعلومات الشخصية"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center mb-6">
-                    <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                      <User className="w-12 h-12 text-primary" />
-                    </div>
-                    <h3 className={`text-xl font-bold ${isRtl ? 'font-tajawal' : ''}`}>
-                      {user.fullName}
-                    </h3>
-                    <p className="text-muted-foreground">@{user.username}</p>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className={`text-sm font-medium text-muted-foreground mb-1 ${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr ? "Email" : "البريد الإلكتروني"}
-                      </h4>
-                      <p>{user.email}</p>
-                    </div>
-                    
-                    {user.phone && (
-                      <div>
-                        <h4 className={`text-sm font-medium text-muted-foreground mb-1 ${isRtl ? 'font-tajawal' : ''}`}>
-                          {isLtr ? "Phone" : "رقم الهاتف"}
-                        </h4>
-                        <p>{user.phone}</p>
-                      </div>
-                    )}
-                    
-                    <div>
-                      <h4 className={`text-sm font-medium text-muted-foreground mb-1 ${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr ? "Loyalty Points" : "نقاط الولاء"}
-                      </h4>
-                      <div className="flex items-center">
-                        <Award className="w-5 h-5 text-primary mr-2" />
-                        <p className="font-medium">{user.loyaltyPoints} {isLtr ? "points" : "نقطة"}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    className={`w-full mt-6 ${isRtl ? 'font-tajawal' : ''}`}
-                    variant="outline"
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    {isLtr ? "Update Profile" : "تحديث الملف الشخصي"}
-                  </Button>
-                </CardContent>
-              </Card>
+          {/* Bookings Tabs */}
+          <div className="lg:col-span-2">
+            <div className="mb-6 max-w-xs">
+              <Input
+                placeholder={isLtr ? "Search bookings..." : "ابحثي عن حجز..."}
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full"
+                aria-label={isLtr ? "Search bookings" : "ابحثي عن حجز"}
+              />
             </div>
             
-            {/* Bookings Tabs */}
-            <div className="lg:col-span-2">
-              <div className="mb-6 max-w-xs">
-                <Input
-                  placeholder={isLtr ? "Search bookings..." : "ابحثي عن حجز..."}
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="w-full"
-                  aria-label={isLtr ? "Search bookings" : "ابحثي عن حجز"}
-                />
-              </div>
+            <Tabs defaultValue="upcoming">
+              <TabsList className="w-full">
+                <TabsTrigger 
+                  value="upcoming" 
+                  className={`flex-1 ${isRtl ? 'font-tajawal' : ''}`}
+                >
+                  {isLtr ? "Upcoming Bookings" : "الحجوزات القادمة"}
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="past" 
+                  className={`flex-1 ${isRtl ? 'font-tajawal' : ''}`}
+                >
+                  {isLtr ? "Past Bookings" : "الحجوزات السابقة"}
+                </TabsTrigger>
+              </TabsList>
               
-              <Tabs defaultValue="upcoming">
-                <TabsList className="w-full">
-                  <TabsTrigger 
-                    value="upcoming" 
-                    className={`flex-1 ${isRtl ? 'font-tajawal' : ''}`}
-                  >
-                    {isLtr ? "Upcoming Bookings" : "الحجوزات القادمة"}
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="past" 
-                    className={`flex-1 ${isRtl ? 'font-tajawal' : ''}`}
-                  >
-                    {isLtr ? "Past Bookings" : "الحجوزات السابقة"}
-                  </TabsTrigger>
-                </TabsList>
-                
-                {/* Upcoming Bookings */}
-                <TabsContent value="upcoming">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr ? "Upcoming Bookings" : "الحجوزات القادمة"}
-                      </CardTitle>
-                      <CardDescription className={`${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr 
-                          ? "Your upcoming salon appointments" 
-                          : "مواعيد الصالون القادمة الخاصة بك"
-                        }
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {isBookingsLoading ? (
-                        <div className="flex justify-center items-center py-12">
-                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        </div>
-                      ) : upcomingBookings.length > 0 ? (
-                        <div className="space-y-4">
-                          {upcomingBookings.map((booking: any) => {
-                            const salon = salonsMap[booking.salonId];
-                            const service = servicesMap[booking.serviceId];
-                            
-                            return (
-                              <div 
-                                key={booking.id} 
-                                className="border border-border rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between"
-                              >
-                                <div className="mb-4 md:mb-0 flex items-center">
-                                  {salon && (
-                                    <img
-                                      src={salon.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`}
-                                      alt={isLtr ? salon.nameEn : salon.nameAr}
-                                      className="w-12 h-12 object-cover rounded-lg border mr-3"
-                                      onError={e => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.onerror = null;
-                                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`;
-                                      }}
-                                    />
-                                  )}
-                                  <div>
-                                    <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon && (isLtr ? salon.nameEn : salon.nameAr)}</h4>
-                                    <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service && (isLtr ? service.nameEn : service.nameAr)}</p>
-                                  </div>
-                                </div>
-                                
-                                <div className="flex items-center">
-                                  <Button 
-                                    variant="outline" 
-                                    className={`mr-2 ${isRtl ? 'font-tajawal' : ''}`}
-                                    size="sm"
-                                    onClick={() => handleCancelBooking(booking.id)}
-                                  >
-                                    {t("profile.cancelBooking")}
-                                  </Button>
-                                  
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon">
-                                        <MoreVertical className="w-4 h-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem className={`${isRtl ? 'font-tajawal' : ''}`}>
-                                        {isLtr ? "View Details" : "عرض التفاصيل"}
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem className={`${isRtl ? 'font-tajawal' : ''}`}>
-                                        {isLtr ? "Reschedule" : "إعادة جدولة"}
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
+              {/* Upcoming Bookings */}
+              <TabsContent value="upcoming">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
+                      {isLtr ? "Upcoming Bookings" : "الحجوزات القادمة"}
+                    </CardTitle>
+                    <CardDescription className={`${isRtl ? 'font-tajawal' : ''}`}>
+                      {isLtr 
+                        ? "Your upcoming salon appointments" 
+                        : "مواعيد الصالون القادمة الخاصة بك"
+                      }
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {isBookingsLoading ? (
+                      <div className="flex justify-center items-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      </div>
+                    ) : upcomingBookings.length > 0 ? (
+                      <div className="space-y-4">
+                        {upcomingBookings.map((booking: any) => {
+                          const salon = salonsMap[booking.salonId];
+                          const service = servicesMap[booking.serviceId];
+                          
+                          return (
+                            <div 
+                              key={booking.id} 
+                              className="border border-border rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between"
+                            >
+                              <div className="mb-4 md:mb-0 flex items-center">
+                                {salon && (
+                                  <img
+                                    src={salon.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`}
+                                    alt={isLtr ? salon.nameEn : salon.nameAr}
+                                    className="w-12 h-12 object-cover rounded-lg border mr-3"
+                                    onError={e => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.onerror = null;
+                                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`;
+                                    }}
+                                  />
+                                )}
+                                <div>
+                                  <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon && (isLtr ? salon.nameEn : salon.nameAr)}</h4>
+                                  <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service && (isLtr ? service.nameEn : service.nameAr)}</p>
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                            {isLtr ? "No bookings found" : "لا توجد حجوزات"}
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                {/* Past Bookings */}
-                <TabsContent value="past">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr ? "Past Bookings" : "الحجوزات السابقة"}
-                      </CardTitle>
-                      <CardDescription className={`${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr 
-                          ? "Your past salon appointments" 
-                          : "مواعيد الصالون السابقة الخاصة بك"
-                        }
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {isBookingsLoading ? (
-                        <div className="flex justify-center items-center py-12">
-                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        </div>
-                      ) : pastBookings.length > 0 ? (
-                        <div className="space-y-4">
-                          {pastBookings.map((booking: any) => {
-                            const salon = salonsMap[booking.salonId];
-                            const service = servicesMap[booking.serviceId];
-                            
-                            return (
-                              <div 
-                                key={booking.id} 
-                                className="border border-border rounded-lg p-4"
-                              >
-                                <div className="flex items-center mb-2">
-                                  {salon && (
-                                    <img
-                                      src={salon.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`}
-                                      alt={isLtr ? salon.nameEn : salon.nameAr}
-                                      className="w-12 h-12 object-cover rounded-lg border mr-3"
-                                      onError={e => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.onerror = null;
-                                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`;
-                                      }}
-                                    />
-                                  )}
-                                  <div>
-                                    <Badge className={getStatusColor(booking.status)}>
-                                      {booking.status}
-                                    </Badge>
-                                    <span className="mx-2">•</span>
-                                    <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
-                                    <span className="text-sm">
-                                      {formatDate(booking.datetime)} at {formatTime(booking.datetime)}
-                                    </span>
-                                    {booking.pointsEarned && (
-                                      <>
-                                        <span className="mx-2">•</span>
-                                        <Award className="w-4 h-4 mr-1 text-primary" />
-                                        <span className="text-sm text-primary">
-                                          +{booking.pointsEarned} {isLtr ? "points" : "نقطة"}
-                                        </span>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
+                              
+                              <div className="flex items-center">
+                                <Button 
+                                  variant="outline" 
+                                  className={`mr-2 ${isRtl ? 'font-tajawal' : ''}`}
+                                  size="sm"
+                                  onClick={() => handleCancelBooking(booking.id)}
+                                >
+                                  {t("profile.cancelBooking")}
+                                </Button>
                                 
-                                <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon && (isLtr ? salon.nameEn : salon.nameAr)}</h4>
-                                <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service && (isLtr ? service.nameEn : service.nameAr)}</p>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreVertical className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem className={`${isRtl ? 'font-tajawal' : ''}`}>
+                                      {isLtr ? "View Details" : "عرض التفاصيل"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className={`${isRtl ? 'font-tajawal' : ''}`}>
+                                      {isLtr ? "Reschedule" : "إعادة جدولة"}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                            {isLtr ? "No bookings found" : "لا توجد حجوزات"}
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
+                          {isLtr ? "No bookings found" : "لا توجد حجوزات"}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Past Bookings */}
+              <TabsContent value="past">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className={`${isRtl ? 'font-tajawal' : ''}`}>
+                      {isLtr ? "Past Bookings" : "الحجوزات السابقة"}
+                    </CardTitle>
+                    <CardDescription className={`${isRtl ? 'font-tajawal' : ''}`}>
+                      {isLtr 
+                        ? "Your past salon appointments" 
+                        : "مواعيد الصالون السابقة الخاصة بك"
+                      }
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {isBookingsLoading ? (
+                      <div className="flex justify-center items-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      </div>
+                    ) : pastBookings.length > 0 ? (
+                      <div className="space-y-4">
+                        {pastBookings.map((booking: any) => {
+                          const salon = salonsMap[booking.salonId];
+                          const service = servicesMap[booking.serviceId];
+                          
+                          return (
+                            <div 
+                              key={booking.id} 
+                              className="border border-border rounded-lg p-4"
+                            >
+                              <div className="flex items-center mb-2">
+                                {salon && (
+                                  <img
+                                    src={salon.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`}
+                                    alt={isLtr ? salon.nameEn : salon.nameAr}
+                                    className="w-12 h-12 object-cover rounded-lg border mr-3"
+                                    onError={e => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.onerror = null;
+                                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`;
+                                    }}
+                                  />
+                                )}
+                                <div>
+                                  <Badge className={getStatusColor(booking.status)}>
+                                    {booking.status}
+                                  </Badge>
+                                  <span className="mx-2">•</span>
+                                  <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
+                                  <span className="text-sm">
+                                    {formatDate(booking.datetime)} at {formatTime(booking.datetime)}
+                                  </span>
+                                  {booking.pointsEarned && (
+                                    <>
+                                      <span className="mx-2">•</span>
+                                      <Award className="w-4 h-4 mr-1 text-primary" />
+                                      <span className="text-sm text-primary">
+                                        +{booking.pointsEarned} {isLtr ? "points" : "نقطة"}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon && (isLtr ? salon.nameEn : salon.nameAr)}</h4>
+                              <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service && (isLtr ? service.nameEn : service.nameAr)}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
+                          {isLtr ? "No bookings found" : "لا توجد حجوزات"}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

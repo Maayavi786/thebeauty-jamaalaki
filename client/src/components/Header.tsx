@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Menu, X, User } from "lucide-react";
@@ -34,6 +34,11 @@ const Header = () => {
     logout();
     navigate("/");
   };
+
+  // Automatically close mobile menu on route change
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location]);
 
   return (
     <header className="bg-background dark:bg-neutral-900 shadow-md sticky top-0 z-50">

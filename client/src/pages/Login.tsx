@@ -90,7 +90,7 @@ const Login = () => {
   
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-premium/30 to-premium/30 dark:from-premium/30 dark:to-premium/30"
       dir={isLtr ? 'ltr' : 'rtl'}
     >
       <Helmet>

@@ -28,7 +28,7 @@ const About = () => {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-[#18181A] to-[#23232B]"
+      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <div className={`container mx-auto py-12 px-4 ${isRtl ? 'font-tajawal' : ''}`}>
@@ -52,7 +52,7 @@ const About = () => {
         </div>
 
         {/* Our Story Section */}
-        <div className="mb-20 bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl p-8">
+        <div className="mb-20 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
           <h2 className="text-3xl font-bold mb-8 text-center">{t('ourStory')}</h2>
           <div className="max-w-3xl mx-auto">
             <p className="mb-4 text-lg">{t('ourStoryP1')}</p>
@@ -62,7 +62,7 @@ const About = () => {
         </div>
 
         {/* Our Values Section */}
-        <div className="mb-20 bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl p-8">
+        <div className="mb-20 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
           <h2 className="text-3xl font-bold mb-8 text-center">{t('ourValues')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="bg-background dark:bg-neutral-900 rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
@@ -85,7 +85,7 @@ const About = () => {
         </div>
 
         {/* Team Section */}
-        <section className="py-16 bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl">
+        <section className="py-16 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">{t("meetOurTeam")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -107,7 +107,7 @@ const About = () => {
         </section>
 
         {/* Contact Section */}
-        <div className="bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl p-8">
+        <div className="bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
           <h2 className="text-3xl font-bold mb-8 text-center">{t('getInTouch')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="bg-background dark:bg-neutral-900 rounded-xl shadow-md p-6 text-center hover:shadow-lg transition-all">

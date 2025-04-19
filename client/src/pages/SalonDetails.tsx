@@ -239,154 +239,153 @@ const SalonDetails = () => {
   }
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-[#18181A] to-[#23232B]"
-      dir={isLtr ? 'ltr' : 'rtl'}
-    >
-      <Helmet>
-        <title>{isLtr ? salon.nameEn : salon.nameAr} | {isLtr ? "Salon Details" : "تفاصيل الصالون"}</title>
-      </Helmet>
+    <div className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
+      <div className="container mx-auto py-12 px-4">
+        <Helmet>
+          <title>{isLtr ? salon.nameEn : salon.nameAr} | {isLtr ? "Salon Details" : "تفاصيل الصالون"}</title>
+        </Helmet>
 
-      {/* Salon Header */}
-      <div className={`relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl overflow-hidden mb-20`}>
-        {/* Salon Image */}
-        <img
-          src={salon?.imageUrl && salon.imageUrl.trim() !== ''
-            ? salon.imageUrl
-            : `/default-salon.jpg`}
-          alt={isLtr ? salon?.nameEn : salon?.nameAr}
-          className="mx-auto rounded-2xl shadow-lg w-40 h-40 object-cover border-8 border-background dark:border-neutral-800 -mt-24 mb-4"
-        />
-        <h1 className="text-3xl font-bold mb-4">
-          {isLtr ? salon.nameEn : salon.nameAr}
-        </h1>
-        <div className="flex items-center gap-4">
-          <RatingDisplay 
-            rating={salon.rating || 0} 
-            isLtr={isLtr}
-            ariaLabel={isLtr ? `Rating: ${salon.rating} stars` : `التقييم: ${salon.rating} نجوم`}
+        {/* Salon Header */}
+        <div className={`relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-[#23232B] dark:to-[#28283A] rounded-xl overflow-hidden mb-20`}>
+          {/* Salon Image */}
+          <img
+            src={salon?.imageUrl && salon.imageUrl.trim() !== ''
+              ? salon.imageUrl
+              : `/default-salon.jpg`}
+            alt={isLtr ? salon?.nameEn : salon?.nameAr}
+            className="mx-auto rounded-2xl shadow-lg w-40 h-40 object-cover border-8 border-background dark:border-neutral-800 -mt-24 mb-4"
           />
-          <InfoItem 
-            icon={MapPin} 
-            text={salon.address} 
-            isLtr={isLtr}
-            ariaLabel={isLtr ? `Address: ${salon.address}` : `العنوان: ${salon.address}`}
-          />
+          <h1 className="text-3xl font-bold mb-4">
+            {isLtr ? salon.nameEn : salon.nameAr}
+          </h1>
+          <div className="flex items-center gap-4">
+            <RatingDisplay 
+              rating={salon.rating || 0} 
+              isLtr={isLtr}
+              ariaLabel={isLtr ? `Rating: ${salon.rating} stars` : `التقييم: ${salon.rating} نجوم`}
+            />
+            <InfoItem 
+              icon={MapPin} 
+              text={salon.address} 
+              isLtr={isLtr}
+              ariaLabel={isLtr ? `Address: ${salon.address}` : `العنوان: ${salon.address}`}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="services" className="w-full" dir={isLtr ? 'ltr' : 'rtl'}>
-        <TabsList className="w-full" aria-label={isLtr ? "Salon information sections" : "أقسام معلومات الصالون"}>
-          <TabsTrigger value="services" className="flex-1">
-            {isLtr ? "Services" : "الخدمات"}
-          </TabsTrigger>
-          <TabsTrigger value="about" className="flex-1">
-            {isLtr ? "About" : "عن الصالون"}
-          </TabsTrigger>
-          <TabsTrigger value="reviews" className="flex-1">
-            {isLtr ? "Reviews" : "التقييمات"}
-          </TabsTrigger>
-        </TabsList>
+        {/* Tabs */}
+        <Tabs defaultValue="services" className="w-full" dir={isLtr ? 'ltr' : 'rtl'}>
+          <TabsList className="w-full" aria-label={isLtr ? "Salon information sections" : "أقسام معلومات الصالون"}>
+            <TabsTrigger value="services" className="flex-1">
+              {isLtr ? "Services" : "الخدمات"}
+            </TabsTrigger>
+            <TabsTrigger value="about" className="flex-1">
+              {isLtr ? "About" : "عن الصالون"}
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="flex-1">
+              {isLtr ? "Reviews" : "التقييمات"}
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Services Tab */}
-        <TabsContent value="services">
-          {isLoading ? (
-            <LoadingSkeleton isLtr={isLtr} />
-          ) : (
-            <div className="py-12 bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl mb-20">
-              <div className="mb-8 overflow-x-auto">
-                {/* Optionally, add category chips/filter here if salon services have categories */}
+          {/* Services Tab */}
+          <TabsContent value="services">
+            {isLoading ? (
+              <LoadingSkeleton isLtr={isLtr} />
+            ) : (
+              <div className="py-12 bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl mb-20">
+                <div className="mb-8 overflow-x-auto">
+                  {/* Optionally, add category chips/filter here if salon services have categories */}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl p-8">
+                  {services?.map((service) => (
+                    <ServiceCard 
+                      key={service.id} 
+                      service={service} 
+                      salonId={salonId}
+                    />
+                  ))}
+                  {services?.length === 0 && (
+                    <div className="col-span-full text-center text-muted-foreground py-8">
+                      {isLtr ? "No services found." : "لم يتم العثور على خدمات."}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl p-8">
-                {services?.map((service) => (
-                  <ServiceCard 
-                    key={service.id} 
-                    service={service} 
-                    salonId={salonId}
+            )}
+          </TabsContent>
+
+          {/* About Tab */}
+          <TabsContent value="about">
+            <Card className="bg-background dark:bg-[#23232B] rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
+              <CardContent className="p-6">
+                <p className={`mb-4 ${isLtr ? 'text-left' : 'text-right'}`}>
+                  {salon?.descriptionEn || salon?.descriptionAr || (isLtr ? 'No description available.' : 'لا يوجد وصف.')}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InfoItem 
+                    icon={Phone} 
+                    text={salon?.phone || '-'} 
+                    isLtr={isLtr}
+                    ariaLabel={isLtr ? `Phone: ${salon?.phone}` : `الهاتف: ${salon?.phone}`}
                   />
+                  <InfoItem 
+                    icon={Mail} 
+                    text={salon?.email || '-'} 
+                    isLtr={isLtr}
+                    ariaLabel={isLtr ? `Email: ${salon?.email}` : `البريد الإلكتروني: ${salon?.email}`}
+                  />
+                  <InfoItem 
+                    icon={Calendar} 
+                    text={isLtr ? "Open 24/7" : "مفتوح 24/7"} 
+                    isLtr={isLtr}
+                    ariaLabel={isLtr ? "Open 24/7" : "مفتوح 24/7"}
+                  />
+                  <InfoItem 
+                    icon={Users} 
+                    text={isLtr ? "Ladies Only" : "نساء فقط"} 
+                    isLtr={isLtr}
+                    ariaLabel={isLtr ? "Ladies Only" : "نساء فقط"}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Reviews Tab */}
+          <TabsContent value="reviews">
+            {isLoading ? (
+              <LoadingSkeleton isLtr={isLtr} />
+            ) : (
+              <div className="space-y-4">
+                {reviews?.map((review: Review) => (
+                  <Card key={review.id} className="bg-background dark:bg-[#23232B] rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <RatingDisplay 
+                          rating={review.rating} 
+                          isLtr={isLtr}
+                          ariaLabel={isLtr ? `Review rating: ${review.rating} stars` : `تقييم المراجعة: ${review.rating} نجوم`}
+                        />
+                        <span className="text-sm text-gray-500">
+                          {formatDate(new Date(review.createdAt))}
+                        </span>
+                      </div>
+                      <p className={`${isLtr ? 'text-left' : 'text-right'}`}>
+                        {review.comment}
+                      </p>
+                    </CardContent>
+                  </Card>
                 ))}
-                {services?.length === 0 && (
-                  <div className="col-span-full text-center text-muted-foreground py-8">
-                    {isLtr ? "No services found." : "لم يتم العثور على خدمات."}
+                {reviews?.length === 0 && (
+                  <div className="text-center text-muted-foreground py-8">
+                    {isLtr ? "No reviews yet." : "لا توجد تقييمات بعد."}
                   </div>
                 )}
               </div>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* About Tab */}
-        <TabsContent value="about">
-          <Card className="bg-background dark:bg-[#23232B] rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
-            <CardContent className="p-6">
-              <p className={`mb-4 ${isLtr ? 'text-left' : 'text-right'}`}>
-                {salon?.descriptionEn || salon?.descriptionAr || (isLtr ? 'No description available.' : 'لا يوجد وصف.')}
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoItem 
-                  icon={Phone} 
-                  text={salon?.phone || '-'} 
-                  isLtr={isLtr}
-                  ariaLabel={isLtr ? `Phone: ${salon?.phone}` : `الهاتف: ${salon?.phone}`}
-                />
-                <InfoItem 
-                  icon={Mail} 
-                  text={salon?.email || '-'} 
-                  isLtr={isLtr}
-                  ariaLabel={isLtr ? `Email: ${salon?.email}` : `البريد الإلكتروني: ${salon?.email}`}
-                />
-                <InfoItem 
-                  icon={Calendar} 
-                  text={isLtr ? "Open 24/7" : "مفتوح 24/7"} 
-                  isLtr={isLtr}
-                  ariaLabel={isLtr ? "Open 24/7" : "مفتوح 24/7"}
-                />
-                <InfoItem 
-                  icon={Users} 
-                  text={isLtr ? "Ladies Only" : "نساء فقط"} 
-                  isLtr={isLtr}
-                  ariaLabel={isLtr ? "Ladies Only" : "نساء فقط"}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Reviews Tab */}
-        <TabsContent value="reviews">
-          {isLoading ? (
-            <LoadingSkeleton isLtr={isLtr} />
-          ) : (
-            <div className="space-y-4">
-              {reviews?.map((review: Review) => (
-                <Card key={review.id} className="bg-background dark:bg-[#23232B] rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <RatingDisplay 
-                        rating={review.rating} 
-                        isLtr={isLtr}
-                        ariaLabel={isLtr ? `Review rating: ${review.rating} stars` : `تقييم المراجعة: ${review.rating} نجوم`}
-                      />
-                      <span className="text-sm text-gray-500">
-                        {formatDate(new Date(review.createdAt))}
-                      </span>
-                    </div>
-                    <p className={`${isLtr ? 'text-left' : 'text-right'}`}>
-                      {review.comment}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-              {reviews?.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
-                  {isLtr ? "No reviews yet." : "لا توجد تقييمات بعد."}
-                </div>
-              )}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

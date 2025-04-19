@@ -65,58 +65,60 @@ const Home = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>The Beauty - {isLtr ? "Luxury Salon Booking" : "حجز صالون الرفاهية"}</title>
-        <meta name="description" content={isLtr 
-          ? "Book luxury salon services designed specifically for women in Saudi Arabia"
-          : "احجزي خدمات صالون فاخرة مصممة خصيصًا للنساء في المملكة العربية السعودية"
-        } />
-      </Helmet>
+    <div className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
+      <>
+        <Helmet>
+          <title>The Beauty - {isLtr ? "Luxury Salon Booking" : "حجز صالون الرفاهية"}</title>
+          <meta name="description" content={isLtr 
+            ? "Book luxury salon services designed specifically for women in Saudi Arabia"
+            : "احجزي خدمات صالون فاخرة مصممة خصيصًا للنساء في المملكة العربية السعودية"
+          } />
+        </Helmet>
 
-      {/* Hero Section */}
-      <HeroSection />
-      
-      {/* Featured Filters */}
-      <FeaturedFilters />
-      
-      {/* Search Section */}
-      <section className="py-12 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h3 className={`font-bold text-3xl mb-4 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
-                {t("findYourPerfectSalon")}
-              </h3>
+        {/* Hero Section */}
+        <HeroSection />
+        
+        {/* Featured Filters */}
+        <FeaturedFilters />
+        
+        {/* Search Section */}
+        <section className="py-12 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-8">
+                <h3 className={`font-bold text-3xl mb-4 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
+                  {t("findYourPerfectSalon")}
+                </h3>
+                
+                <p className="text-muted-foreground max-w-lg mx-auto">
+                  {isLtr 
+                    ? "Search for salons based on your needs, location and preferences"
+                    : "ابحثي عن الصالونات بناءً على احتياجاتك وموقعك وتفضيلاتك"
+                  }
+                </p>
+              </div>
               
-              <p className="text-muted-foreground max-w-lg mx-auto">
-                {isLtr 
-                  ? "Search for salons based on your needs, location and preferences"
-                  : "ابحثي عن الصالونات بناءً على احتياجاتك وموقعك وتفضيلاتك"
-                }
-              </p>
+              <SearchBar onSearch={handleSearch} />
             </div>
-            
-            <SearchBar onSearch={handleSearch} />
           </div>
-        </div>
-      </section>
-      
-      {/* Featured Salons */}
-      <FeaturedSalons />
-      
-      {/* Services Section */}
-      <ServicesSection />
-      
-      {/* Booking Process Steps */}
-      <BookingSteps />
-      
-      {/* Testimonials */}
-      <Testimonials />
-      
-      {/* CTA Section */}
-      <CTASection />
-    </>
+        </section>
+        
+        {/* Featured Salons */}
+        <FeaturedSalons />
+        
+        {/* Services Section */}
+        <ServicesSection />
+        
+        {/* Booking Process Steps */}
+        <BookingSteps />
+        
+        {/* Testimonials */}
+        <Testimonials />
+        
+        {/* CTA Section */}
+        <CTASection />
+      </>
+    </div>
   );
 };
 

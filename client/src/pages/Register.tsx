@@ -109,15 +109,15 @@ const Register = () => {
   };
   
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
-      dir={isRtl ? 'rtl' : 'ltr'}
-    >
-      <Helmet>
-        <title>{isLtr ? 'Register' : 'تسجيل حساب'} | Jamaalaki</title>
-        <meta name="description" content={isLtr ? 'Create your Jamaalaki account' : 'إنشاء حسابك في جمالكي'} />
-      </Helmet>
-      <div className="container mx-auto px-4 py-16 flex justify-center">
+    <div className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 flex items-center justify-center">
+      <div
+        className="container mx-auto px-4 py-16 flex justify-center"
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
+        <Helmet>
+          <title>{isLtr ? 'Register' : 'تسجيل حساب'} | Jamaalaki</title>
+          <meta name="description" content={isLtr ? 'Create your Jamaalaki account' : 'إنشاء حسابك في جمالكي'} />
+        </Helmet>
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className={`text-2xl ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>

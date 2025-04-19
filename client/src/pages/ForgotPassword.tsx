@@ -60,19 +60,12 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 pattern-bg"
-      dir={isLtr ? 'ltr' : 'rtl'}
-    >
-      <div className="flex flex-col items-center justify-center">
-        <Helmet>
-          <title>{isLtr ? "Forgot Password | The Beauty" : "نسيت كلمة المرور | جمالكِ"}</title>
-        </Helmet>
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-lg shadow-md p-8 space-y-6"
-          dir={isLtr ? "ltr" : "rtl"}
-        >
+    <div className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 flex items-center justify-center">
+      <div className="container mx-auto px-4 py-16 flex justify-center">
+        <div className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-lg shadow-md p-8 space-y-6" dir={isLtr ? "ltr" : "rtl"}>
+          <Helmet>
+            <title>{isLtr ? "Forgot Password | The Beauty" : "نسيت كلمة المرور | جمالكِ"}</title>
+          </Helmet>
           <h2 className="text-2xl font-bold mb-4 text-center">
             {isLtr ? "Forgot Password" : "نسيت كلمة المرور"}
           </h2>
@@ -81,28 +74,30 @@ export default function ForgotPassword() {
               ? "Enter your email and we'll send you a reset link."
               : "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور."}
           </p>
-          <Input
-            type="email"
-            placeholder={isLtr ? "Email address" : "البريد الإلكتروني"}
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            className="mb-4"
-            aria-label={isLtr ? "Email address" : "البريد الإلكتروني"}
-          />
-          <Button type="submit" className="w-full" disabled={loading || sent}>
-            {loading ? (
-              <Loader2 className="animate-spin mr-2 h-5 w-5 inline" />
-            ) : null}
-            {sent
-              ? isLtr
-                ? "Email Sent"
-                : "تم إرسال البريد"
-              : isLtr
-              ? "Send Reset Link"
-              : "إرسال رابط إعادة التعيين"}
-          </Button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              type="email"
+              placeholder={isLtr ? "Email address" : "البريد الإلكتروني"}
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              className="mb-4"
+              aria-label={isLtr ? "Email address" : "البريد الإلكتروني"}
+            />
+            <Button type="submit" className="w-full" disabled={loading || sent}>
+              {loading ? (
+                <Loader2 className="animate-spin mr-2 h-5 w-5 inline" />
+              ) : null}
+              {sent
+                ? isLtr
+                  ? "Email Sent"
+                  : "تم إرسال البريد"
+                : isLtr
+                ? "Send Reset Link"
+                : "إرسال رابط إعادة التعيين"}
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -198,16 +198,13 @@ const BookingPage = () => {
   }
   
   return (
-    <div
-      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
-      dir={isRtl ? 'rtl' : 'ltr'}
-    >
-      <Helmet>
-        <title>{isLtr ? 'Booking' : 'الحجز'} | Jamaalaki</title>
-        <meta name="description" content={isLtr ? 'Book your luxury salon appointment' : 'احجزي موعد صالون فاخر'} />
-      </Helmet>
+    <div className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
       <ErrorBoundary>
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto py-12 px-4">
+          <Helmet>
+            <title>{isLtr ? "Booking" : "الحجز"} | Jamaalaki</title>
+            <meta name="description" content={isLtr ? 'Book your luxury salon appointment' : 'احجزي موعد صالون فاخر'} />
+          </Helmet>
           <div className="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl overflow-hidden mb-20">
             <div 
               className="absolute inset-0 opacity-20"
