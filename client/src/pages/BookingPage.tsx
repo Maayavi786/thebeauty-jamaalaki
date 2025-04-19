@@ -155,18 +155,16 @@ const BookingPage = () => {
       return;
     }
 
-    // Removed session expired check and popup completely for smoother UX
-    // (If user is not authenticated, the booking will fail server-side and handled by booking error toast)
-    
     // Create datetime from selected date and time
     const [hours, minutes] = selectedTime.split(':').map(Number);
     const bookingDate = new Date(selectedDate);
     bookingDate.setHours(hours, minutes, 0, 0);
     
+    // Use .data.id for salon and service to match API response shape
     const bookingData = {
       userId: user.id,
-      salonId: (salon as Salon).id,
-      serviceId: (service as Service).id,
+      salonId: (salon as any)?.data?.id,
+      serviceId: (service as any)?.data?.id,
       datetime: bookingDate.toISOString(),
       status: "pending",
       notes: formData.notes,
