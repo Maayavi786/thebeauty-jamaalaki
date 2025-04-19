@@ -433,7 +433,8 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
     try {
       const salonId = req.query.salonId ? parseInt(req.query.salonId as string) : undefined;
       const reviews = salonId ? await storage.getReviewsBySalon(salonId) : await storage.getAllReviews();
-      res.status(200).json(reviews);
+      console.log('API /api/reviews?salonId=', salonId, 'Result:', reviews);
+      res.status(200).json({ success: true, data: reviews });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
