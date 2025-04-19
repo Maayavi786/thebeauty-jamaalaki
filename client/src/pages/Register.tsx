@@ -118,7 +118,7 @@ const Register = () => {
           <title>{isLtr ? 'Register' : 'تسجيل حساب'} | Jamaalaki</title>
           <meta name="description" content={isLtr ? 'Create your Jamaalaki account' : 'إنشاء حسابك في جمالكي'} />
         </Helmet>
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-white dark:bg-neutral-900">
           <CardHeader className="space-y-1">
             <CardTitle className={`text-2xl ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
               {isLtr ? "Create an Account" : "إنشاء حساب"}

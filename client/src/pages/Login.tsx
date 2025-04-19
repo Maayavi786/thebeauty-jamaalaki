@@ -98,7 +98,7 @@ const Login = () => {
         <meta name="description" content={isLtr ? 'Login to your Jamaalaki account' : 'تسجيل الدخول إلى حساب جمالكي'} />
       </Helmet>
       <div className="container mx-auto px-4 py-16 flex justify-center">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-white dark:bg-neutral-900">
           <CardHeader className="space-y-1">
             <CardTitle className={`text-2xl ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>
               {isLtr ? "Welcome Back" : "مرحباً بعودتك"}
