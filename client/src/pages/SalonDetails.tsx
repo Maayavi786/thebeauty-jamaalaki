@@ -248,17 +248,14 @@ const SalonDetails = () => {
       </Helmet>
 
       {/* Salon Header */}
-      <div className={`mb-8 ${isLtr ? 'text-left' : 'text-right'}`}>
+      <div className={`relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl overflow-hidden mb-20`}>
         {/* Salon Image */}
         <img
-          src={salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`}
+          src={salon?.imageUrl && salon.imageUrl.trim() !== ''
+            ? salon.imageUrl
+            : `/default-salon.jpg`}
           alt={isLtr ? salon?.nameEn : salon?.nameAr}
-          className="w-full h-56 object-cover rounded-lg mb-6 border"
-          onError={e => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`;
-          }}
+          className="mx-auto rounded-2xl shadow-lg w-40 h-40 object-cover border-8 border-background dark:border-neutral-800 -mt-24 mb-4"
         />
         <h1 className="text-3xl font-bold mb-4">
           {isLtr ? salon.nameEn : salon.nameAr}

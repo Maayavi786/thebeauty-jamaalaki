@@ -234,6 +234,17 @@ const BookingPage = () => {
                     <CardContent>
                       <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                          {/* Salon Image */}
+                          <div className="flex justify-center mt-8">
+                            <img
+                              src={salon?.imageUrl && salon.imageUrl.trim() !== ''
+                                ? salon.imageUrl
+                                : '/default-salon.jpg'}
+                              alt={isLtr ? salon?.nameEn : salon?.nameAr}
+                              className="rounded-2xl shadow-lg w-32 h-32 object-cover border-4 border-background dark:border-neutral-800 mb-4"
+                            />
+                          </div>
+                          
                           {/* Service Information */}
                           <div className="bg-muted/30 p-4 rounded-lg mb-6">
                             <h3 className={`font-medium text-lg mb-3 ${isRtl ? 'font-tajawal' : ''}`}>
