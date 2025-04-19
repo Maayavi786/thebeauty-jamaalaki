@@ -342,20 +342,21 @@ const SalonDetails = () => {
           <Card>
             <CardContent className="p-6">
               <p className={`mb-4 ${isLtr ? 'text-left' : 'text-right'}`}>
-                {isLtr ? salon.descriptionEn : salon.descriptionAr}
+                {/* Show salon description, fallback to placeholder if missing */}
+                {salon?.descriptionEn || salon?.descriptionAr || (isLtr ? 'No description available.' : 'لا يوجد وصف.')}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <InfoItem 
                   icon={Phone} 
-                  text={salon.phone} 
+                  text={salon?.phone || '-'} 
                   isLtr={isLtr}
-                  ariaLabel={isLtr ? `Phone: ${salon.phone}` : `الهاتف: ${salon.phone}`}
+                  ariaLabel={isLtr ? `Phone: ${salon?.phone}` : `الهاتف: ${salon?.phone}`}
                 />
                 <InfoItem 
                   icon={Mail} 
-                  text={salon.email || '-'} 
+                  text={salon?.email || '-'} 
                   isLtr={isLtr}
-                  ariaLabel={isLtr ? `Email: ${salon.email}` : `البريد الإلكتروني: ${salon.email}`}
+                  ariaLabel={isLtr ? `Email: ${salon?.email}` : `البريد الإلكتروني: ${salon?.email}`}
                 />
                 <InfoItem 
                   icon={Calendar} 
@@ -380,25 +381,32 @@ const SalonDetails = () => {
             <LoadingSkeleton isLtr={isLtr} />
           ) : (
             <div className="space-y-4">
-              {reviews?.map((review) => (
-                <Card key={review.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <RatingDisplay 
-                        rating={review.rating} 
-                        isLtr={isLtr}
-                        ariaLabel={isLtr ? `Review rating: ${review.rating} stars` : `تقييم المراجعة: ${review.rating} نجوم`}
-                      />
-                      <span className="text-sm text-gray-500">
-                        {formatDate(new Date(review.createdAt))}
-                      </span>
-                    </div>
-                    <p className={`${isLtr ? 'text-left' : 'text-right'}`}>
-                      {review.comment}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+              {/* Show reviews or fallback if none */}
+              {reviews && reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <Card key={review.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <RatingDisplay 
+                          rating={review.rating} 
+                          isLtr={isLtr}
+                          ariaLabel={isLtr ? `Review rating: ${review.rating} stars` : `تقييم المراجعة: ${review.rating} نجوم`}
+                        />
+                        <span className="text-sm text-gray-500">
+                          {formatDate(new Date(review.createdAt))}
+                        </span>
+                      </div>
+                      <p className={`${isLtr ? 'text-left' : 'text-right'}`}>
+                        {review.comment}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground py-8">
+                  {isLtr ? "No reviews yet." : "لا توجد تقييمات بعد."}
+                </div>
+              )}
             </div>
           )}
         </TabsContent>
