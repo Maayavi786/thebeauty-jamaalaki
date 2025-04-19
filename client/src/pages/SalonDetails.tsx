@@ -382,8 +382,8 @@ const SalonDetails = () => {
           ) : (
             <div className="space-y-4">
               {/* Show reviews or fallback if none */}
-              {reviews && reviews.length > 0 ? (
-                reviews.map((review) => (
+              {(salon?.reviews && salon?.reviews.length > 0 ? salon.reviews : (reviews && reviews.length > 0 ? reviews : []))
+                .map((review: Review) => (
                   <Card key={review.id}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-2">
@@ -402,7 +402,8 @@ const SalonDetails = () => {
                     </CardContent>
                   </Card>
                 ))
-              ) : (
+              }
+              {((salon?.reviews && salon?.reviews.length === 0) || (reviews && reviews.length === 0)) && (
                 <div className="text-center text-muted-foreground py-8">
                   {isLtr ? "No reviews yet." : "لا توجد تقييمات بعد."}
                 </div>
