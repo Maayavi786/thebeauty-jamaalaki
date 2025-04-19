@@ -56,10 +56,18 @@ const BookingPage = () => {
   // Use default query client for salons and services
   const { data: salon, isLoading: isSalonLoading } = useQuery({
     queryKey: [config.api.endpoints.salons + `/${params?.salonId}`],
+    queryFn: async () => {
+      const response = await apiRequest('GET', config.api.endpoints.salons + `/${params?.salonId}`);
+      return response.json();
+    },
   });
 
   const { data: service, isLoading: isServiceLoading } = useQuery({
     queryKey: [config.api.endpoints.services + `/${params?.serviceId}`],
+    queryFn: async () => {
+      const response = await apiRequest('GET', config.api.endpoints.services + `/${params?.serviceId}`);
+      return response.json();
+    },
   });
   
   // Create booking form schema
