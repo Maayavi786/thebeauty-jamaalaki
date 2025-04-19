@@ -255,17 +255,7 @@ const SalonDetails = () => {
 
   return (
     <div
-      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A]"
-      style={{
-        backgroundImage: `
-          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
-          url('/assets/luxury-motif-floral.svg'),
-          linear-gradient(180deg, #201A23 0%, #18181A 100%)
-        `,
-        backgroundBlendMode: 'normal',
-        backgroundRepeat: 'repeat',
-        backgroundSize: 'auto',
-      }}
+      className="min-h-screen pattern-bg"
       dir={isLtr ? 'ltr' : 'rtl'}
     >
       <Helmet>
@@ -322,17 +312,11 @@ const SalonDetails = () => {
           {isLoading ? (
             <LoadingSkeleton isLtr={isLtr} />
           ) : (
-            <>
-              <div className="mb-6 max-w-xs">
-                <Input
-                  placeholder={isLtr ? "Search services..." : "ابحثي عن خدمة..."}
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="w-full"
-                  aria-label={isLtr ? "Search services" : "ابحثي عن خدمة"}
-                />
+            <div className="py-12 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl mb-20">
+              <div className="mb-8 overflow-x-auto">
+                {/* Optionally, add category chips/filter here if salon services have categories */}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
                 {filteredServices.map((service) => (
                   <ServiceCard 
                     key={service.id} 
@@ -346,7 +330,7 @@ const SalonDetails = () => {
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
         </TabsContent>
 

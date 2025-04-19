@@ -110,18 +110,8 @@ const Register = () => {
   
   return (
     <div
-      className="min-h-screen bg-[#FAF6F2] dark:bg-[#18181A] flex items-center justify-center"
-      style={{
-        backgroundImage: `
-          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
-          url('/assets/luxury-motif-floral.svg'),
-          linear-gradient(180deg, #201A23 0%, #18181A 100%)
-        `,
-        backgroundBlendMode: 'normal',
-        backgroundRepeat: 'repeat',
-        backgroundSize: 'auto',
-      }}
-      dir={isLtr ? 'ltr' : 'rtl'}
+      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
+      dir={isRtl ? 'rtl' : 'ltr'}
     >
       <Helmet>
         <title>{isLtr ? 'Register' : 'تسجيل حساب'} | Jamaalaki</title>
