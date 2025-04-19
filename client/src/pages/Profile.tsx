@@ -329,24 +329,23 @@ const Profile = () => {
                                 key={booking.id} 
                                 className="border border-border rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between"
                               >
-                                <div className="mb-4 md:mb-0">
-                                  <div className="flex items-center mb-2">
-                                    <Badge className={getStatusColor(booking.status)}>
-                                      {booking.status}
-                                    </Badge>
-                                    <span className="mx-2">•</span>
-                                    <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
-                                    <span className="text-sm">
-                                      {formatDate(booking.datetime)} at {formatTime(booking.datetime)}
-                                    </span>
+                                <div className="mb-4 md:mb-0 flex items-center">
+                                  {salon && (
+                                    <img
+                                      src={salon.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`}
+                                      alt={isLtr ? salon.nameEn : salon.nameAr}
+                                      className="w-12 h-12 object-cover rounded-lg border mr-3"
+                                      onError={e => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.onerror = null;
+                                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`;
+                                      }}
+                                    />
+                                  )}
+                                  <div>
+                                    <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon && (isLtr ? salon.nameEn : salon.nameAr)}</h4>
+                                    <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service && (isLtr ? service.nameEn : service.nameAr)}</p>
                                   </div>
-                                  
-                                  <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>
-                                    {salon && (isLtr ? salon.nameEn : salon.nameAr)}
-                                  </h4>
-                                  <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                                    {service && (isLtr ? service.nameEn : service.nameAr)}
-                                  </p>
                                 </div>
                                 
                                 <div className="flex items-center">
@@ -421,32 +420,41 @@ const Profile = () => {
                                 className="border border-border rounded-lg p-4"
                               >
                                 <div className="flex items-center mb-2">
-                                  <Badge className={getStatusColor(booking.status)}>
-                                    {booking.status}
-                                  </Badge>
-                                  <span className="mx-2">•</span>
-                                  <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
-                                  <span className="text-sm">
-                                    {formatDate(booking.datetime)} at {formatTime(booking.datetime)}
-                                  </span>
-                                  
-                                  {booking.pointsEarned && (
-                                    <>
-                                      <span className="mx-2">•</span>
-                                      <Award className="w-4 h-4 mr-1 text-primary" />
-                                      <span className="text-sm text-primary">
-                                        +{booking.pointsEarned} {isLtr ? "points" : "نقطة"}
-                                      </span>
-                                    </>
+                                  {salon && (
+                                    <img
+                                      src={salon.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`}
+                                      alt={isLtr ? salon.nameEn : salon.nameAr}
+                                      className="w-12 h-12 object-cover rounded-lg border mr-3"
+                                      onError={e => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.onerror = null;
+                                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon.nameEn || '' : salon.nameAr || '')}&background=D4AF37&color=fff&size=64`;
+                                      }}
+                                    />
                                   )}
+                                  <div>
+                                    <Badge className={getStatusColor(booking.status)}>
+                                      {booking.status}
+                                    </Badge>
+                                    <span className="mx-2">•</span>
+                                    <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
+                                    <span className="text-sm">
+                                      {formatDate(booking.datetime)} at {formatTime(booking.datetime)}
+                                    </span>
+                                    {booking.pointsEarned && (
+                                      <>
+                                        <span className="mx-2">•</span>
+                                        <Award className="w-4 h-4 mr-1 text-primary" />
+                                        <span className="text-sm text-primary">
+                                          +{booking.pointsEarned} {isLtr ? "points" : "نقطة"}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
                                 
-                                <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>
-                                  {salon && (isLtr ? salon.nameEn : salon.nameAr)}
-                                </h4>
-                                <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                                  {service && (isLtr ? service.nameEn : service.nameAr)}
-                                </p>
+                                <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon && (isLtr ? salon.nameEn : salon.nameAr)}</h4>
+                                <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service && (isLtr ? service.nameEn : service.nameAr)}</p>
                               </div>
                             );
                           })}
