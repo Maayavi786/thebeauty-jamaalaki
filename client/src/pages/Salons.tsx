@@ -202,108 +202,110 @@ const Salons = () => {
   }, [salonsResponse, searchTerm, filteredSalons]);
   
   return (
-    <div
-      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
-      dir={isRtl ? 'rtl' : 'ltr'}
-    >
-      <Helmet>
-        <title>{isRtl ? 'صالونات' : 'Salons'} | Jamaalaki</title>
-        <meta name="description" content={isRtl ? 'اكتشفي أفضل صالونات التجميل' : 'Discover the best beauty salons'} />
-      </Helmet>
-      <div className={`container mx-auto py-12 px-4 ${isRtl ? 'font-tajawal' : ''}`}
-        style={{ background: 'transparent' }}>
-        <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>{t("salons", { ns: 'home' })}</h1>
-        {/* Hero Section */}
-        <div className="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl mb-20">
-          <div 
-            className="absolute inset-0 opacity-20"
-            style={{ 
-              backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(getIslamicPatternSvg('#ffffff'))}")`, 
-              backgroundSize: '300px' 
-            }}
-          ></div>
-          <div className="relative z-10 py-20 px-6 text-center max-w-3xl mx-auto">
-            <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${isRtl ? 'font-tajawal' : 'font-playfair'}`}>{t('findYourPerfectSalon', { ns: 'common' })}</h1>
-            <p className={`text-lg mb-8 text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{t('salonsDescription', { ns: 'home' })}</p>
-            <div className="max-w-2xl mx-auto">
-              <SearchBar onSearch={handleSearch} />
+    <section data-aos="fade-up">
+      <div
+        className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
+        <Helmet>
+          <title>{isRtl ? 'صالونات' : 'Salons'} | Jamaalaki</title>
+          <meta name="description" content={isRtl ? 'اكتشفي أفضل صالونات التجميل' : 'Discover the best beauty salons'} />
+        </Helmet>
+        <div className={`container mx-auto py-12 px-4 ${isRtl ? 'font-tajawal' : ''}`}
+          style={{ background: 'transparent' }}>
+          <h1 className={`text-3xl font-bold mb-6 ${isLtr ? 'font-playfair' : 'font-tajawal'}`}>{t("salons", { ns: 'home' })}</h1>
+          {/* Hero Section */}
+          <div className="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl mb-20">
+            <div 
+              className="absolute inset-0 opacity-20"
+              style={{ 
+                backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(getIslamicPatternSvg('#ffffff'))}")`, 
+                backgroundSize: '300px' 
+              }}
+            ></div>
+            <div className="relative z-10 py-20 px-6 text-center max-w-3xl mx-auto">
+              <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${isRtl ? 'font-tajawal' : 'font-playfair'}`}>{t('findYourPerfectSalon', { ns: 'common' })}</h1>
+              <p className={`text-lg mb-8 text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{t('salonsDescription', { ns: 'home' })}</p>
+              <div className="max-w-2xl mx-auto">
+                <SearchBar onSearch={handleSearch} />
+              </div>
             </div>
           </div>
-        </div>
-        {/* Filters Section */}
-        <div className="mb-12 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-6">
-          <div className="mb-8 overflow-x-auto">
-            <FilterChips
-              options={[
-                { id: 'ladiesOnly', label: t('ladiesOnly') },
-                { id: 'privateRoom', label: t('privateRoom') },
-                { id: 'hijabFriendly', label: t('hijabFriendly') },
-                { id: 'topRated', label: t('topRated') },
-                { id: 'newArrivals', label: t('newArrivals') },
-                { id: 'openNow', label: t('openNow') },
-                { id: 'verified', label: t('verified') },
-              ]}
-              selectedFilters={selectedFilters}
-              toggleFilter={toggleFilter}
-            />
-          </div>
-        </div>
-        {/* Active filters */}
-        {selectedFilters.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {selectedFilters.map(filter => {
-              const option = filterOptions.find(opt => opt.id === filter);
-              if (!option) return null;
-              return (
-                <Badge 
-                  key={filter} 
-                  className="bg-primary text-white flex items-center gap-1"
-                  onClick={() => toggleFilter(filter)}
-                >
-                  {option.label}
-                  <span className="ml-1 cursor-pointer">&times;</span>
-                </Badge>
-              );
-            })}
-          </div>
-        )}
-        {/* Search bar */}
-        <div className="mb-6 max-w-xs">
-          <Input
-            placeholder={isLtr ? "Search salons..." : "ابحثي عن صالون..."}
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full"
-            aria-label={isLtr ? "Search salons" : "ابحثي عن صالون"}
-          />
-        </div>
-        {/* Results count */}
-        <div className="mb-6">
-          <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{t('salonsFound', { count: filteredSalonsBySearchTerm.length, ns: 'home' })}</p>
-        </div>
-        {/* Salons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          {/* Filters Section */}
+          <div className="mb-12 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-6">
+            <div className="mb-8 overflow-x-auto">
+              <FilterChips
+                options={[
+                  { id: 'ladiesOnly', label: t('ladiesOnly') },
+                  { id: 'privateRoom', label: t('privateRoom') },
+                  { id: 'hijabFriendly', label: t('hijabFriendly') },
+                  { id: 'topRated', label: t('topRated') },
+                  { id: 'newArrivals', label: t('newArrivals') },
+                  { id: 'openNow', label: t('openNow') },
+                  { id: 'verified', label: t('verified') },
+                ]}
+                selectedFilters={selectedFilters}
+                toggleFilter={toggleFilter}
+              />
             </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-red-500 mb-4">{t('errorLoadingSalons')}</p>
-              <Button onClick={() => window.location.reload()} variant="outline">{t('refresh')}</Button>
-            </div>
-          ) : filteredSalonsBySearchTerm.length > 0 ? (
-            filteredSalonsBySearchTerm.map((salon: any) => (
-              <SalonCard key={salon.id} salon={salon} />
-            ))
-          ) : (
-            <div className="text-center py-12">
-              <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{t('noSalonsFound', { ns: 'home' })}</p>
+          </div>
+          {/* Active filters */}
+          {selectedFilters.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {selectedFilters.map(filter => {
+                const option = filterOptions.find(opt => opt.id === filter);
+                if (!option) return null;
+                return (
+                  <Badge 
+                    key={filter} 
+                    className="bg-primary text-white flex items-center gap-1"
+                    onClick={() => toggleFilter(filter)}
+                  >
+                    {option.label}
+                    <span className="ml-1 cursor-pointer">&times;</span>
+                  </Badge>
+                );
+              })}
             </div>
           )}
+          {/* Search bar */}
+          <div className="mb-6 max-w-xs">
+            <Input
+              placeholder={isLtr ? "Search salons..." : "ابحثي عن صالون..."}
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full"
+              aria-label={isLtr ? "Search salons" : "ابحثي عن صالون"}
+            />
+          </div>
+          {/* Results count */}
+          <div className="mb-6">
+            <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{t('salonsFound', { count: filteredSalonsBySearchTerm.length, ns: 'home' })}</p>
+          </div>
+          {/* Salons Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-red-500 mb-4">{t('errorLoadingSalons')}</p>
+                <Button onClick={() => window.location.reload()} variant="outline">{t('refresh')}</Button>
+              </div>
+            ) : filteredSalonsBySearchTerm.length > 0 ? (
+              filteredSalonsBySearchTerm.map((salon: any) => (
+                <SalonCard key={salon.id} salon={salon} />
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <p className={`text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{t('noSalonsFound', { ns: 'home' })}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

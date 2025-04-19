@@ -47,7 +47,7 @@ const Testimonials = () => {
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
+    <section data-aos="fade-up" className="py-16 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h4 className="text-primary uppercase tracking-wider text-sm font-medium">

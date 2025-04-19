@@ -2,8 +2,8 @@ import 'dotenv/config';
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { createServer } from "http";
-import { registerRoutes } from "./routes.js";
-import { setupVite, serveStatic, log } from "./vite.mjs";
+import { registerRoutes } from "./routes";
+// import { setupVite, serveStatic, log } from "./vite.mjs";
 import session from "express-session";
 import passport from "passport";
 import { env } from "./config.js";
@@ -72,7 +72,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      log(logLine);
+      console.log(logLine);
     }
   });
 
@@ -103,9 +103,9 @@ async function main() {
     
     // Set up Vite middleware first in development
     const server = await createServer(app);
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    }
+    // if (app.get("env") === "development") {
+    //   await setupVite(app, server);
+    // }
 
     // Then register API routes
     await registerRoutes(app, storage);
@@ -120,9 +120,9 @@ async function main() {
     });
 
     // Finally, serve static files in production
-    if (app.get("env") !== "development") {
-      serveStatic(app);
-    }
+    // if (app.get("env") !== "development") {
+    //   serveStatic(app);
+    // }
 
     // ALWAYS serve the app on port 5000
     // this serves both the API and the client.
@@ -133,7 +133,7 @@ async function main() {
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
-      log(`serving on port ${port}`);
+      console.log(`serving on port ${port}`);
     });
   } catch (err) {
     console.error("Failed to initialize application:", err);

@@ -1,9 +1,9 @@
 import type { Express, Request, Response } from "express";
-import { IStorage } from "./storage.js";
+import { IStorage } from "./storage";
 import { 
   insertUserSchema, insertSalonSchema, insertServiceSchema, 
   insertBookingSchema, insertReviewSchema, loginSchema, User 
-} from "../shared/schema.js";
+} from "../shared/schema";
 import { ZodError } from "zod";
 import { hashPassword, comparePasswords } from "./auth.js";
 import { Session } from "express-session";

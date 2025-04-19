@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Salon } from "@shared/schema";
 import { Star, Check, MapPin } from "lucide-react";
+import cn from "classnames";
 
 interface SalonCardProps {
   salon: Salon;
@@ -15,7 +16,12 @@ const SalonCard = ({ salon }: SalonCardProps) => {
 
   return (
     <Link href={`/salons/${salon.id}`}>
-      <div className="luxury-card bg-background dark:bg-neutral-800/20 rounded-xl overflow-hidden shadow-md border border-muted dark:border-neutral-800 transition-all duration-200 ease-in-out cursor-pointer hover:-translate-y-2 hover:shadow-xl">
+      <div
+        className={cn(
+          "luxury-card card-animate bg-background dark:bg-neutral-800/20 rounded-xl overflow-hidden shadow-md border border-muted dark:border-neutral-800 transition-all duration-200 ease-in-out cursor-pointer hover:-translate-y-2 hover:shadow-xl",
+          salon.featured ? "gold-border" : "",
+        )}
+      >
         <div className="relative">
           <img 
             src={salon.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(salon.nameEn)}&background=D4AF37&color=fff&size=256`} 

@@ -5,13 +5,17 @@ import { Service } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 import { Clock } from 'lucide-react';
+import cn from 'classnames';
 
 interface ServiceCardProps {
   service: Service;
   salonId: number;
+  featured?: boolean;
+  className?: string;
+  onClick?: () => void;
 }
 
-const ServiceCard = ({ service, salonId }: ServiceCardProps) => {
+const ServiceCard = ({ service, salonId, featured, className, onClick }: ServiceCardProps) => {
   const { t } = useTranslation("common");
   const { isLtr, isRtl } = useLanguage();
   
@@ -25,7 +29,14 @@ const ServiceCard = ({ service, salonId }: ServiceCardProps) => {
   };
 
   return (
-    <div className="bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-md transition-all hover:shadow-lg">
+    <div
+      className={cn(
+        "bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-md card-animate transition-all hover:shadow-lg",
+        featured ? "gold-border" : "",
+        className
+      )}
+      onClick={onClick}
+    >
       <div className="p-6">
         <h3 className={`text-xl font-bold mb-2 ${isRtl ? 'font-tajawal' : ''}`}>
           {isLtr ? service.nameEn : service.nameAr}

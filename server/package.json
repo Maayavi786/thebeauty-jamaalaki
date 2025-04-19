@@ -1,0 +1,11 @@
+{
+  "name": "thebeauty-server",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "ts-node index.ts"
+  },
+  "dependencies": {
+    "ts-node": "^10.9.1"
+  }
+}

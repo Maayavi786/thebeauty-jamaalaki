@@ -74,9 +74,14 @@ const Home = () => {
         } />
       </Helmet>
 
-      {/* Hero Section */}
-      <HeroSection />
-      
+      <section
+        className="relative py-16 px-4 sm:px-8 lg:px-16"
+        data-aos="fade-up"
+      >
+        {/* Hero Section */}
+        <HeroSection />
+      </section>
+
       {/* Featured Filters */}
       <FeaturedFilters />
       
@@ -102,20 +107,30 @@ const Home = () => {
         </div>
       </section>
       
-      {/* Featured Salons */}
-      <FeaturedSalons />
-      
-      {/* Services Section */}
-      <ServicesSection />
-      
-      {/* Booking Process Steps */}
-      <BookingSteps />
-      
-      {/* Testimonials */}
-      <Testimonials />
-      
-      {/* CTA Section */}
-      <CTASection />
+      <section className="my-12" data-aos="fade-up">
+        {/* Featured Salons */}
+        <FeaturedSalons />
+      </section>
+
+      <section className="my-12" data-aos="fade-up">
+        {/* Services Section */}
+        <ServicesSection />
+      </section>
+
+      <section className="my-12" data-aos="fade-up">
+        {/* Booking Process Steps */}
+        <BookingSteps />
+      </section>
+
+      <section className="my-12" data-aos="fade-up">
+        {/* Testimonials */}
+        <Testimonials />
+      </section>
+
+      <section className="my-12" data-aos="fade-up">
+        {/* CTA Section */}
+        <CTASection />
+      </section>
     </>
   );
 };

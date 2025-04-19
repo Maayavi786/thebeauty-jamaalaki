@@ -72,10 +72,7 @@ const Services = () => {
   };
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
-      dir={isRtl ? 'rtl' : 'ltr'}
-    >
+    <section data-aos="fade-up" className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900">
       <Helmet>
         <title>{isRtl ? 'الخدمات' : 'Services'} | Jamaalaki</title>
         <meta name="description" content={isRtl ? 'تصفحي واحجزي خدمات التجميل الفاخرة' : 'Browse and book luxury beauty services'} />
@@ -147,7 +144,7 @@ const Services = () => {
           )}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
