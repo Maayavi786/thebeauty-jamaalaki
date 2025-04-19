@@ -240,7 +240,7 @@ const SalonDetails = () => {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900"
+      className="min-h-screen bg-gradient-to-br from-[#18181A] to-[#23232B]"
       dir={isLtr ? 'ltr' : 'rtl'}
     >
       <Helmet>
@@ -297,11 +297,11 @@ const SalonDetails = () => {
           {isLoading ? (
             <LoadingSkeleton isLtr={isLtr} />
           ) : (
-            <div className="py-12 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl mb-20">
+            <div className="py-12 bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl mb-20">
               <div className="mb-8 overflow-x-auto">
                 {/* Optionally, add category chips/filter here if salon services have categories */}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-br from-secondary/20 to-accent/20 dark:from-[#23232B] dark:to-[#28283A] rounded-xl p-8">
                 {services?.map((service) => (
                   <ServiceCard 
                     key={service.id} 
@@ -321,7 +321,7 @@ const SalonDetails = () => {
 
         {/* About Tab */}
         <TabsContent value="about">
-          <Card>
+          <Card className="bg-background dark:bg-[#23232B] rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
             <CardContent className="p-6">
               <p className={`mb-4 ${isLtr ? 'text-left' : 'text-right'}`}>
                 {salon?.descriptionEn || salon?.descriptionAr || (isLtr ? 'No description available.' : 'لا يوجد وصف.')}
@@ -363,7 +363,7 @@ const SalonDetails = () => {
           ) : (
             <div className="space-y-4">
               {reviews?.map((review: Review) => (
-                <Card key={review.id}>
+                <Card key={review.id} className="bg-background dark:bg-[#23232B] rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
                       <RatingDisplay 
