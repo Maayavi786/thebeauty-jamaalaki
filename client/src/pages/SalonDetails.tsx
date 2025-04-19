@@ -136,9 +136,23 @@ const useSalonData = (salonId: number): SalonData => {
     retry: false
   });
 
-  const salon = salonResponse || null;
-  const services = salonResponse?.services || null;
-  const reviews = salonResponse?.reviews || null;
+  // Unwrap response if needed
+  let salon: Salon | null = null;
+  let services: Service[] | null = null;
+  let reviews: Review[] | null = null;
+  if (salonResponse) {
+    if (salonResponse.data) {
+      // API returns { data: { ...salon, services, reviews } }
+      salon = salonResponse.data;
+      services = salonResponse.data.services || null;
+      reviews = salonResponse.data.reviews || null;
+    } else {
+      // API returns { ...salon, services, reviews }
+      salon = salonResponse;
+      services = salonResponse.services || null;
+      reviews = salonResponse.reviews || null;
+    }
+  }
 
   return {
     salon,
