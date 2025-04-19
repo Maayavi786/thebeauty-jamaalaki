@@ -200,7 +200,14 @@ const Salons = () => {
       (salon.descriptionAr && salon.descriptionAr.toLowerCase().includes(term))
     );
   }, [salonsResponse, searchTerm, filteredSalons]);
-  
+
+  // DEBUG: Log salons data and search/filter state
+  console.log('salonsResponse', salonsResponse);
+  console.log('searchTerm', searchTerm);
+  console.log('queryParams', queryParams);
+  console.log('filteredSalons', filteredSalons);
+  console.log('filteredSalonsBySearchTerm', filteredSalonsBySearchTerm);
+
   return (
     <section data-aos="fade-up">
       <div
@@ -284,6 +291,10 @@ const Salons = () => {
           </div>
           {/* Salons Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
+            {/* DEBUG: Show raw filtered salons data */}
+            <pre style={{ background: '#222', color: '#fff', padding: '1em', borderRadius: '8px', marginBottom: '1em', maxHeight: 300, overflow: 'auto' }}>
+              {JSON.stringify(filteredSalonsBySearchTerm, null, 2)}
+            </pre>
             {isLoading ? (
               <div className="flex justify-center items-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
