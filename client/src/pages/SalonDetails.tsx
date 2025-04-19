@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import ServiceCard from "@/components/ServiceCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { Input } from "@/components/ui/input";
 import { config } from "@/lib/config";
 
 // TypeScript Interfaces
@@ -136,21 +135,21 @@ const useSalonData = (salonId: number): SalonData => {
     retry: false
   });
 
-  // Unwrap response if needed
   let salon: Salon | null = null;
   let services: Service[] | null = null;
   let reviews: Review[] | null = null;
   if (salonResponse) {
-    if (salonResponse.data) {
-      // API returns { data: { ...salon, services, reviews } }
-      salon = salonResponse.data;
-      services = salonResponse.data.services || null;
-      reviews = salonResponse.data.reviews || null;
+    // Try to unwrap if the API returns { data: { ...salon, services, reviews } }
+    if ((salonResponse as any).data) {
+      const data = (salonResponse as any).data;
+      salon = data;
+      services = data.services || null;
+      reviews = data.reviews || null;
     } else {
       // API returns { ...salon, services, reviews }
-      salon = salonResponse;
-      services = salonResponse.services || null;
-      reviews = salonResponse.reviews || null;
+      salon = salonResponse as Salon;
+      services = (salonResponse as any).services || null;
+      reviews = (salonResponse as any).reviews || null;
     }
   }
 
@@ -178,20 +177,6 @@ const SalonDetails = () => {
   
   const { salon, services, reviews, isLoading, errors } = useSalonData(salonId);
   
-  const [searchTerm, setSearchTerm] = React.useState("");
-
-  const filteredServices = React.useMemo(() => {
-    if (!services) return [];
-    if (!searchTerm.trim()) return services;
-    const term = searchTerm.trim().toLowerCase();
-    return services.filter(service =>
-      (service.nameEn && service.nameEn.toLowerCase().includes(term)) ||
-      (service.nameAr && service.nameAr.toLowerCase().includes(term)) ||
-      (service.descriptionEn && service.descriptionEn.toLowerCase().includes(term)) ||
-      (service.descriptionAr && service.descriptionAr.toLowerCase().includes(term))
-    );
-  }, [services, searchTerm]);
-
   useEffect(() => {
     const handleError = (error: unknown, defaultMessage: string) => {
       if (error) {
@@ -317,14 +302,14 @@ const SalonDetails = () => {
                 {/* Optionally, add category chips/filter here if salon services have categories */}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
-                {filteredServices.map((service) => (
+                {services?.map((service) => (
                   <ServiceCard 
                     key={service.id} 
                     service={service} 
                     salonId={salonId}
                   />
                 ))}
-                {filteredServices.length === 0 && (
+                {services?.length === 0 && (
                   <div className="col-span-full text-center text-muted-foreground py-8">
                     {isLtr ? "No services found." : "لم يتم العثور على خدمات."}
                   </div>
@@ -339,8 +324,7 @@ const SalonDetails = () => {
           <Card>
             <CardContent className="p-6">
               <p className={`mb-4 ${isLtr ? 'text-left' : 'text-right'}`}>
-                {/* Show salon description, fallback to placeholder if missing */}
-                {salon?.descriptionEn || salon?.description_en || salon?.descriptionAr || salon?.description_ar || (isLtr ? 'No description available.' : 'لا يوجد وصف.')}
+                {salon?.descriptionEn || salon?.descriptionAr || (isLtr ? 'No description available.' : 'لا يوجد وصف.')}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <InfoItem 
@@ -378,29 +362,26 @@ const SalonDetails = () => {
             <LoadingSkeleton isLtr={isLtr} />
           ) : (
             <div className="space-y-4">
-              {/* Show reviews or fallback if none */}
-              {(reviews && reviews.length > 0 ? reviews : (salon?.reviews && salon.reviews.length > 0 ? salon.reviews : []))
-                .map((review: Review) => (
-                  <Card key={review.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <RatingDisplay 
-                          rating={review.rating} 
-                          isLtr={isLtr}
-                          ariaLabel={isLtr ? `Review rating: ${review.rating} stars` : `تقييم المراجعة: ${review.rating} نجوم`}
-                        />
-                        <span className="text-sm text-gray-500">
-                          {formatDate(new Date(review.createdAt))}
-                        </span>
-                      </div>
-                      <p className={`${isLtr ? 'text-left' : 'text-right'}`}>
-                        {review.comment}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))
-              }
-              {((reviews && reviews.length === 0) || (salon?.reviews && salon.reviews.length === 0)) && (
+              {reviews?.map((review: Review) => (
+                <Card key={review.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <RatingDisplay 
+                        rating={review.rating} 
+                        isLtr={isLtr}
+                        ariaLabel={isLtr ? `Review rating: ${review.rating} stars` : `تقييم المراجعة: ${review.rating} نجوم`}
+                      />
+                      <span className="text-sm text-gray-500">
+                        {formatDate(new Date(review.createdAt))}
+                      </span>
+                    </div>
+                    <p className={`${isLtr ? 'text-left' : 'text-right'}`}>
+                      {review.comment}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+              {reviews?.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">
                   {isLtr ? "No reviews yet." : "لا توجد تقييمات بعد."}
                 </div>
