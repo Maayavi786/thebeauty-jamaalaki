@@ -84,7 +84,14 @@ const Login = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const success = await login(values.username, values.password);
     if (success) {
-      navigate(getRedirectPath());
+      // Check for booking redirect in sessionStorage first
+      const bookingRedirect = sessionStorage.getItem('bookingRedirect');
+      if (bookingRedirect) {
+        sessionStorage.removeItem('bookingRedirect');
+        navigate(bookingRedirect);
+      } else {
+        navigate(getRedirectPath());
+      }
     }
   };
   

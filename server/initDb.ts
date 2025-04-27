@@ -1,9 +1,9 @@
-import { db } from './db.js';
+import { db } from './db';
 import { 
   users as usersTable, salons, services, Salon
-} from '../shared/schema.js';
+} from '../shared/schema';
 import { sql, inArray, eq } from 'drizzle-orm';
-import { hashPassword } from './auth.js';
+import { hashPassword } from './auth';
 
 let isInitialized: boolean = false;
 

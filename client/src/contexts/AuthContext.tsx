@@ -34,15 +34,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
 
   const checkSession = async () => {
     try {
-      const response = await apiRequest('GET', config.api.endpoints.auth + '/session');
-      if (!response.ok) {
-        throw new Error('Session check failed');
-      }
+      // Use apiRequest instead of direct fetch for consistent handling
+      const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth}/session`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        // Always include credentials for session cookies
+        credentials: 'include',
+        mode: 'cors'
+      });
       
-      const data = await response.json();
-      if (data.success && data.user) {
-        setUser(data.user);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Session check response:', data);
+        if (data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
       } else {
+        // Just treat any failure as not logged in
+        console.log('Session check failed with status:', response.status);
         setUser(null);
       }
     } catch (error) {
@@ -68,16 +82,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
       const response = await apiRequest('POST', config.api.endpoints.auth + '/login', { username, password });
       
       const data = await response.json();
-      if (!response.ok || !data.success) {
+      
+      // The API returns 200 status code with a 'message' field for successful login
+      if (response.ok) {
+        // Set the user data from the response
+        setUser(data.user);
+        toast({
+          title: "Success",
+          description: "You have been logged in successfully",
+        });
+        return true;
+      } else {
+        // Handle unsuccessful login
         throw new Error(data.message || 'Login failed');
       }
-      
-      setUser(data.user);
-      toast({
-        title: "Success",
-        description: "You have been logged in successfully",
-      });
-      return true;
     } catch (error) {
       console.error('Login failed:', error);
       toast({
@@ -96,27 +114,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
       setLoading(true);
       const response = await apiRequest('POST', config.api.endpoints.auth + '/register', userData);
       
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Registration failed');
-      }
-      
+      // The server returns the user object directly on success with a 201 status code
       const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || 'Registration failed');
-      }
       
-      setUser(data.user);
-      toast({
-        title: "Success",
-        description: "Your account has been created successfully",
-      });
-      return true;
+      // Set the user from the response data
+      if (data && data.id) {
+        setUser(data);
+        toast({
+          title: "Success",
+          description: "Your account has been created successfully",
+        });
+        return true;
+      } else {
+        // This case handles if we get a valid response but no user data
+        throw new Error('Registration successful but no user data returned');
+      }
     } catch (error) {
       console.error('Registration failed:', error);
+      // Provide a more specific error message for debugging
+      const errorMessage = error instanceof Error 
+        ? `${error.message}` 
+        : "Registration failed - server error";
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Registration failed",
+        description: errorMessage,
         variant: "destructive"
       });
       return false;

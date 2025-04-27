@@ -24,8 +24,35 @@ const ServiceCard = ({ service, salonId }: ServiceCardProps) => {
     "120min": "2 hours"
   };
 
+  // Service images based on category (if service doesn't have an image)
+  const getCategoryImage = (category: string) => {
+    const categoryImages: Record<string, string> = {
+      'haircuts': 'https://images.unsplash.com/photo-1560869713-7d0a29430803?q=80&w=600&auto=format&fit=crop',
+      'coloring': 'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?q=80&w=600&auto=format&fit=crop',
+      'styling': 'https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?q=80&w=600&auto=format&fit=crop',
+      'makeup': 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=600&auto=format&fit=crop',
+      'facial': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=600&auto=format&fit=crop',
+      'nails': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?q=80&w=600&auto=format&fit=crop',
+      'massage': 'https://images.unsplash.com/photo-1620733723572-11c53fc809a9?q=80&w=600&auto=format&fit=crop',
+      'default': 'https://images.unsplash.com/photo-1560869713-7d0a29430803?q=80&w=600&auto=format&fit=crop'
+    };
+    
+    return categoryImages[category] || categoryImages.default;
+  };
+
+  const serviceImage = service.imageUrl || getCategoryImage(service.category || 'default');
+
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-md transition-all hover:shadow-lg">
+      {/* Service image - full width */}
+      <div 
+        className="w-full h-40 bg-center bg-cover"
+        style={{
+          backgroundImage: `url(${serviceImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      ></div>
       <div className="p-6">
         <h3 className={`text-xl font-bold mb-2 ${isRtl ? 'font-tajawal' : ''}`}>
           {isLtr ? service.nameEn : service.nameAr}

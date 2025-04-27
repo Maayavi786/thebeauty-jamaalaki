@@ -24,26 +24,37 @@ async function throwIfResNotOk(res: Response) {
 }
 
 function normalizeEndpoint(endpoint: string): string {
-  // Remove any leading /api or double /api
-  return endpoint.replace(/^\/+api(\/|$)/, '/');
+  // Ensure endpoint starts with a single slash
+  const normalized = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  // Don't remove /api prefix - it's required for our backend
+  return normalized;
 }
 
 export const apiRequest = async (method: string, endpoint: string, data?: any) => {
   const normalizedEndpoint = normalizeEndpoint(endpoint);
   const url = `${API_BASE_URL}${normalizedEndpoint}`;
   console.log('apiRequest URL:', url, 'endpoint:', endpoint, 'normalizedEndpoint:', normalizedEndpoint, 'API_BASE_URL:', API_BASE_URL);
+  
+  // Simplified headers for development
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache'
+    'Content-Type': 'application/json'
   };
 
   try {
-    const response = await fetch(url, {
+    // Use mode: 'cors' explicitly and don't require credentials for GET requests
+    const fetchOptions: RequestInit = {
       method,
       headers,
-      credentials: 'include',
-      body: data ? JSON.stringify(data) : undefined
-    });
+      mode: 'cors',
+      credentials: method.toUpperCase() === 'GET' ? 'same-origin' : 'include',
+    };
+    
+    // Only add body for non-GET requests
+    if (data && method.toUpperCase() !== 'GET') {
+      fetchOptions.body = JSON.stringify(data);
+    }
+    
+    const response = await fetch(url, fetchOptions);
 
     await throwIfResNotOk(response);
     return response;

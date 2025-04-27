@@ -78,12 +78,14 @@ const Profile = () => {
     const patternSvg = getIslamicPatternSvg();
     const patternBg = document.createElement('div');
     patternBg.className = 'pattern-bg';
-    patternBg.style.backgroundImage = `url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(patternSvg)}')`;
-    
+    patternBg.style.backgroundImage = `url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(patternSvg)}')`;    
     document.body.appendChild(patternBg);
     
     return () => {
-      document.body.removeChild(patternBg);
+      // Check if the element is still in the document before removing
+      if (document.body.contains(patternBg)) {
+        document.body.removeChild(patternBg);
+      }
     };
   }, []);
   

@@ -54,18 +54,30 @@ const BookingPage = () => {
   
   // Use default query client for salons and services
   const { data: salon, isLoading: isSalonLoading } = useQuery({
-    queryKey: [config.api.endpoints.salons + `/${params?.salonId}`],
+    queryKey: [`salon-${params?.salonId}`],
     queryFn: async () => {
-      const response = await apiRequest('GET', config.api.endpoints.salons + `/${params?.salonId}`);
-      return response.json();
+      try {
+        const response = await apiRequest('GET', config.api.endpoints.salons + `/${params?.salonId}`);
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('Failed to fetch salon:', error);
+        throw error;
+      }
     },
   });
 
   const { data: service, isLoading: isServiceLoading } = useQuery({
-    queryKey: [config.api.endpoints.services + `/${params?.serviceId}`],
+    queryKey: [`service-${params?.serviceId}`],
     queryFn: async () => {
-      const response = await apiRequest('GET', config.api.endpoints.services + `/${params?.serviceId}`);
-      return response.json();
+      try {
+        const response = await apiRequest('GET', config.api.endpoints.services + `/${params?.serviceId}`);
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('Failed to fetch service:', error);
+        throw error;
+      }
     },
   });
   
@@ -84,24 +96,30 @@ const BookingPage = () => {
   
   // Create booking mutation
   const createBooking = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', config.api.endpoints.bookings, data);
-      return response.json();
+    mutationFn: async (formData: any) => {
+      try {
+        const response = await apiRequest('POST', config.api.endpoints.bookings, formData);
+        const result = await response.json();
+        // console.log (removed for production)('Booking creation response:', result);
+        return result;
+      } catch (error) {
+        console.error('Error creating booking:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
-      toast({
-        title: isLtr ? "Booking Confirmed" : "تم تأكيد الحجز",
-        description: isLtr 
-          ? "Your appointment has been successfully booked." 
-          : "تم حجز موعدك بنجاح.",
-        variant: "default",
-      });
-      queryClient.invalidateQueries({ queryKey: [`/bookings/user/${user?.id}`] });
-      navigate("/profile");
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [config.api.endpoints.bookings] });
+      setShowConfirmation(true);
+      
+      // After a short delay, redirect to profile page
+      setTimeout(() => {
+        navigate('/profile');
+      }, 3000);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Booking creation error:', error);
       toast({
-        title: isLtr ? "Booking Failed" : "فشل الحجز",
+        title: "Error",
         description: error instanceof Error 
           ? error.message 
           : isLtr 
@@ -112,9 +130,10 @@ const BookingPage = () => {
     },
   });
   
-  // Redirect to login if not authenticated
+  // Check authentication and redirect if not logged in
   useEffect(() => {
-    if (!isAuthenticated && !loading) {
+    if (loading) return;
+    if (!isAuthenticated || !user) {
       toast({
         title: isLtr ? "Authentication Required" : "مطلوب تسجيل الدخول",
         description: isLtr 
@@ -122,10 +141,11 @@ const BookingPage = () => {
           : "يرجى تسجيل الدخول لحجز موعد.",
         variant: "default",
       });
-      const redirectPath = encodeURIComponent(location);
-      navigate(`/login?redirect=${redirectPath}`);
+      // Store the current location to redirect back after login
+      sessionStorage.setItem('bookingRedirect', location);
+      navigate("/login");
     }
-  }, [isAuthenticated, loading, location, navigate, toast, isLtr]);
+  }, [isAuthenticated, loading, navigate, toast, isLtr, user, location]);
   
   // Create pattern SVG background
   useEffect(() => {
@@ -159,11 +179,33 @@ const BookingPage = () => {
     const bookingDate = new Date(selectedDate);
     bookingDate.setHours(hours, minutes, 0, 0);
     
-    // Use .data.id for salon and service to match API response shape
+    // Log the structure of salon and service to debug
+    // console.log (removed for production)('Salon data structure:', salon);
+    // console.log (removed for production)('Service data structure:', service);
+    
+    // Extract IDs correctly based on the response structure
+    // Direct access if salon/service has an id property, otherwise try to access it through data property
+    const salonId = salon?.id || (salon as any)?.data?.id || Number(params?.salonId);
+    const serviceId = service?.id || (service as any)?.data?.id || Number(params?.serviceId);
+    
+    // console.log (removed for production)('Using salonId:', salonId, 'serviceId:', serviceId);
+    
+    // Make sure we have valid IDs before proceeding
+    if (!salonId || !serviceId) {
+      toast({
+        title: isLtr ? "Missing Information" : "معلومات ناقصة",
+        description: isLtr 
+          ? "Could not determine salon or service information. Please try again." 
+          : "تعذر تحديد معلومات الصالون أو الخدمة. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const bookingData = {
       userId: user.id,
-      salonId: (salon as any)?.data?.id,
-      serviceId: (service as any)?.data?.id,
+      salonId: salonId,
+      serviceId: serviceId,
       datetime: bookingDate.toISOString(),
       status: "pending",
       notes: formData.notes,
@@ -230,15 +272,16 @@ const BookingPage = () => {
                     <CardContent>
                       <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                          {/* Salon Image */}
-                          <div className="flex justify-center mt-8">
-                            <img
-                              src={salon?.imageUrl && salon.imageUrl.trim() !== ''
-                                ? salon.imageUrl
-                                : '/default-salon.jpg'}
-                              alt={isLtr ? salon?.nameEn : salon?.nameAr}
-                              className="rounded-2xl shadow-lg w-32 h-32 object-cover border-4 border-background dark:border-neutral-800 mb-4"
-                            />
+                          {/* Salon Image - Full Width */}
+                          <div className="w-full overflow-hidden rounded-xl shadow-lg mt-8 mb-6">
+                            <div 
+                              className="w-full h-48 bg-center bg-cover"
+                              style={{
+                                backgroundImage: `url(${salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : '/default-salon.jpg'})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center'
+                              }}
+                            ></div>
                           </div>
                           
                           {/* Service Information */}

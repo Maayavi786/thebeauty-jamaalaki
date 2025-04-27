@@ -25,6 +25,7 @@ import {
 import ServiceCard from "@/components/ServiceCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { config } from "@/lib/config";
+import { apiRequest } from "@/lib/queryClient";
 
 // TypeScript Interfaces
 interface InfoItemProps {
@@ -131,7 +132,18 @@ const useSalonData = (salonId: number): SalonData => {
     isLoading: isSalonLoading, 
     error: salonError 
   } = useQuery({
-    queryKey: [`${config.api.endpoints.salons}/${salonId}`],
+    queryKey: [`salon-${salonId}`],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('GET', `${config.api.endpoints.salons}/${salonId}`);
+        const result = await response.json();
+        console.log('Salon details response:', result);
+        return result;
+      } catch (error) {
+        console.error('Failed to fetch salon details:', error);
+        throw error;
+      }
+    },
     retry: false
   });
 
@@ -245,31 +257,36 @@ const SalonDetails = () => {
           <title>{isLtr ? salon.nameEn : salon.nameAr} | {isLtr ? "Salon Details" : "تفاصيل الصالون"}</title>
         </Helmet>
 
-        {/* Salon Header */}
-        <div className={`relative overflow-hidden py-16 lg:py-24 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-[#23232B] dark:to-[#28283A] rounded-xl overflow-hidden mb-20`}>
-          {/* Salon Image */}
-          <img
-            src={salon?.imageUrl && salon.imageUrl.trim() !== ''
-              ? salon.imageUrl
-              : `/default-salon.jpg`}
-            alt={isLtr ? salon?.nameEn : salon?.nameAr}
-            className="mx-auto rounded-2xl shadow-lg w-40 h-40 object-cover border-8 border-background dark:border-neutral-800 -mt-24 mb-4"
-          />
-          <h1 className="text-3xl font-bold mb-4">
-            {isLtr ? salon.nameEn : salon.nameAr}
-          </h1>
-          <div className="flex items-center gap-4">
-            <RatingDisplay 
-              rating={salon.rating || 0} 
-              isLtr={isLtr}
-              ariaLabel={isLtr ? `Rating: ${salon.rating} stars` : `التقييم: ${salon.rating} نجوم`}
-            />
-            <InfoItem 
-              icon={MapPin} 
-              text={salon.address} 
-              isLtr={isLtr}
-              ariaLabel={isLtr ? `Address: ${salon.address}` : `العنوان: ${salon.address}`}
-            />
+        {/* Salon Header with Full-Width Image */}
+        <div className="relative rounded-xl overflow-hidden mb-20">
+          {/* Full-width background image */}
+          <div 
+            className="w-full h-64 bg-center bg-cover"
+            style={{
+              backgroundImage: `url(${salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : '/default-salon.jpg'})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          ></div>
+          
+          {/* Content overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center justify-end p-6">
+            <h1 className="text-3xl font-bold mb-4 text-white drop-shadow-lg">
+              {isLtr ? salon.nameEn : salon.nameAr}
+            </h1>
+            <div className="flex items-center gap-4 text-white">
+              <RatingDisplay 
+                rating={salon.rating || 0} 
+                isLtr={isLtr}
+                ariaLabel={isLtr ? `Rating: ${salon.rating} stars` : `التقييم: ${salon.rating} نجوم`}
+              />
+              <InfoItem 
+                icon={MapPin} 
+                text={salon.address} 
+                isLtr={isLtr}
+                ariaLabel={isLtr ? `Address: ${salon.address}` : `العنوان: ${salon.address}`}
+              />
+            </div>
           </div>
         </div>
 

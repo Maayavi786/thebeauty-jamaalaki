@@ -64,12 +64,20 @@ const Salons = () => {
   }, [location]);
   
   // Use default query client for salons
-  const { data: salonsResponse = { success: false, data: [] }, isLoading, error } = useQuery({
-    queryKey: [config.api.endpoints.salons],
+  const { data: salonsData = [], isLoading, error } = useQuery({
+    queryKey: ['salons-list'],
     queryFn: async () => {
       // Always use apiRequest to ensure correct URL and credentials
-      const response = await apiRequest('GET', config.api.endpoints.salons);
-      return response.json();
+      try {
+        const response = await apiRequest('GET', config.api.endpoints.salons);
+        const result = await response.json();
+        console.log('Salons API response:', result);
+        // API might return { success: true, data: [...] } or directly the array
+        return Array.isArray(result) ? result : (result.data || []);
+      } catch (err) {
+        console.error('Failed to fetch salons:', err);
+        throw err;
+      }
     },
   });
   
@@ -167,30 +175,43 @@ const Salons = () => {
   };
   
   // Filter salons based on search term and service type
-  const filteredSalons = salonsResponse?.data ? salonsResponse.data.filter((salon: Salon) => {
-    let matchesSearch = true;
-    let matchesService = true;
-    
-    // Search term filter
-    if (queryParams.q) {
-      const searchTerm = queryParams.q.toLowerCase();
-      const nameEn = salon.nameEn.toLowerCase();
-      const nameAr = salon.nameAr.toLowerCase();
-      const city = salon.city.toLowerCase();
-      
-      matchesSearch = nameEn.includes(searchTerm) || 
-                      nameAr.includes(searchTerm) || 
-                      city.includes(searchTerm);
+  const filteredSalons = useMemo(() => {
+    // Ensure we have salon data
+    if (!salonsData || !Array.isArray(salonsData) || salonsData.length === 0) {
+      return [];
     }
     
-    // TODO: Implement service type filtering when service data is available
-    
-    return matchesSearch && matchesService;
-  }) : [];
+    return salonsData.filter((salon: Salon) => {
+      let matchesSearch = true;
+      let matchesService = true;
+      
+      // Search term filter
+      if (queryParams.q) {
+        const searchTerm = queryParams.q.toLowerCase();
+        const nameEn = salon.nameEn?.toLowerCase() || '';
+        const nameAr = salon.nameAr?.toLowerCase() || '';
+        const city = salon.city?.toLowerCase() || '';
+        
+        matchesSearch = nameEn.includes(searchTerm) || 
+                        nameAr.includes(searchTerm) || 
+                        city.includes(searchTerm);
+      }
+      
+      // Additional filters
+      if (queryParams.isLadiesOnly && !salon.isLadiesOnly) return false;
+      if (queryParams.hasPrivateRooms && !salon.hasPrivateRooms) return false;
+      if (queryParams.isHijabFriendly && !salon.isHijabFriendly) return false;
+      if (queryParams.minRating && salon.rating < queryParams.minRating) return false;
+      
+      return matchesSearch && matchesService;
+    });
+  }, [salonsData, queryParams]);  // Dependencies array
   
   const filteredSalonsBySearchTerm = useMemo(() => {
-    if (!salonsResponse?.data) return [];
+    // If no search term, just return the filtered salons
     if (!searchTerm.trim()) return filteredSalons;
+    
+    // Otherwise, search within the already filtered salons
     const term = searchTerm.trim().toLowerCase();
     return filteredSalons.filter((salon: any) =>
       (salon.nameEn && salon.nameEn.toLowerCase().includes(term)) ||
@@ -199,7 +220,7 @@ const Salons = () => {
       (salon.descriptionEn && salon.descriptionEn.toLowerCase().includes(term)) ||
       (salon.descriptionAr && salon.descriptionAr.toLowerCase().includes(term))
     );
-  }, [salonsResponse, searchTerm, filteredSalons]);
+  }, [searchTerm, filteredSalons]);
   
   return (
     <div
@@ -292,7 +313,7 @@ const Salons = () => {
               <p className="text-red-500 mb-4">{t('errorLoadingSalons')}</p>
               <Button onClick={() => window.location.reload()} variant="outline">{t('refresh')}</Button>
             </div>
-          ) : filteredSalonsBySearchTerm.length > 0 ? (
+          ) : filteredSalonsBySearchTerm && filteredSalonsBySearchTerm.length > 0 ? (
             filteredSalonsBySearchTerm.map((salon: any) => (
               <SalonCard key={salon.id} salon={salon} />
             ))

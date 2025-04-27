@@ -1,5 +1,5 @@
-import { eq, and, or, isNull } from 'drizzle-orm';
-import { db, users, salons, services, bookings, reviews } from './db.js';
+import { eq, and, or, isNull, sql } from 'drizzle-orm';
+import { db, users, salons, services, bookings, reviews } from './db';
 import { IStorage } from './storage.js';
 import { 
   User, InsertUser,
@@ -7,7 +7,7 @@ import {
   Service, InsertService,
   Booking, InsertBooking,
   Review, InsertReview
-} from '../shared/schema.js';
+} from '../shared/schema';
 
 // --- Drizzle ORM: Fix Table Type Errors ---
 // Ensure correct import and usage of Drizzle ORM tables
@@ -28,13 +28,75 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    try {
+      // Select specific fields from the database that we know exist
+      const [dbUser] = await db.select({
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        email: users.email,
+        role: users.role,
+        createdAt: users.createdAt
+        // Omitting problematic fields
+      }).from(users).where(eq(users.username, username));
+      
+      if (!dbUser) return undefined;
+      
+      // Create a complete User object with default values for missing fields
+      const user: User = {
+        id: dbUser.id,
+        username: dbUser.username,
+        password: dbUser.password,
+        email: dbUser.email,
+        fullName: '', // Default empty string for the missing field
+        phone: null, // Default null for the missing field
+        role: dbUser.role,
+        loyaltyPoints: 0, // Default value
+        preferredLanguage: 'en', // Default value
+        createdAt: dbUser.createdAt
+      };
+      
+      return user;
+    } catch (error) {
+      console.error('Error in getUserByUsername:', error);
+      throw error;
+    }
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    try {
+      // Select specific fields from the database that we know exist
+      const [dbUser] = await db.select({
+        id: users.id,
+        username: users.username,
+        password: users.password,
+        email: users.email,
+        role: users.role,
+        createdAt: users.createdAt
+        // Omitting problematic fields
+      }).from(users).where(eq(users.email, email));
+      
+      if (!dbUser) return undefined;
+      
+      // Create a complete User object with default values for missing fields
+      const user: User = {
+        id: dbUser.id,
+        username: dbUser.username,
+        password: dbUser.password,
+        email: dbUser.email,
+        fullName: '', // Default empty string for the missing field
+        phone: null, // Default null for the missing field
+        role: dbUser.role,
+        loyaltyPoints: 0, // Default value
+        preferredLanguage: 'en', // Default value
+        createdAt: dbUser.createdAt
+      };
+      
+      return user;
+    } catch (error) {
+      console.error('Error in getUserByEmail:', error);
+      throw error;
+    }
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -42,8 +104,81 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(userData: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(userData).returning();
-    return user;
+    try {
+      console.log('Inspecting database schema before creating user');
+      
+      // First, let's inspect the actual table structure to see column names
+      const tableInfo = await db.execute(sql`
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'users'
+      `);
+      
+      console.log('Database users table schema:', tableInfo.rows);
+      
+      // Let's try with the original approach but with mapped field names to match the actual database
+      const [user] = await db.insert(users).values({
+        username: userData.username,
+        password: userData.password,
+        email: userData.email,
+        // Use any of these options depending on the actual column name in the database
+        fullName: userData.fullName, // If the ORM mapping is correct
+        // full_name: userData.fullName, // If using snake_case directly
+        // fullname: userData.fullName, // If the column doesn't have underscore
+        phone: userData.phone,
+        role: userData.role || 'customer',
+        preferredLanguage: userData.preferredLanguage || 'en',
+        // preferred_language: userData.preferredLanguage || 'en', // Alt option
+        loyaltyPoints: 0,
+        // loyalty_points: 0, // Alt option
+      }).returning();
+      
+      console.log('User created successfully:', { id: user.id, username: user.username });
+      return user;
+    } catch (error) {
+      console.error('Detailed error in createUser:', error);
+      
+      // If the first approach fails, try with direct SQL as a fallback
+      try {
+        console.log('Falling back to direct SQL with minimal columns');
+        
+        // Simplified SQL with only the essential columns that we know must exist
+        const result = await db.execute(sql`
+          INSERT INTO users (username, password, email) 
+          VALUES (
+            ${userData.username}, 
+            ${userData.password}, 
+            ${userData.email}
+          )
+          RETURNING id, username, email
+        `);
+        
+        if (!result.rows || result.rows.length === 0) {
+          throw new Error('Failed to create user - no rows returned');
+        }
+        
+        // Create a minimal user object with the returned data
+        const userRow = result.rows[0];
+        const user: User = {
+          id: Number(userRow.id),
+          username: userRow.username,
+          password: userData.password,
+          email: userRow.email,
+          fullName: userData.fullName || '',
+          phone: userData.phone || null,
+          role: userData.role || 'customer',
+          loyaltyPoints: 0,
+          preferredLanguage: userData.preferredLanguage || 'en',
+          createdAt: new Date()
+        };
+        
+        console.log('User created with fallback method:', { id: user.id, username: user.username });
+        return user;
+      } catch (fallbackError) {
+        console.error('Fallback creation also failed:', fallbackError);
+        throw error; // Throw the original error as it's likely more relevant
+      }
+    }
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {

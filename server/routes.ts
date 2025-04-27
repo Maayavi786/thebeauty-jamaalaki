@@ -5,7 +5,7 @@ import {
   insertBookingSchema, insertReviewSchema, loginSchema, User 
 } from "../shared/schema";
 import { ZodError } from "zod";
-import { hashPassword, comparePasswords } from "./auth.js";
+import { hashPassword, comparePasswords } from "./auth";
 import { Session } from "express-session";
 import { Router } from 'express';
 import { neon } from '@neondatabase/serverless';
@@ -54,35 +54,70 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
 
   // User routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
+    // console.log (removed for production)("Registration request received:", req.body);
+    
+    // Validate the request data
     const { data, error } = validateRequest(insertUserSchema, req.body);
     if (error) {
+      // console.log (removed for production)("Registration validation error:", error);
       return res.status(400).json({ message: "Validation error", errors: error });
     }
 
     try {
       // Check if username or email already exists
+      // console.log (removed for production)("Checking for existing username:", data.username);
       const existingUsername = await storage.getUserByUsername(data.username);
       if (existingUsername) {
+        // console.log (removed for production)("Username already exists:", data.username);
         return res.status(400).json({ message: "Username already exists" });
       }
 
+      // console.log (removed for production)("Checking for existing email:", data.email);
       const existingEmail = await storage.getUserByEmail(data.email);
       if (existingEmail) {
+        // console.log (removed for production)("Email already exists:", data.email);
         return res.status(400).json({ message: "Email already exists" });
       }
 
       // Hash the password before storing it
+      // console.log (removed for production)("Hashing password...");
       const hashedPassword = await hashPassword(data.password);
-      const userData = { ...data, password: hashedPassword };
       
+      // Ensure all required fields are present according to the schema
+      // Note: The database uses snake_case (full_name) while our code uses camelCase (fullName)
+      // We need to adapt our data to match the expected database column names
+      const userData = { 
+        username: data.username,
+        password: hashedPassword,
+        email: data.email,
+        // Map to the database column name for full_name
+        full_name: data.fullName || "", 
+        phone: data.phone,
+        role: data.role || "customer",
+        preferred_language: data.preferredLanguage || "en",
+        loyalty_points: 0
+      };
+      
+      // console.log (removed for production)("Creating new user with data:", { ...userData, password: "[REDACTED]" });
       const user = await storage.createUser(userData);
+      
+      if (!user) {
+        console.error("User creation failed: No user returned from storage");
+        return res.status(500).json({ message: "Failed to create user account" });
+      }
+      
       // Don't return password in response
       const { password, ...userWithoutPassword } = user;
       
+      // console.log (removed for production)("User created successfully:", { id: user.id, username: user.username });
       res.status(201).json(userWithoutPassword);
     } catch (error) {
-      console.error("Error creating user:", error);
-      res.status(500).json({ message: "Error creating user" });
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error creating user:", errorMessage, error);
+      res.status(500).json({ 
+        message: "Error creating user", 
+        details: process.env.NODE_ENV === "development" ? errorMessage : undefined 
+      });
     }
   });
 
@@ -433,7 +468,7 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
     try {
       const salonId = req.query.salonId ? parseInt(req.query.salonId as string) : undefined;
       const reviews = salonId ? await storage.getReviewsBySalon(salonId) : await storage.getAllReviews();
-      console.log('API /api/reviews?salonId=', salonId, 'Result:', reviews);
+      // console.log (removed for production)('API /api/reviews?salonId=', salonId, 'Result:', reviews);
       res.status(200).json({ success: true, data: reviews });
     } catch (err) {
       console.error(err);

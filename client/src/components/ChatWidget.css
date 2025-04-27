@@ -1,0 +1,115 @@
+.chat-widget-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.chat-widget-fab {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 2rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.16);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-widget-fab:hover {
+  background: #1d4ed8;
+}
+
+.chat-widget {
+  background: #fff;
+  width: 340px;
+  max-height: 520px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+  overflow: hidden;
+  animation: chat-widget-pop 0.22s cubic-bezier(.2,1.3,.4,1) both;
+}
+
+@keyframes chat-widget-pop {
+  from { transform: scale(0.85); opacity: 0.5; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.chat-widget-header {
+  background: #2563eb;
+  color: #fff;
+  padding: 12px 18px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chat-widget-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.chat-widget-messages {
+  flex: 1;
+  padding: 14px 14px 0 14px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+.chat-widget-message {
+  margin-bottom: 10px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  max-width: 80%;
+  font-size: 1rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.chat-widget-message-user {
+  background: #2563eb;
+  color: #fff;
+  align-self: flex-end;
+  margin-left: auto;
+}
+.chat-widget-message-ai {
+  background: #e0e7ff;
+  color: #1e293b;
+  align-self: flex-start;
+  margin-right: auto;
+}
+
+.chat-widget-input-row {
+  display: flex;
+  padding: 12px 14px;
+  border-top: 1px solid #e5e7eb;
+  background: #f1f5f9;
+}
+.chat-widget-input {
+  flex: 1;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  outline: none;
+  margin-right: 8px;
+}
+.chat-widget-send {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-widget-send:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}

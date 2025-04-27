@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +10,7 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { getIslamicPatternSvg } from '@/lib/utils';
 import { config } from '@/lib/config';
+import { apiRequest } from '@/lib/queryClient';
 import Helmet from 'react-helmet';
 
 interface ServicesResponse {
@@ -22,11 +23,22 @@ const Services = () => {
   const { isRtl } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
 
-  // Use default query client for services
-  const { data: servicesResponse = { success: false, data: [] }, isLoading, error } = useQuery({
-    queryKey: [config.api.endpoints.services],
+  // Use query client with explicit fetch function for services
+  const { data: servicesData = [], isLoading, error } = useQuery({
+    queryKey: ['services-list'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('GET', config.api.endpoints.services);
+        const result = await response.json();
+        console.log('Services API response:', result);
+        // API might return { success: true, data: [...] } or directly the array
+        return Array.isArray(result) ? result : (result.data || []);
+      } catch (err) {
+        console.error('Failed to fetch services:', err);
+        throw err;
+      }
+    },
   });
 
   // Filter options
@@ -41,11 +53,16 @@ const Services = () => {
     { id: 'massage', label: t('services:massage') },
   ];
 
-  // Filter services based on category and search query
-  useEffect(() => {
-    if (!Array.isArray(servicesResponse.data)) return;
+  // Use memo to filter services based on category and search query
+  // This avoids the useEffect + setState pattern that can cause infinite loops
+  const filteredServices = useMemo(() => {
+    // Return early if data isn't available or isn't an array
+    if (!servicesData || !Array.isArray(servicesData) || servicesData.length === 0) {
+      return [];
+    }
 
-    let filtered = [...servicesResponse.data];
+    console.log('Filtering services from data:', servicesData);
+    let filtered = [...servicesData];
 
     // Filter by category
     if (selectedCategory !== 'all') {
@@ -56,15 +73,16 @@ const Services = () => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(service =>
-        service.nameEn.toLowerCase().includes(query) ||
-        service.nameAr.toLowerCase().includes(query) ||
+        service.nameEn?.toLowerCase().includes(query) ||
+        service.nameAr?.toLowerCase().includes(query) ||
         service.descriptionEn?.toLowerCase().includes(query) ||
         service.descriptionAr?.toLowerCase().includes(query)
       );
     }
 
-    setFilteredServices(filtered);
-  }, [servicesResponse.data, selectedCategory, searchQuery]);
+    console.log('Filtered services result:', filtered);
+    return filtered;
+  }, [servicesData, selectedCategory, searchQuery]);
 
   // Handle category selection
   const handleCategoryChange = (categoryId: string) => {
