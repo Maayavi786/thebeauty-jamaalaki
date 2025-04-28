@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
-import { Service } from '@shared/schema';
+import { Service, Salon } from '@shared/schema';
 import FilterChips from '@/components/FilterChips';
 import ServiceCard from '@/components/ServiceCard';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ const Services = () => {
   const { isRtl } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [salonsMap, setSalonsMap] = useState<Record<number, Salon>>({});
 
   // Use query client with explicit fetch function for services
   const { data: servicesData = [], isLoading, error } = useQuery({
@@ -54,6 +55,41 @@ const Services = () => {
     { id: 'nails', label: t('services:nails') },
     { id: 'massage', label: t('services:massage') },
   ];
+
+  // Fetch salon data for each service
+  useEffect(() => {
+    const fetchSalons = async () => {
+      if (!Array.isArray(servicesData) || servicesData.length === 0) return;
+
+      // Get unique salon IDs from all services
+      const salonIds = [...new Set(servicesData.map(service => service.salonId))].filter(Boolean);
+      if (salonIds.length === 0) return;
+
+      // Fetch salon data for each unique salon ID
+      const newSalonsMap: Record<number, Salon> = {};
+      
+      for (const salonId of salonIds) {
+        try {
+          // Skip if already fetched
+          if (salonsMap[salonId]) continue;
+          
+          const response = await apiRequest('GET', `${config.api.endpoints.salons}/${salonId}`);
+          if (response.ok) {
+            const result = await response.json();
+            const salon = result.data || result;
+            newSalonsMap[salonId] = salon;
+          }
+        } catch (error) {
+          console.error(`Error fetching salon ${salonId}:`, error);
+        }
+      }
+      
+      // Update state with new salons
+      setSalonsMap(prev => ({ ...prev, ...newSalonsMap }));
+    };
+    
+    fetchSalons();
+  }, [servicesData]);
 
   // Use memo to filter services based on category and search query
   // This avoids the useEffect + setState pattern that can cause infinite loops
@@ -158,7 +194,12 @@ const Services = () => {
             </div>
           ) : filteredServices.length > 0 ? (
             filteredServices.map((service) => (
-              <ServiceCard key={service.id} service={service} salonId={service.salonId} />
+              <ServiceCard 
+                key={service.id} 
+                service={service} 
+                salonId={service.salonId} 
+                salon={salonsMap[service.salonId]}
+              />
             ))
           ) : (
             <div className="text-center py-12">
