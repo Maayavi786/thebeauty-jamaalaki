@@ -153,7 +153,20 @@ const useSalonData = (salonId: number): SalonData => {
   if (salonResponse) {
     // Unwrap .data if present, else fallback
     const base = (salonResponse as any).data || salonResponse;
-    salon = base;
+    // Process salon data to ensure all required fields
+    salon = {
+      ...base,
+      // Ensure these required fields exist for salon
+      nameEn: base.nameEn || base.name_en || 'Unnamed Salon',
+      nameAr: base.nameAr || base.name_ar || 'صالون غير مسمى',
+      descriptionEn: base.descriptionEn || base.description_en || 'No description available',
+      descriptionAr: base.descriptionAr || base.description_ar || 'لا يوجد وصف متاح',
+      imageUrl: base.imageUrl || base.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(base.nameEn || base.name_en || '')}&background=D4AF37&color=fff&size=256`,
+      rating: typeof base.rating === 'number' ? base.rating : 5,
+      address: base.address || 'No address provided',
+      phone: base.phone || 'No phone provided',
+      email: base.email || 'No email provided'
+    };
     
     // Process services to ensure they have all required fields
     if (base.services && Array.isArray(base.services)) {
@@ -166,20 +179,24 @@ const useSalonData = (salonId: number): SalonData => {
         descriptionAr: service.descriptionAr || service.description_ar || 'لا يوجد وصف متاح'
       }));
     } else {
-      services = null;
+      services = [];
     }
     
     // Process reviews to ensure they have all required fields
+    console.log('Raw reviews data:', base.reviews);
     if (base.reviews && Array.isArray(base.reviews)) {
       reviews = base.reviews.map((review: any) => ({
         ...review,
+        id: review.id || Math.random().toString(36).substring(2, 9),
         // Ensure these required fields exist
         rating: typeof review.rating === 'number' ? review.rating : 5,
         comment: review.comment || '',
         createdAt: review.createdAt || review.created_at || new Date().toISOString()
       }));
+      console.log('Processed reviews:', reviews);
     } else {
-      reviews = null;
+      console.log('No reviews found in API response');
+      reviews = [];
     }
   }
 
@@ -399,27 +416,30 @@ const SalonDetails = () => {
               <LoadingSkeleton isLtr={isLtr} />
             ) : (
               <div className="space-y-4">
-                {Array.isArray(reviews) && reviews.length > 0 ? reviews.map((review: Review) => (
-                  <Card key={review.id} className="bg-background dark:bg-[#23232B] rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <RatingDisplay 
-                          rating={review.rating} 
-                          isLtr={isLtr}
-                          ariaLabel={isLtr ? `Review rating: ${review.rating} stars` : `تقييم المراجعة: ${review.rating} نجوم`}
-                        />
-                        <span className="text-sm text-gray-500">
-                          {formatDate(new Date(review.createdAt))}
-                        </span>
-                      </div>
-                      <p className={`${isLtr ? 'text-left' : 'text-right'}`}>
-                        {review.comment || (isLtr ? 'No comment provided.' : 'لا يوجد تعليق.')}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )) : (
+                {console.log('Rendering reviews:', reviews)}
+                {Array.isArray(reviews) && reviews.length > 0 ? (
+                  reviews.map((review: any) => (
+                    <Card key={review.id || Math.random()} className="bg-background dark:bg-[#23232B] rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-2">
+                          <RatingDisplay 
+                            rating={review.rating} 
+                            isLtr={isLtr}
+                            ariaLabel={isLtr ? `Review rating: ${review.rating} stars` : `تقييم المراجعة: ${review.rating} نجوم`}
+                          />
+                          <span className="text-sm text-gray-500">
+                            {formatDate(new Date(review.createdAt || review.created_at || new Date()))}
+                          </span>
+                        </div>
+                        <p className={`${isLtr ? 'text-left' : 'text-right'}`}>
+                          {review.comment || (isLtr ? 'No comment provided.' : 'لا يوجد تعليق.')}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
                   <div className="text-center text-muted-foreground py-8">
-                    {isLtr ? "No reviews yet." : "لا توجد تقييمات بعد."}
+                    {isLtr ? "No reviews yet. Be the first to review!" : "لا توجد تقييمات بعد. كن أول من يقيم!"}
                   </div>
                 )}
               </div>
