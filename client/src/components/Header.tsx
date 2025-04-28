@@ -18,7 +18,7 @@ import {
 const Header = () => {
   const { t } = useTranslation("common");
   const { isLtr, isRtl } = useLanguage();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [location, navigate] = useLocation();
 
@@ -83,21 +83,32 @@ const Header = () => {
             <ThemeToggle />
 
             {isAuthenticated ? (
-              <DropdownMenu>
+              <DropdownMenu dir={isLtr ? "ltr" : "rtl"}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors">
                     <User className="h-5 w-5 text-primary" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align={isLtr ? "end" : "start"}>
-                  <DropdownMenuItem className={isRtl ? 'font-tajawal' : ''}>
-                    <Link href="/profile">
-                      <span className="w-full cursor-pointer">{t("profile")}</span>
-                    </Link>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    {isLtr ? "Profile" : "الملف الشخصي"}
                   </DropdownMenuItem>
+                  
+                  {/* Owner Dashboard Link - show only for salon owners */}
+                  {user?.role === 'salon_owner' && (
+                    <>
+                      <DropdownMenuItem onClick={() => navigate("/owner/dashboard")}>
+                        {isLtr ? "Owner Dashboard" : "لوحة تحكم المالك"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/owner/salon-profile")}>
+                        {isLtr ? "Manage Salon" : "إدارة الصالون"}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className={isRtl ? 'font-tajawal' : ''}>
-                    {t("logout")}
+                  <DropdownMenuItem onClick={handleLogout}>
+                    {isLtr ? "Logout" : "تسجيل الخروج"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

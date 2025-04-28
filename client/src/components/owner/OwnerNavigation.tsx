@@ -37,7 +37,7 @@ const OwnerNavigation: React.FC<OwnerNavigationProps> = ({ activePage }) => {
       id: 'salon',
       name: isLtr ? 'Salon Profile' : 'ملف الصالون',
       icon: <Store className="h-5 w-5" />,
-      path: '/owner/salon',
+      path: '/owner/salon-profile',
     },
     {
       id: 'services',
