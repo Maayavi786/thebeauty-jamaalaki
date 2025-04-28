@@ -78,7 +78,7 @@ const Register = () => {
         : "يجب أن يكون الاسم الكامل حرفين على الأقل."
     }),
     phone: z.string().optional(),
-    role: z.enum(["user", "salon_owner"]).default("user"),
+    role: z.enum(["customer", "salon_owner"]).default("customer"),
     preferredLanguage: z.string().default(isLtr ? "en" : "ar"),
   }).refine((data) => data.password === data.confirmPassword, {
     message: isLtr 
@@ -96,7 +96,7 @@ const Register = () => {
       confirmPassword: "",
       fullName: "",
       phone: "",
-      role: "user",
+      role: "customer",
       preferredLanguage: isLtr ? "en" : "ar",
     },
   });
@@ -277,7 +277,7 @@ const Register = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="user">{isLtr ? "Customer" : "عميل"}</SelectItem>
+                          <SelectItem value="customer">{isLtr ? "Customer" : "عميل"}</SelectItem>
                           <SelectItem value="salon_owner">{isLtr ? "Salon Owner" : "مالك صالون"}</SelectItem>
                         </SelectContent>
                       </Select>

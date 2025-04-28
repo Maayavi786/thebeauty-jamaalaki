@@ -106,6 +106,36 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
         return res.status(500).json({ message: "Failed to create user account" });
       }
       
+      // Create a default salon if user is a salon owner
+      if (user.role === 'salon_owner') {
+        try {
+          console.log("Creating default salon for salon owner:", user.id);
+          const salonData = {
+            ownerId: user.id,
+            nameEn: `${user.full_name || user.username}'s Salon`,
+            nameAr: `صالون ${user.full_name || user.username}`,
+            descriptionEn: 'New salon - update your description',
+            descriptionAr: 'صالون جديد - قم بتحديث الوصف',
+            address: 'Update your address',
+            city: 'Riyadh',
+            phone: user.phone || 'Update your phone number',
+            email: user.email,
+            imageUrl: 'https://via.placeholder.com/300x200?text=Salon+Image',
+            isLadiesOnly: true,
+            hasPrivateRooms: false,
+            isHijabFriendly: true,
+            priceRange: 'SAR',
+          };
+          
+          await storage.createSalon(salonData);
+          console.log("Default salon created successfully for user:", user.id);
+        } catch (salonError) {
+          console.error("Error creating default salon:", salonError);
+          // We won't fail the registration if salon creation fails
+          // Just log the error and continue
+        }
+      }
+      
       // Don't return password in response
       const { password, ...userWithoutPassword } = user;
       
