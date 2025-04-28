@@ -16,6 +16,13 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/not-found";
 
+// Owner Pages
+import Dashboard from "@/pages/owner/Dashboard";
+import SalonProfile from "@/pages/owner/SalonProfile";
+import ServicesManagement from "@/pages/owner/ServicesManagement";
+import BookingsManagement from "@/pages/owner/BookingsManagement";
+import PromotionsManagement from "@/pages/owner/PromotionsManagement";
+
 // Layout components
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -33,6 +40,14 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      
+      {/* Owner Routes */}
+      <Route path="/owner/dashboard" component={Dashboard} />
+      <Route path="/owner/salon-profile" component={SalonProfile} />
+      <Route path="/owner/services" component={ServicesManagement} />
+      <Route path="/owner/bookings" component={BookingsManagement} />
+      <Route path="/owner/promotions" component={PromotionsManagement} />
+      
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

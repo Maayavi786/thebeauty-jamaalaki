@@ -211,7 +211,8 @@ const useSalonData = (salonId: number): SalonData => {
       const rawReviews = Array.isArray(reviewsData) ? reviewsData : 
                         Array.isArray(reviewsData.data) ? reviewsData.data : [];
       
-      console.log('Reviews from direct API call:', rawReviews);
+      console.log(`[Salon ${salonId}] Reviews from direct API call:`, rawReviews);
+      console.log(`[Salon ${salonId}] Number of reviews from direct API call:`, rawReviews.length);
       
       reviews = rawReviews.map((review: any) => ({
         ...review,
@@ -223,7 +224,8 @@ const useSalonData = (salonId: number): SalonData => {
     } 
     // Fallback to reviews from salon data if direct query failed
     else if (base.reviews && Array.isArray(base.reviews)) {
-      console.log('Falling back to reviews from salon data:', base.reviews);
+      console.log(`[Salon ${salonId}] Falling back to reviews from salon data:`, base.reviews);
+      console.log(`[Salon ${salonId}] Number of reviews from salon data:`, base.reviews.length);
       reviews = base.reviews.map((review: any) => ({
         ...review,
         id: review.id || Math.random().toString(36).substring(2, 9),
@@ -232,7 +234,7 @@ const useSalonData = (salonId: number): SalonData => {
         createdAt: review.createdAt || review.created_at || new Date().toISOString()
       }));
     } else {
-      console.log('No reviews found in any API response');
+      console.log(`[Salon ${salonId}] No reviews found in any API response`);
       // For testing, generate a mock review
       reviews = [{
         id: '1',
