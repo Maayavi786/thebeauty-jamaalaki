@@ -1,7 +1,7 @@
 // Use environment variable or default to production Netlify URL
+let envBaseUrl = import.meta.env.VITE_API_BASE_URL;
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'https://thebeauty.netlify.app';
+  (envBaseUrl && envBaseUrl.startsWith('http') ? envBaseUrl : 'https://thebeauty.netlify.app');
 console.log('API_BASE_URL:', API_BASE_URL);
 
 export const config = {
