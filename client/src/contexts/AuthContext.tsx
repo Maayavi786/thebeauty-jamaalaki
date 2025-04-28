@@ -34,29 +34,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
 
   const checkSession = async () => {
     try {
-      // Use apiRequest instead of direct fetch for consistent handling
-      const response = await fetch(`${config.api.baseUrl}${config.api.endpoints.auth}/session`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        // Always include credentials for session cookies
-        credentials: 'include',
-        mode: 'cors'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Session check response:', data);
-        if (data.user) {
-          setUser(data.user);
+      try {
+        const response = await apiRequest('GET', config.api.endpoints.auth + '/session');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Session check response:', data);
+          if (data.user) {
+            setUser(data.user);
+          } else {
+            setUser(null);
+          }
         } else {
+          // Just treat any failure as not logged in
+          console.log('Session check failed with status:', response.status);
           setUser(null);
         }
-      } else {
-        // Just treat any failure as not logged in
-        console.log('Session check failed with status:', response.status);
+      } catch (error) {
+        console.error('Session check failed:', error);
         setUser(null);
       }
     } catch (error) {
