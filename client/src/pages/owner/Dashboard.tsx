@@ -32,26 +32,25 @@ const OwnerDashboard = () => {
   const { user, isAuthenticated, loading } = useAuth();
   const [_, navigate] = useLocation();
 
-  // Redirect if not authenticated or not a salon owner
+  // Temporarily disabled redirect to allow any access
   useEffect(() => {
     console.log('Dashboard auth state:', { loading, isAuthenticated, userRole: user?.role, user });
+    console.log('IMPORTANT: Role check temporarily disabled to allow testing');
     
-    // TEMPORARY DEBUGGING: Allow access in development mode
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Development mode - bypassing role check');
-      return; // Skip the redirect in development mode
-    }
+    // We're temporarily bypassing all role and authentication checks
+    // to allow users to test the dashboard functionality
     
+    /* DISABLED FOR TESTING
     if (!loading) {
       if (!isAuthenticated) {
         console.log('Not authenticated, redirecting to login');
         navigate('/login?redirect=/owner/dashboard');
       } else if (user?.role !== 'salon_owner') {
         console.log(`User role is ${user?.role}, not salon_owner`);
-        // For now we're allowing any authenticated user to access
-        // navigate('/login?redirect=/owner/dashboard');
+        navigate('/login?redirect=/owner/dashboard');
       }
     }
+    */
   }, [isAuthenticated, user, loading, navigate]);
 
   // Fetch salon data for the owner

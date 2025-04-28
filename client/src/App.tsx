@@ -15,6 +15,7 @@ import Profile from "@/pages/Profile";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/not-found";
+import OwnerTest from "@/pages/OwnerTest";
 
 // Owner Pages
 import Dashboard from "@/pages/owner/Dashboard";
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/owner-test" component={OwnerTest} />
       
       {/* Owner Routes with role checking for development mode */}
       <Route path="/owner/dashboard">
