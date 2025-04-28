@@ -22,6 +22,8 @@ import SalonProfile from "@/pages/owner/SalonProfile";
 import ServicesManagement from "@/pages/owner/ServicesManagement";
 import BookingsManagement from "@/pages/owner/BookingsManagement";
 import PromotionsManagement from "@/pages/owner/PromotionsManagement";
+import Analytics from "@/pages/owner/Analytics";
+import Settings from "@/pages/owner/Settings";
 
 // Layout components
 import Header from "@/components/Header";
@@ -47,6 +49,8 @@ function Router() {
       <Route path="/owner/services" component={ServicesManagement} />
       <Route path="/owner/bookings" component={BookingsManagement} />
       <Route path="/owner/promotions" component={PromotionsManagement} />
+      <Route path="/owner/analytics" component={Analytics} />
+      <Route path="/owner/settings" component={Settings} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
