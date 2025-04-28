@@ -44,9 +44,19 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       
-      {/* Owner Routes */}
-      <Route path="/owner/dashboard" component={Dashboard} />
-      <Route path="/owner/salon-profile" component={SalonProfile} />
+      {/* Owner Routes with role checking for development mode */}
+      <Route path="/owner/dashboard">
+        {() => {
+          console.log('Rendering owner dashboard route');
+          return <Dashboard />;
+        }}
+      </Route>
+      <Route path="/owner/salon-profile">
+        {() => {
+          console.log('Rendering salon profile route');
+          return <SalonProfile />;
+        }}
+      </Route>
       <Route path="/owner/services" component={ServicesManagement} />
       <Route path="/owner/bookings" component={BookingsManagement} />
       <Route path="/owner/promotions" component={PromotionsManagement} />

@@ -172,6 +172,12 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
       // Don't return password in response
       const { password, ...userWithoutPassword } = user;
       
+      // Log user details for debugging (with password redacted)
+      console.log('User attempting login:', {
+        ...userWithoutPassword,
+        role: user.role, // Explicitly log the role for debugging
+      });
+      
       // Set up session
       req.session.user = userWithoutPassword;
       req.session.save((err) => {
@@ -179,6 +185,13 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
           console.error("Error saving session:", err);
           return res.status(500).json({ message: "Error setting up session" });
         }
+        
+        // Log session data for debugging
+        console.log('Session saved successfully:', {
+          userId: userWithoutPassword.id,
+          role: userWithoutPassword.role,
+          sessionId: req.sessionID
+        });
         
         res.status(200).json({
           message: "Login successful",

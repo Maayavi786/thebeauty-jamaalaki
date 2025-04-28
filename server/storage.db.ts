@@ -29,32 +29,29 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     try {
-      // Select specific fields from the database that we know exist
-      const [dbUser] = await db.select({
-        id: users.id,
-        username: users.username,
-        password: users.password,
-        email: users.email,
-        role: users.role,
-        createdAt: users.createdAt
-        // Omitting problematic fields
-      }).from(users).where(eq(users.username, username));
+      // Get all user fields to ensure we have everything
+      const [dbUser] = await db.select().from(users).where(eq(users.username, username));
       
       if (!dbUser) return undefined;
       
-      // Create a complete User object with default values for missing fields
+      console.log('Database user found:', JSON.stringify(dbUser, null, 2));
+      
+      // Create a complete User object ensuring role is properly set
       const user: User = {
         id: dbUser.id,
         username: dbUser.username,
         password: dbUser.password,
         email: dbUser.email,
-        fullName: '', // Default empty string for the missing field
-        phone: null, // Default null for the missing field
-        role: dbUser.role,
-        loyaltyPoints: 0, // Default value
-        preferredLanguage: 'en', // Default value
+        fullName: dbUser.fullName || '',
+        phone: dbUser.phone || null,
+        // Explicitly cast role to ensure it's properly typed
+        role: dbUser.role as User['role'],
+        loyaltyPoints: dbUser.loyaltyPoints || 0,
+        preferredLanguage: dbUser.preferredLanguage || 'en',
         createdAt: dbUser.createdAt
       };
+      
+      console.log('Processed user object:', { ...user, password: '[REDACTED]' });
       
       return user;
     } catch (error) {
