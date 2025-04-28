@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Service } from "@shared/schema";
@@ -15,6 +15,7 @@ interface ServiceCardProps {
 const ServiceCard = ({ service, salonId, salon }: ServiceCardProps) => {
   const { t } = useTranslation("common");
   const { isLtr, isRtl } = useLanguage();
+  const [_, navigate] = useLocation();
   
   const durationMap: Record<string, string> = {
     "15min": "15 min",
@@ -41,13 +42,8 @@ const ServiceCard = ({ service, salonId, salon }: ServiceCardProps) => {
     return categoryImages[category] || categoryImages.default;
   };
 
-  console.log('ServiceCard - service:', service);
-  console.log('ServiceCard - salon:', salon);
-  console.log('ServiceCard - salonId:', salonId);
-  
   // Prefer service.imageUrl, then salon.imageUrl, then category image
   const serviceImage = service.imageUrl || (salon?.imageUrl ?? getCategoryImage(service.category || 'default'));
-  console.log('ServiceCard - final serviceImage:', serviceImage);
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-md transition-all hover:shadow-lg">
@@ -82,16 +78,12 @@ const ServiceCard = ({ service, salonId, salon }: ServiceCardProps) => {
         
         <div
           onClick={() => {
-            // Wouter doesn't fully support state passing with Link, so manually navigate
-            const href = `/booking/${salonId}/${service.id}`;
-            // Create and set query param with salon ID to ensure image loads
-            if (typeof window !== 'undefined') {
-              // Store salon in sessionStorage for retrieval in BookingPage
-              if (salon) {
-                sessionStorage.setItem('salon-' + salonId, JSON.stringify(salon));
-              }
-              window.location.href = href;
+            // Store salon in sessionStorage for retrieval in BookingPage
+            if (salon && typeof window !== 'undefined') {
+              sessionStorage.setItem('salon-' + salonId, JSON.stringify(salon));
             }
+            // Use Wouter's navigate for smooth SPA routing
+            navigate(`/booking/${salonId}/${service.id}`);
           }}
         >
           <Button className="w-full bg-primary hover:bg-primary/90 text-white">

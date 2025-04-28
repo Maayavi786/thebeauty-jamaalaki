@@ -53,27 +53,25 @@ const BookingPage = () => {
   }, [timeSlots, searchTerm]);
   
   // Use default query client for salons and services
-  // Check all possible sources for salon data
-  console.log('BookingPage - location:', location);
-  // Try to get salon from sessionStorage first
+  // Get salon from multiple sources in order of preference
+  // 1. Try sessionStorage first (set by ServiceCard)
   let salonFromStorage;
   if (typeof window !== 'undefined' && params?.salonId) {
     try {
       const stored = sessionStorage.getItem('salon-' + params.salonId);
       if (stored) {
         salonFromStorage = JSON.parse(stored);
-        console.log('BookingPage - Found salon in sessionStorage:', salonFromStorage);
       }
     } catch (e) {
       console.error('Error parsing salon from sessionStorage:', e);
     }
   }
   
-  // Fallback to location state if available
-  const salonFromState = (location && typeof location === 'object' && 'state' in location && (location as any).state?.salon) 
-    ? (location as any).state.salon 
-    : salonFromStorage;
-  console.log('BookingPage - Final salonFromState:', salonFromState);
+  // 2. Fallback to location state if available
+  const salonFromState = salonFromStorage || 
+    ((location && typeof location === 'object' && 'state' in location && (location as any).state?.salon) 
+      ? (location as any).state.salon 
+      : undefined);
   
   const { data: salonFetched, isLoading: isSalonLoading } = useQuery({
     queryKey: [`salon-${params?.salonId}`],
