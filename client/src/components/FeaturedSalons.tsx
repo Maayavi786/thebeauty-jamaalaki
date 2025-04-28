@@ -6,15 +6,30 @@ import { Link } from "wouter";
 import { Salon } from "@shared/schema";
 import SalonCard from "@/components/SalonCard";
 import { Loader2 } from "lucide-react";
-import { config } from "@/lib/config"; // Assuming config is imported from here
+import { config } from "@/lib/config";
+import { apiRequest } from "@/lib/queryClient"; // Import apiRequest
 
 const FeaturedSalons = () => {
   const { t } = useTranslation("common");
   const { isLtr, isRtl } = useLanguage();
   
   // Use default query client for featured salons
-  const { data: salons, isLoading } = useQuery({
-    queryKey: [config.api.endpoints.salons],
+  const { data: salons = [], isLoading, error } = useQuery({
+    queryKey: ['featured-salons'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('GET', config.api.endpoints.salons);
+        const result = await response.json();
+        console.log('Featured Salons API response:', result);
+        if (Array.isArray(result)) return result;
+        if (result && Array.isArray(result.data)) return result.data;
+        if (result && result.success && Array.isArray(result.data)) return result.data;
+        return [];
+      } catch (err) {
+        console.error('Failed to fetch featured salons:', err);
+        throw err;
+      }
+    },
   });
   
   // State for featured salons
