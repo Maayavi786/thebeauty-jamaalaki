@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
 import { getIslamicPatternSvg } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -77,6 +78,7 @@ const Register = () => {
         : "يجب أن يكون الاسم الكامل حرفين على الأقل."
     }),
     phone: z.string().optional(),
+    role: z.enum(["user", "salon_owner"]).default("user"),
     preferredLanguage: z.string().default(isLtr ? "en" : "ar"),
   }).refine((data) => data.password === data.confirmPassword, {
     message: isLtr 
@@ -94,6 +96,7 @@ const Register = () => {
       confirmPassword: "",
       fullName: "",
       phone: "",
+      role: "user",
       preferredLanguage: isLtr ? "en" : "ar",
     },
   });
@@ -253,6 +256,32 @@ const Register = () => {
                         />
                       </FormControl>
                       <FormMessage className={`${isRtl ? 'font-tajawal' : ''}`} />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={`${isRtl ? 'font-tajawal' : ''}`}>
+                        {isLtr ? "Account Type" : "نوع الحساب"}
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={isLtr ? "Select account type" : "اختر نوع الحساب"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="user">{isLtr ? "Customer" : "عميل"}</SelectItem>
+                          <SelectItem value="salon_owner">{isLtr ? "Salon Owner" : "مالك صالون"}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
