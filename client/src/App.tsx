@@ -1,5 +1,5 @@
 import { Switch, Route } from "wouter";
-import { Toaster } from "@/components/ui/sonner";
+// Toaster temporarily removed for build fix
 import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Helmet } from "react-helmet";
@@ -93,7 +93,7 @@ function App() {
         <Router />
       </main>
       <Footer />
-      <Toaster />
+      {/* Toaster temporarily removed for build fix */}
       <ChatWidget />
     </div>
   );

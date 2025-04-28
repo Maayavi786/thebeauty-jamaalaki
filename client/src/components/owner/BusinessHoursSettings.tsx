@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiRequest';
 import { config } from '@/config';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import {
   Card,
   CardContent,

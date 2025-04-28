@@ -38,7 +38,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Loader2, Upload, Camera } from 'lucide-react';
 import OwnerNavigation from '@/components/owner/OwnerNavigation';
 

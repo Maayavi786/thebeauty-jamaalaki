@@ -52,7 +52,7 @@ import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Loader2, Plus, Edit, Trash, Search, Upload, Tag } from 'lucide-react';
 import OwnerNavigation from '@/components/owner/OwnerNavigation';
 import { Badge } from '@/components/ui/badge';
