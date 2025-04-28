@@ -1,5 +1,5 @@
 import { Switch, Route } from "wouter";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Helmet } from "react-helmet";
