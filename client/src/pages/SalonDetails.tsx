@@ -318,6 +318,7 @@ const SalonDetails = () => {
                       key={service.id} 
                       service={service} 
                       salonId={salonId}
+                      salon={salon}
                     />
                   ))}
                   {services?.length === 0 && (

@@ -9,9 +9,10 @@ import { Clock } from 'lucide-react';
 interface ServiceCardProps {
   service: Service;
   salonId: number;
+  salon?: any; // Accept optional salon object for image fallback
 }
 
-const ServiceCard = ({ service, salonId }: ServiceCardProps) => {
+const ServiceCard = ({ service, salonId, salon }: ServiceCardProps) => {
   const { t } = useTranslation("common");
   const { isLtr, isRtl } = useLanguage();
   
@@ -40,7 +41,8 @@ const ServiceCard = ({ service, salonId }: ServiceCardProps) => {
     return categoryImages[category] || categoryImages.default;
   };
 
-  const serviceImage = service.imageUrl || getCategoryImage(service.category || 'default');
+  // Prefer service.imageUrl, then salon.imageUrl, then category image
+  const serviceImage = service.imageUrl || (salon?.imageUrl ?? getCategoryImage(service.category || 'default'));
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-md transition-all hover:shadow-lg">
@@ -73,7 +75,7 @@ const ServiceCard = ({ service, salonId }: ServiceCardProps) => {
           </div>
         </div>
         
-        <Link href={`/booking/${salonId}/${service.id}`}>
+        <Link href={`/booking/${salonId}/${service.id}`} state={salon ? { salon } : undefined}>
           <Button className="w-full bg-primary hover:bg-primary/90 text-white">
             {t("bookNow")}
           </Button>

@@ -53,7 +53,9 @@ const BookingPage = () => {
   }, [timeSlots, searchTerm]);
   
   // Use default query client for salons and services
-  const { data: salon, isLoading: isSalonLoading } = useQuery({
+  // Use salon from navigation state if available, else fetch
+  const salonFromState = (location && typeof location === 'object' && 'state' in location && (location as any).state?.salon) ? (location as any).state.salon : undefined;
+  const { data: salonFetched, isLoading: isSalonLoading } = useQuery({
     queryKey: [`salon-${params?.salonId}`],
     queryFn: async () => {
       try {
@@ -65,7 +67,9 @@ const BookingPage = () => {
         throw error;
       }
     },
+    enabled: !salonFromState && !!params?.salonId
   });
+  const salon = salonFromState || salonFetched;
 
   const { data: service, isLoading: isServiceLoading } = useQuery({
     queryKey: [`service-${params?.serviceId}`],
