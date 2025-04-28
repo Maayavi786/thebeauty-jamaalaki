@@ -401,7 +401,7 @@ const BookingPage = () => {
                         {/* Salon Image */}
                         <div className="w-32 h-32 flex-shrink-0">
                           <img
-                            src={salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`}
+                            src={salon?.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || salon?.nameAr || 'Unknown Salon' : salon?.nameAr || salon?.nameEn || 'Unknown Salon')}&background=D4AF37&color=fff&size=256`}
                             alt={isLtr ? salon?.nameEn : salon?.nameAr}
                             className="w-full h-full object-cover rounded-xl border border-muted bg-white"
                             onError={e => {

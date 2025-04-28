@@ -338,8 +338,8 @@ const Profile = () => {
                                   />
                                 )}
                                 <div>
-                                  <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon && (isLtr ? salon.nameEn : salon.nameAr)}</h4>
-                                  <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service && (isLtr ? service.nameEn : service.nameAr)}</p>
+                                  <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon ? (isLtr ? salon.nameEn : salon.nameAr) : (isLtr ? 'Unknown Salon' : 'صالون غير معروف')}</h4>
+                                  <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service ? (isLtr ? service.nameEn : service.nameAr) : (isLtr ? 'Unknown Service' : 'خدمة غير معروفة')}</p>
                                 </div>
                               </div>
                               
@@ -448,8 +448,8 @@ const Profile = () => {
                                 </div>
                               </div>
                               
-                              <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon && (isLtr ? salon.nameEn : salon.nameAr)}</h4>
-                              <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service && (isLtr ? service.nameEn : service.nameAr)}</p>
+                              <h4 className={`font-medium ${isRtl ? 'font-tajawal' : ''}`}>{salon ? (isLtr ? salon.nameEn : salon.nameAr) : (isLtr ? 'Unknown Salon' : 'صالون غير معروف')}</h4>
+                              <p className={`text-sm text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>{service ? (isLtr ? service.nameEn : service.nameAr) : (isLtr ? 'Unknown Service' : 'خدمة غير معروفة')}</p>
                             </div>
                           );
                         })}

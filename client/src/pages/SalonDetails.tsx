@@ -260,14 +260,20 @@ const SalonDetails = () => {
         {/* Salon Header with Full-Width Image */}
         <div className="relative rounded-xl overflow-hidden mb-20">
           {/* Full-width background image */}
-          <div 
-            className="w-full h-64 bg-center bg-cover"
-            style={{
-              backgroundImage: `url(${salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : '/default-salon.jpg'})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
-          ></div>
+          {/* Ensure /default-salon.jpg exists in client/public/ for production */}
+          <div className="w-full h-64 bg-center bg-cover relative">
+            <img
+              src={salon?.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`}
+              alt={isLtr ? salon?.nameEn : salon?.nameAr}
+              className="w-full h-full object-cover absolute inset-0"
+              style={{ zIndex: 0 }}
+              onError={e => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`;
+              }}
+            />
+          </div>
           
           {/* Content overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center justify-end p-6">
