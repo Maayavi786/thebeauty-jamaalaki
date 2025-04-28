@@ -24,10 +24,8 @@ async function throwIfResNotOk(res: Response) {
 }
 
 function normalizeEndpoint(endpoint: string): string {
-  // Remove leading /api if already present (to avoid /api/api)
-  let normalized = endpoint.startsWith('/api/') ? endpoint.slice(4) : endpoint;
   // Ensure endpoint starts with a single slash
-  if (!normalized.startsWith('/')) normalized = '/' + normalized;
+  let normalized = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   // Always return with a single /api prefix
   return '/api' + normalized;
 }

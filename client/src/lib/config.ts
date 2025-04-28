@@ -8,11 +8,11 @@ export const config = {
   api: {
     baseUrl: API_BASE_URL,
     endpoints: {
-      salons: '/api/salons',
-      services: '/api/services',
-      reviews: '/api/reviews',
-      bookings: '/api/bookings',
-      auth: '/api/auth',
+      salons: '/salons',
+      services: '/services',
+      reviews: '/reviews',
+      bookings: '/bookings',
+      auth: '/auth',
     },
   },
   features: {
