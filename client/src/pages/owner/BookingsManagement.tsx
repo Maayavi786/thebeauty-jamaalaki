@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
-import { config } from '@/config';
+import { config } from '@/lib/config';
 import {
   Card,
   CardContent,
