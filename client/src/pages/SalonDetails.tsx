@@ -263,7 +263,7 @@ const SalonDetails = () => {
           {/* Ensure /default-salon.jpg exists in client/public/ for production */}
           <div className="w-full h-64 bg-center bg-cover relative">
             <img
-              src={salon?.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || '' : salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`}
+              src={salon?.imageUrl || salon?.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(isLtr ? salon?.nameEn || salon?.nameEn || '' : salon?.nameAr || salon?.nameAr || '')}&background=D4AF37&color=fff&size=256`}
               alt={isLtr ? salon?.nameEn : salon?.nameAr}
               className="w-full h-full object-cover absolute inset-0"
               style={{ zIndex: 0 }}

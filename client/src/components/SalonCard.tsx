@@ -18,7 +18,7 @@ const SalonCard = ({ salon }: SalonCardProps) => {
       <div className="luxury-card bg-background dark:bg-neutral-800/20 rounded-xl overflow-hidden shadow-md border border-muted dark:border-neutral-800 transition-all duration-200 ease-in-out cursor-pointer hover:-translate-y-2 hover:shadow-xl">
         <div className="relative">
           <img 
-            src={salon.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(salon.nameEn)}&background=D4AF37&color=fff&size=256`} 
+            src={salon.imageUrl || salon.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(salon.nameEn)}&background=D4AF37&color=fff&size=256`} 
             alt={isLtr ? salon.nameEn : salon.nameAr} 
             className="w-full h-56 object-cover"
             onError={(e) => {
