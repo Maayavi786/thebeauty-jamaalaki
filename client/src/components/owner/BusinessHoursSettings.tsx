@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/apiRequest';
+import { apiRequest } from '@/lib/queryClient';
 import { config } from '@/config';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/lib/toast';
