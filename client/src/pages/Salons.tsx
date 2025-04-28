@@ -72,10 +72,27 @@ const Salons = () => {
         const response = await apiRequest('GET', config.api.endpoints.salons);
         const result = await response.json();
         console.log('Salons API response:', result);
-        if (Array.isArray(result)) return result;
-        if (result && Array.isArray(result.data)) return result.data;
-        if (result && result.success && Array.isArray(result.data)) return result.data;
-        return [];
+        // Standardize field names to ensure consistency
+        let salons = [];
+        if (Array.isArray(result)) {
+          salons = result; 
+        } else if (result && Array.isArray(result.data)) {
+          salons = result.data;
+        } else if (result && result.success && Array.isArray(result.data)) {
+          salons = result.data;
+        }
+        
+        // Process salons to ensure consistent field names
+        return salons.map((salon: any) => ({
+          ...salon,
+          // Ensure these required fields exist
+          nameEn: salon.nameEn || salon.name_en || 'Unnamed Salon',
+          nameAr: salon.nameAr || salon.name_ar || 'صالون غير مسمى',
+          descriptionEn: salon.descriptionEn || salon.description_en || 'No description available',
+          descriptionAr: salon.descriptionAr || salon.description_ar || 'لا يوجد وصف متاح',
+          imageUrl: salon.imageUrl || salon.image_url || 'https://images.unsplash.com/photo-1560869713-7d0a29430803?q=80&w=600&auto=format&fit=crop',
+          rating: typeof salon.rating === 'number' ? salon.rating : 5
+        }))
       } catch (err) {
         console.error('Failed to fetch salons:', err);
         throw err;

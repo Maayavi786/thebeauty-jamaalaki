@@ -33,10 +33,27 @@ const Services = () => {
         const response = await apiRequest('GET', config.api.endpoints.services);
         const result = await response.json();
         console.log('Services API response:', result);
-        if (Array.isArray(result)) return result;
-        if (result && Array.isArray(result.data)) return result.data;
-        if (result && result.success && Array.isArray(result.data)) return result.data;
-        return [];
+        // Standardize field names to ensure consistency
+        let services = [];
+        if (Array.isArray(result)) {
+          services = result; 
+        } else if (result && Array.isArray(result.data)) {
+          services = result.data;
+        } else if (result && result.success && Array.isArray(result.data)) {
+          services = result.data;
+        }
+        
+        // Process services to ensure consistent field names
+        return services.map((service: any) => ({
+          ...service,
+          // Ensure these required fields exist
+          nameEn: service.nameEn || service.name_en || 'Unnamed Service',
+          nameAr: service.nameAr || service.name_ar || 'خدمة غير مسماة',
+          descriptionEn: service.descriptionEn || service.description_en || 'No description available',
+          descriptionAr: service.descriptionAr || service.description_ar || 'لا يوجد وصف متاح',
+          price: service.price || 0,
+          duration: service.duration || '30min'
+        }))
       } catch (err) {
         console.error('Failed to fetch services:', err);
         throw err;

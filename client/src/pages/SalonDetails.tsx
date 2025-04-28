@@ -154,8 +154,33 @@ const useSalonData = (salonId: number): SalonData => {
     // Unwrap .data if present, else fallback
     const base = (salonResponse as any).data || salonResponse;
     salon = base;
-    services = base.services || null;
-    reviews = base.reviews || null;
+    
+    // Process services to ensure they have all required fields
+    if (base.services && Array.isArray(base.services)) {
+      services = base.services.map((service: any) => ({
+        ...service,
+        // Ensure these required fields exist
+        nameEn: service.nameEn || service.name_en || 'Unnamed Service',
+        nameAr: service.nameAr || service.name_ar || 'خدمة غير مسماة',
+        descriptionEn: service.descriptionEn || service.description_en || 'No description available',
+        descriptionAr: service.descriptionAr || service.description_ar || 'لا يوجد وصف متاح'
+      }));
+    } else {
+      services = null;
+    }
+    
+    // Process reviews to ensure they have all required fields
+    if (base.reviews && Array.isArray(base.reviews)) {
+      reviews = base.reviews.map((review: any) => ({
+        ...review,
+        // Ensure these required fields exist
+        rating: typeof review.rating === 'number' ? review.rating : 5,
+        comment: review.comment || '',
+        createdAt: review.createdAt || review.created_at || new Date().toISOString()
+      }));
+    } else {
+      reviews = null;
+    }
   }
 
   return {
