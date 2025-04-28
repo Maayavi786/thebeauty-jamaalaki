@@ -32,8 +32,10 @@ const Services = () => {
         const response = await apiRequest('GET', config.api.endpoints.services);
         const result = await response.json();
         console.log('Services API response:', result);
-        // API might return { success: true, data: [...] } or directly the array
-        return Array.isArray(result) ? result : (result.data || []);
+        if (Array.isArray(result)) return result;
+        if (result && Array.isArray(result.data)) return result.data;
+        if (result && result.success && Array.isArray(result.data)) return result.data;
+        return [];
       } catch (err) {
         console.error('Failed to fetch services:', err);
         throw err;
@@ -56,8 +58,8 @@ const Services = () => {
   // Use memo to filter services based on category and search query
   // This avoids the useEffect + setState pattern that can cause infinite loops
   const filteredServices = useMemo(() => {
-    // Return early if data isn't available or isn't an array
-    if (!servicesData || !Array.isArray(servicesData) || servicesData.length === 0) {
+    // Robustly handle null/undefined/empty
+    if (!Array.isArray(servicesData) || servicesData.length === 0) {
       return [];
     }
 

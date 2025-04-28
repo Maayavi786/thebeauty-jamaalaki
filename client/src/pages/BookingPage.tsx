@@ -59,7 +59,7 @@ const BookingPage = () => {
       try {
         const response = await apiRequest('GET', config.api.endpoints.salons + `/${params?.salonId}`);
         const result = await response.json();
-        return result.data;
+        return result.data || result;
       } catch (error) {
         console.error('Failed to fetch salon:', error);
         throw error;
@@ -73,7 +73,7 @@ const BookingPage = () => {
       try {
         const response = await apiRequest('GET', config.api.endpoints.services + `/${params?.serviceId}`);
         const result = await response.json();
-        return result.data;
+        return result.data || result;
       } catch (error) {
         console.error('Failed to fetch service:', error);
         throw error;

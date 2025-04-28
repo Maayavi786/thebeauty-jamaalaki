@@ -103,8 +103,9 @@ const Profile = () => {
             // Use default query client for fetching salon details
             const response = await apiRequest('GET', `${config.api.endpoints.salons}/${salonId}`);
             if (response.ok) {
-              const salon = await response.json();
-              newSalonsMap[salonId] = salon;
+              const result = await response.json();
+              const base = result.data || result;
+              newSalonsMap[salonId] = base;
             }
           }
         } catch (error) {
@@ -125,8 +126,9 @@ const Profile = () => {
             // Use default query client for fetching service details
             const response = await apiRequest('GET', `${config.api.endpoints.services}/${serviceId}`);
             if (response.ok) {
-              const service = await response.json();
-              newServicesMap[serviceId] = service;
+              const result = await response.json();
+              const base = result.data || result;
+              newServicesMap[serviceId] = base;
             }
           }
         } catch (error) {
