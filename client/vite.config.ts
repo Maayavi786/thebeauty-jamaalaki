@@ -24,14 +24,14 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom', 'sonner'],
           'ui-vendor': ['@chakra-ui/react', '@emotion/react', '@emotion/styled', 'framer-motion']
         }
       }
     }
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom']
+    include: ['react', 'react-dom', 'react-router-dom', 'sonner']
   },
   esbuild: {
     logOverride: { 'this-is-undefined-in-esm': 'silent' }
