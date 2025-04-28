@@ -41,8 +41,13 @@ const ServiceCard = ({ service, salonId, salon }: ServiceCardProps) => {
     return categoryImages[category] || categoryImages.default;
   };
 
+  console.log('ServiceCard - service:', service);
+  console.log('ServiceCard - salon:', salon);
+  console.log('ServiceCard - salonId:', salonId);
+  
   // Prefer service.imageUrl, then salon.imageUrl, then category image
   const serviceImage = service.imageUrl || (salon?.imageUrl ?? getCategoryImage(service.category || 'default'));
+  console.log('ServiceCard - final serviceImage:', serviceImage);
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-md transition-all hover:shadow-lg">
@@ -75,11 +80,24 @@ const ServiceCard = ({ service, salonId, salon }: ServiceCardProps) => {
           </div>
         </div>
         
-        <Link href={`/booking/${salonId}/${service.id}`} state={salon ? { salon } : undefined}>
+        <div
+          onClick={() => {
+            // Wouter doesn't fully support state passing with Link, so manually navigate
+            const href = `/booking/${salonId}/${service.id}`;
+            // Create and set query param with salon ID to ensure image loads
+            if (typeof window !== 'undefined') {
+              // Store salon in sessionStorage for retrieval in BookingPage
+              if (salon) {
+                sessionStorage.setItem('salon-' + salonId, JSON.stringify(salon));
+              }
+              window.location.href = href;
+            }
+          }}
+        >
           <Button className="w-full bg-primary hover:bg-primary/90 text-white">
             {t("bookNow")}
           </Button>
-        </Link>
+        </div>
       </div>
     </div>
   );

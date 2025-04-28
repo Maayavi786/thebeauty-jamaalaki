@@ -313,6 +313,7 @@ const SalonDetails = () => {
                   {/* Optionally, add category chips/filter here if salon services have categories */}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-gradient-to-r from-secondary/30 to-accent/30 dark:from-neutral-900 dark:to-neutral-900 rounded-xl p-8">
+                  {console.log('SalonDetails - salon object being passed to ServiceCard:', salon)}
                   {services?.map((service) => (
                     <ServiceCard 
                       key={service.id} 
