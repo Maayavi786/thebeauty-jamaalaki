@@ -34,7 +34,9 @@ const OwnerDashboard = () => {
 
   // Redirect if not authenticated or not a salon owner
   useEffect(() => {
+    console.log('Dashboard auth state:', { loading, isAuthenticated, userRole: user?.role });
     if (!loading && (!isAuthenticated || user?.role !== 'salon_owner')) {
+      console.log('Redirecting to login from dashboard');
       navigate('/login');
     }
   }, [isAuthenticated, user, loading, navigate]);

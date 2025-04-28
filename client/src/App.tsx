@@ -29,6 +29,7 @@ import Settings from "@/pages/owner/Settings";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
+import DashboardLink from "@/components/DashboardLink";
 
 function Router() {
   return (
@@ -94,7 +95,10 @@ function App() {
       </main>
       <Footer />
       {/* Toaster temporarily removed for build fix */}
+      {/* Chat widget always visible */}
       <ChatWidget />
+      {/* Quick access to salon owner dashboard */}
+      <DashboardLink />
     </div>
   );
 }

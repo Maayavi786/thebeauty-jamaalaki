@@ -40,8 +40,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
           const data = await response.json();
           console.log('Session check response:', data);
           if (data.user) {
+            console.log('User authenticated with role:', data.user.role);
             setUser(data.user);
           } else {
+            console.log('No user data in session response');
             setUser(null);
           }
         } else {
