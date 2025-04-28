@@ -143,6 +143,8 @@ const Register = () => {
                       </FormLabel>
                       <FormControl>
                         <Input 
+                          id="register-fullname"
+                          name="fullName"
                           placeholder={isLtr ? "Enter your full name" : "أدخل اسمك الكامل"} 
                           {...field} 
                         />
@@ -161,6 +163,8 @@ const Register = () => {
                       </FormLabel>
                       <FormControl>
                         <Input 
+                          id="register-username"
+                          name="username"
                           placeholder={isLtr ? "Choose a username" : "اختر اسم مستخدم"} 
                           {...field} 
                         />
@@ -179,6 +183,8 @@ const Register = () => {
                       </FormLabel>
                       <FormControl>
                         <Input 
+                          id="register-email"
+                          name="email"
                           type="email" 
                           placeholder={isLtr ? "Enter your email" : "أدخل بريدك الإلكتروني"} 
                           {...field} 
@@ -198,6 +204,8 @@ const Register = () => {
                       </FormLabel>
                       <FormControl>
                         <Input 
+                          id="register-phone"
+                          name="phone"
                           placeholder={isLtr ? "Enter your phone number" : "أدخل رقم هاتفك"} 
                           {...field} 
                         />
@@ -216,6 +224,8 @@ const Register = () => {
                       </FormLabel>
                       <FormControl>
                         <Input 
+                          id="register-password"
+                          name="password"
                           type="password" 
                           placeholder={isLtr ? "Create a password" : "أنشئ كلمة مرور"} 
                           {...field} 
@@ -235,6 +245,8 @@ const Register = () => {
                       </FormLabel>
                       <FormControl>
                         <Input 
+                          id="register-confirm-password"
+                          name="confirmPassword"
                           type="password" 
                           placeholder={isLtr ? "Confirm your password" : "أكد كلمة المرور"} 
                           {...field} 

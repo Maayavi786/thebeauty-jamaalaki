@@ -130,6 +130,8 @@ const Login = () => {
                       </FormLabel>
                       <FormControl>
                         <Input 
+                          id="login-username"
+                          name="username"
                           placeholder={isLtr ? "Enter your username" : "أدخل اسم المستخدم"} 
                           {...field} 
                         />
@@ -148,6 +150,8 @@ const Login = () => {
                       </FormLabel>
                       <FormControl>
                         <Input 
+                          id="login-password"
+                          name="password"
                           type="password" 
                           placeholder={isLtr ? "Enter your password" : "أدخل كلمة المرور"} 
                           {...field} 

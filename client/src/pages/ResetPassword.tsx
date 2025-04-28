@@ -84,6 +84,8 @@ export default function ResetPassword() {
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
+              id="reset-password"
+              name="password"
               type="password"
               placeholder={isLtr ? "New password" : "كلمة المرور الجديدة"}
               value={password}
@@ -93,6 +95,8 @@ export default function ResetPassword() {
               aria-label={isLtr ? "New password" : "كلمة المرور الجديدة"}
             />
             <Input
+              id="reset-confirm-password"
+              name="confirmPassword"
               type="password"
               placeholder={isLtr ? "Confirm password" : "تأكيد كلمة المرور"}
               value={confirmPassword}

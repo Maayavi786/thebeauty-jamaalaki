@@ -76,6 +76,8 @@ export default function ForgotPassword() {
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
+              id="forgot-email"
+              name="email"
               type="email"
               placeholder={isLtr ? "Email address" : "البريد الإلكتروني"}
               value={email}
