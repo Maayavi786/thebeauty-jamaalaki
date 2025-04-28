@@ -1,5 +1,6 @@
-// Use environment variable for API base URL, fallback to localhost for development
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+// Force port 5000 to avoid caching issues with environment variables
+export const API_BASE_URL = 'http://localhost:5000';
+console.log('API_BASE_URL hardcoded to:', API_BASE_URL);
 
 export const config = {
   api: {

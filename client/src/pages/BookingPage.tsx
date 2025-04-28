@@ -100,7 +100,7 @@ const BookingPage = () => {
       try {
         const response = await apiRequest('POST', config.api.endpoints.bookings, formData);
         const result = await response.json();
-        // console.log (removed for production)('Booking creation response:', result);
+        console.log('Booking creation response:', result);
         return result;
       } catch (error) {
         console.error('Error creating booking:', error);
@@ -180,15 +180,15 @@ const BookingPage = () => {
     bookingDate.setHours(hours, minutes, 0, 0);
     
     // Log the structure of salon and service to debug
-    // console.log (removed for production)('Salon data structure:', salon);
-    // console.log (removed for production)('Service data structure:', service);
+    console.log('Salon data structure:', salon);
+    console.log('Service data structure:', service);
     
     // Extract IDs correctly based on the response structure
     // Direct access if salon/service has an id property, otherwise try to access it through data property
     const salonId = salon?.id || (salon as any)?.data?.id || Number(params?.salonId);
     const serviceId = service?.id || (service as any)?.data?.id || Number(params?.serviceId);
     
-    // console.log (removed for production)('Using salonId:', salonId, 'serviceId:', serviceId);
+    console.log('Using salonId:', salonId, 'serviceId:', serviceId);
     
     // Make sure we have valid IDs before proceeding
     if (!salonId || !serviceId) {
