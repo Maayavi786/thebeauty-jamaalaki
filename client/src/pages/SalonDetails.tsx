@@ -151,18 +151,11 @@ const useSalonData = (salonId: number): SalonData => {
   let services: Service[] | null = null;
   let reviews: Review[] | null = null;
   if (salonResponse) {
-    // Try to unwrap if the API returns { data: { ...salon, services, reviews } }
-    if ((salonResponse as any).data) {
-      const data = (salonResponse as any).data;
-      salon = data;
-      services = data.services || null;
-      reviews = data.reviews || null;
-    } else {
-      // API returns { ...salon, services, reviews }
-      salon = salonResponse as Salon;
-      services = (salonResponse as any).services || null;
-      reviews = (salonResponse as any).reviews || null;
-    }
+    // Unwrap .data if present, else fallback
+    const base = (salonResponse as any).data || salonResponse;
+    salon = base;
+    services = base.services || null;
+    reviews = base.reviews || null;
   }
 
   return {
@@ -380,7 +373,7 @@ const SalonDetails = () => {
               <LoadingSkeleton isLtr={isLtr} />
             ) : (
               <div className="space-y-4">
-                {reviews?.map((review: Review) => (
+                {Array.isArray(reviews) && reviews.length > 0 ? reviews.map((review: Review) => (
                   <Card key={review.id} className="bg-background dark:bg-[#23232B] rounded-xl shadow-md p-6 border-t-4 border-primary hover:shadow-lg transition-all">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-2">
@@ -394,12 +387,11 @@ const SalonDetails = () => {
                         </span>
                       </div>
                       <p className={`${isLtr ? 'text-left' : 'text-right'}`}>
-                        {review.comment}
+                        {review.comment || (isLtr ? 'No comment provided.' : 'لا يوجد تعليق.')}
                       </p>
                     </CardContent>
                   </Card>
-                ))}
-                {reviews?.length === 0 && (
+                )) : (
                   <div className="text-center text-muted-foreground py-8">
                     {isLtr ? "No reviews yet." : "لا توجد تقييمات بعد."}
                   </div>
