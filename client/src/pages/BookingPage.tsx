@@ -59,7 +59,7 @@ const BookingPage = () => {
       try {
         const response = await apiRequest('GET', config.api.endpoints.salons + `/${params?.salonId}`);
         const result = await response.json();
-        return result;
+        return result.data;
       } catch (error) {
         console.error('Failed to fetch salon:', error);
         throw error;
@@ -73,7 +73,7 @@ const BookingPage = () => {
       try {
         const response = await apiRequest('GET', config.api.endpoints.services + `/${params?.serviceId}`);
         const result = await response.json();
-        return result;
+        return result.data;
       } catch (error) {
         console.error('Failed to fetch service:', error);
         throw error;
@@ -277,7 +277,7 @@ const BookingPage = () => {
                             <div 
                               className="w-full h-48 bg-center bg-cover"
                               style={{
-                                backgroundImage: `url(${salon?.imageUrl && salon.imageUrl.trim() !== '' ? salon.imageUrl : '/default-salon.jpg'})`,
+                                backgroundImage: `url(${salon?.imageUrl || salon?.image_url || '/default-salon.jpg'})`,
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center'
                               }}
@@ -413,7 +413,7 @@ const BookingPage = () => {
                         </div>
                         <div>
                           <p className={`font-medium text-lg ${isRtl ? 'font-tajawal' : ''}`}>
-                            {isLtr ? salon.nameEn : salon.nameAr}
+                            {salon ? (isLtr ? salon.nameEn : salon.nameAr) : (isLtr ? 'Unknown Salon' : 'صالون غير معروف')}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {salon && typeof salon.city === 'string' && salon.city.includes(' | ')
@@ -427,7 +427,7 @@ const BookingPage = () => {
                       
                       <div className="flex justify-between items-center pb-3 border-b">
                         <div className={`${isRtl ? 'font-tajawal' : ''}`}>
-                          <p className="font-medium">{isLtr ? (service as Service).nameEn : (service as Service).nameAr}</p>
+                          <p className="font-medium">{service ? (isLtr ? (service as Service).nameEn : (service as Service).nameAr) : (isLtr ? 'Unknown Service' : 'خدمة غير معروفة')}</p>
                           <p className="text-sm text-muted-foreground">
                             {(service as Service).duration} {isLtr ? "minutes" : "دقيقة"}
                           </p>
