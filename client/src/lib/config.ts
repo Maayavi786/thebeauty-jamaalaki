@@ -13,6 +13,8 @@ export const config = {
       reviews: '/reviews',
       bookings: '/bookings',
       auth: '/auth',
+      promotions: '/promotions', 
+      analytics: '/analytics',
     },
   },
   features: {
