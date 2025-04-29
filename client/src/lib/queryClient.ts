@@ -30,43 +30,61 @@ function normalizeEndpoint(endpoint: string): string {
   return '/api' + normalized;
 }
 
-export const apiRequest = async (method: string, endpoint: string, data?: any) => {
+export const apiRequest = async (method: string, endpoint: string, data?: any, headers?: Record<string, string>) => {
   const normalizedEndpoint = normalizeEndpoint(endpoint);
-  const url = `${API_BASE_URL}${normalizedEndpoint}`;
+  let url = `${API_BASE_URL}${normalizedEndpoint}`;
   console.log('apiRequest URL:', url, 'endpoint:', endpoint, 'normalizedEndpoint:', normalizedEndpoint, 'API_BASE_URL:', API_BASE_URL);
   
-  // Simplified headers for development
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json'
+  console.log(`API Request: ${method} ${url}`);
+  
+  // For get requests with data, convert to query params
+  if (data && (method === 'GET' || method === 'HEAD')) {
+    const params = new URLSearchParams();
+    Object.entries(data).forEach(([key, value]) => {
+      params.append(key, String(value));
+    });
+    url = `${url}?${params.toString()}`;
+  }
+  
+  const defaultHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
   };
-
+  
+  const requestOptions: RequestInit = {
+    method,
+    headers: { ...defaultHeaders, ...(headers || {}) },
+    credentials: 'include', // Important for sessions
+  };
+  
+  if (data && method !== 'GET' && method !== 'HEAD') {
+    requestOptions.body = JSON.stringify(data);
+  }
+  
   try {
-    // Use mode: 'cors' explicitly and don't require credentials for GET requests
-    const fetchOptions: RequestInit = {
-      method,
-      headers,
-      mode: 'cors',
-      credentials: method.toUpperCase() === 'GET' ? 'same-origin' : 'include',
-    };
+    console.log(`Sending ${method} request to ${url}`);
+    const response = await fetch(url, requestOptions);
     
-    // Only add body for non-GET requests
-    if (data && method.toUpperCase() !== 'GET') {
-      fetchOptions.body = JSON.stringify(data);
+    // Log API response for debugging
+    console.log(`API Response (${response.status}):`, url);
+    
+    // Extra debug info for non-ok responses
+    if (!response.ok) {
+      console.error(`API error: ${response.status} ${response.statusText}`);
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.clone().json();
+          console.error('Error details:', errorData);
+        }
+      } catch (e) {
+        console.error('Could not parse error response body');
+      }
     }
     
-    const response = await fetch(url, fetchOptions);
-
-    await throwIfResNotOk(response);
+    // Return the response object for handling by the caller
     return response;
   } catch (error) {
-    if (error instanceof Error) {
-      const apiError = error as ApiError;
-      if (apiError.status === 401) {
-        // Remove automatic redirect to login. Let UI handle booking errors.
-        // window.location.href = '/login';
-      }
-      throw apiError;
-    }
+    console.error(`API Request failed: ${method} ${url}`, error);
     throw error;
   }
 };
