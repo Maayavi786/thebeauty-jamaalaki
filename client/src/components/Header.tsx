@@ -83,14 +83,24 @@ const Header = () => {
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             {/* Owner Portal Direct Link - visible for all users */}
             {isAuthenticated && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="hidden md:flex items-center mr-2 bg-primary/10 hover:bg-primary/20 border-primary/20"
-                onClick={() => navigate('/owner-test')}
-              >
-                <span className="font-medium">{isLtr ? 'Owner Portal' : 'بوابة المالك'}</span>
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:flex items-center mr-2 bg-primary/10 hover:bg-primary/20 border-primary/20"
+                  onClick={() => navigate('/owner-test')}
+                >
+                  <span className="font-medium">{isLtr ? 'Owner Portal' : 'بوابة المالك'}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:flex items-center mr-2 bg-blue-100 hover:bg-blue-200 border-blue-200 text-blue-700"
+                  onClick={() => navigate('/map-salon')}
+                >
+                  <span className="font-medium">{isLtr ? 'Map Salon' : 'ربط صالون'}</span>
+                </Button>
+              </>
             )}
             <LanguageToggle />
             <ThemeToggle />
@@ -163,17 +173,30 @@ const Header = () => {
               <ul className="space-y-4">
                 {/* Owner Portal Mobile Link - visible for all authenticated users */}
                 {isAuthenticated && (
-                  <li>
-                    <span 
-                      className={`block py-2 font-medium cursor-pointer bg-primary/10 px-3 rounded-md text-center ${isRtl ? 'font-tajawal' : ''}`}
-                      onClick={() => {
-                        closeMenu();
-                        navigate('/owner-test');
-                      }}
-                    >
-                      {isLtr ? "👑 Owner Portal" : "👑 بوابة المالك"}
-                    </span>
-                  </li>
+                  <>
+                    <li>
+                      <span 
+                        className={`block py-2 font-medium cursor-pointer bg-primary/10 px-3 rounded-md text-center ${isRtl ? 'font-tajawal' : ''}`}
+                        onClick={() => {
+                          closeMenu();
+                          navigate('/owner-test');
+                        }}
+                      >
+                        {isLtr ? "👑 Owner Portal" : "👑 بوابة المالك"}
+                      </span>
+                    </li>
+                    <li className="mt-2">
+                      <span 
+                        className={`block py-2 font-medium cursor-pointer bg-blue-100 text-blue-700 px-3 rounded-md text-center ${isRtl ? 'font-tajawal' : ''}`}
+                        onClick={() => {
+                          closeMenu();
+                          navigate('/map-salon');
+                        }}
+                      >
+                        {isLtr ? "🔗 Map Salon" : "🔗 ربط صالون"}
+                      </span>
+                    </li>
+                  </>
                 )}
                 <li>
                   <Link href="/">
