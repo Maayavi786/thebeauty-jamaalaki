@@ -28,6 +28,11 @@ const MapSalon = () => {
 
     setLoading(true);
     try {
+      console.log('Sending request to map salon:', {
+        username: user.username,
+        salonId: parseInt(salonId)
+      });
+      
       const response = await fetch('/.netlify/functions/mapSalon', {
         method: 'POST',
         headers: {
@@ -39,19 +44,58 @@ const MapSalon = () => {
         }),
       });
 
-      const data = await response.json();
+      // Check if the response is ok first
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response from mapSalon:', errorText);
+        
+        let errorMessage = "Failed to map salon";
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // If we can't parse the error as JSON, use the raw text
+          errorMessage = errorText || errorMessage;
+        }
+        
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
       
-      if (response.ok) {
+      // Handle successful response
+      try {
+        const responseText = await response.text();
+        console.log('Raw response from mapSalon:', responseText);
+        
+        // Try to parse the response as JSON
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse response as JSON:', parseError);
+          // If we can't parse as JSON, create a simple data object
+          data = { 
+            success: true,
+            message: "Salon was mapped successfully, but there was an issue with the response format."
+          };
+        }
+        
+        // Update state and show success message
         setResult(data);
         toast({
           title: "Success",
-          description: data.message,
+          description: data.message || "Salon mapped successfully",
         });
-      } else {
+      } catch (processError) {
+        console.error('Error processing successful response:', processError);
         toast({
-          title: "Error",
-          description: data.error || "Failed to map salon",
-          variant: "destructive"
+          title: "Warning",
+          description: "Salon may have been mapped, but there was an error processing the response.",
         });
       }
     } catch (error) {

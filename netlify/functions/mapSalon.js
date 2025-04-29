@@ -10,17 +10,29 @@ exports.handler = async (event, context) => {
     };
   }
 
+  let requestBody;
   try {
     // Parse request body
-    const { username, salonId = 2 } = JSON.parse(event.body || '{}');
+    requestBody = JSON.parse(event.body || '{}');
+    console.log('Received request body:', JSON.stringify(requestBody));
+  } catch (parseError) {
+    console.error('Failed to parse request body:', parseError);
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Invalid request format' })
+    };
+  }
 
-    if (!username) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Username is required' })
-      };
-    }
+  const { username, salonId = 2 } = requestBody;
 
+  if (!username) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Username is required' })
+    };
+  }
+
+  try {
     // Connect to the database
     const sql = neon(process.env.DATABASE_URL);
     
@@ -80,22 +92,37 @@ exports.handler = async (event, context) => {
       console.log(`Updated user role to salon_owner`);
     }
     
+    const responseData = {
+      success: true,
+      message: `Salon ${result[0].name_en} (ID: ${result[0].id}) successfully mapped to ${username}`,
+      serviceMessage,
+      salon: {
+        id: result[0].id,
+        name_en: result[0].name_en,
+        name_ar: result[0].name_ar
+      },
+      userId: user.id
+    };
+    
+    console.log('Sending response:', JSON.stringify(responseData));
+    
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        success: true,
-        message: `Salon ${result[0].name_en} (ID: ${result[0].id}) successfully mapped to ${username}`,
-        serviceMessage,
-        salon: result[0],
-        userId: user.id
-      })
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(responseData)
     };
     
   } catch (error) {
     console.error('Error mapping salon:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error', details: error.message })
+      body: JSON.stringify({ 
+        error: 'Internal server error', 
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      })
     };
   }
 };
