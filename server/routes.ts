@@ -926,5 +926,36 @@ export default async function registerRoutes(app: Express, storage: IStorage) {
     }
   });
 
+  // Add a new endpoint that matches the client's request pattern
+  app.get("/api/salons/:salonId/reviews", async (req: Request, res: Response) => {
+    try {
+      console.log(`Fetching reviews for salon ID: ${req.params.salonId}`);
+      
+      // Parse salon ID as integer and validate
+      const salonId = parseInt(req.params.salonId);
+      if (isNaN(salonId)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid salon ID format", 
+          error: "Salon ID must be a valid number" 
+        });
+      }
+      
+      // Use the existing storage method to fetch reviews
+      const reviews = await storage.getReviewsBySalon(salonId);
+      console.log(`Found ${reviews?.length || 0} reviews for salon ID ${salonId}`);
+      
+      // Return reviews array (empty array if none found)
+      res.status(200).json(reviews || []);
+    } catch (err) {
+      console.error(`Error fetching reviews for salon ID ${req.params.salonId}:`, err);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch salon reviews", 
+        error: err.message || "Unknown error"
+      });
+    }
+  });
+
   return router;
 }
