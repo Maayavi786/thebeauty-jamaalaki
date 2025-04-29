@@ -313,6 +313,81 @@ export default async function registerRoutes(app: Express, storage: IStorage) {
     }
   });
 
+  // Get business hours for a salon owner
+  app.get("/api/salons/business-hours", async (req: Request, res: Response) => {
+    try {
+      // Check if user is logged in
+      if (!req.session.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Get the owner ID from the session and ensure it's a valid number
+      const ownerId = parseInt(String(req.session.user.id));
+      console.log('Fetching business hours for owner ID:', ownerId);
+      
+      if (isNaN(ownerId)) {
+        console.error('Invalid owner ID (NaN) for business hours:', req.session.user.id);
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid owner ID", 
+          error: "Owner ID is missing or invalid" 
+        });
+      }
+      
+      // First, get the salon for this owner
+      const salons = await sql`SELECT id, business_hours FROM salons WHERE owner_id = ${ownerId}`;
+      
+      if (!salons || salons.length === 0) {
+        console.log('No salon found for this owner, returning default business hours');
+        // Return default business hours
+        return res.json({
+          monday: { open: '09:00', close: '18:00' },
+          tuesday: { open: '09:00', close: '18:00' },
+          wednesday: { open: '09:00', close: '18:00' },
+          thursday: { open: '09:00', close: '18:00' },
+          friday: { open: '09:00', close: '18:00' },
+          saturday: { open: '10:00', close: '16:00' },
+          sunday: { open: '10:00', close: '16:00' },
+        });
+      }
+      
+      const salon = salons[0];
+      console.log(`Found salon ID ${salon.id} for business hours`);
+      
+      // Parse business hours from JSON string if it exists
+      let businessHours;
+      try {
+        businessHours = salon.business_hours ? JSON.parse(salon.business_hours) : null;
+      } catch (parseError) {
+        console.error('Error parsing business hours JSON:', parseError);
+        businessHours = null;
+      }
+      
+      // If no business hours or parsing failed, return default
+      if (!businessHours) {
+        console.log('No valid business hours found, returning defaults');
+        businessHours = {
+          monday: { open: '09:00', close: '18:00' },
+          tuesday: { open: '09:00', close: '18:00' },
+          wednesday: { open: '09:00', close: '18:00' },
+          thursday: { open: '09:00', close: '18:00' },
+          friday: { open: '09:00', close: '18:00' },
+          saturday: { open: '10:00', close: '16:00' },
+          sunday: { open: '10:00', close: '16:00' },
+        };
+      }
+      
+      res.json(businessHours);
+    } catch (error) {
+      console.error("Error getting salon business hours:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch salon business hours", 
+        error: error.message || "Unknown error" 
+      });
+    }
+  });
+
   // Salon Analytics
   app.get("/api/salons/analytics", async (req: Request, res: Response) => {
     try {
@@ -418,35 +493,42 @@ export default async function registerRoutes(app: Express, storage: IStorage) {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const ownerId = req.session.user.id;
-      console.log('Fetching services for owner ID (from session):', ownerId);
+      // Get the owner ID from the session and ensure it's a valid number
+      const ownerId = parseInt(String(req.session.user.id));
+      console.log('Fetching services for owner ID:', ownerId);
       
-      if (!ownerId || isNaN(ownerId)) {
-        return res.status(400).json({ message: "Invalid owner ID" });
+      if (isNaN(ownerId)) {
+        console.error('Invalid owner ID (NaN) for services:', req.session.user.id);
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid owner ID", 
+          error: "Owner ID is missing or invalid" 
+        });
       }
       
-      // Get salons for this owner
-      const salons = await sql`SELECT * FROM salons WHERE owner_id = ${ownerId}`;
+      // First, get the salon for this owner
+      const salons = await sql`SELECT id FROM salons WHERE owner_id = ${ownerId}`;
       
-      // If no salons found, return empty list
       if (!salons || salons.length === 0) {
-        console.log('No salons found for this owner, returning empty services list');
+        console.log('No salon found for this owner, returning empty array');
         return res.json([]);
       }
       
-      // Use the first salon
-      const salonId = salons[0].id;
-      console.log('Using salon ID:', salonId);
+      const salonId = parseInt(String(salons[0].id));
+      console.log(`Found salon ID for services: ${salonId}`);
       
       // Get services for this salon
       const services = await sql`SELECT * FROM services WHERE salon_id = ${salonId}`;
-      console.log('Found services:', services?.length || 0);
+      console.log(`Found ${services.length} services for salon ID ${salonId}`);
       
-      // If no services, return empty array instead of null
-      res.json(services || []);
+      res.json(services);
     } catch (error) {
-      console.error("Error getting services for logged-in owner's salon:", error);
-      res.status(500).json({ message: "Error getting services data" });
+      console.error("Error getting services for logged-in owner:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch salon services", 
+        error: error.message || "Unknown error" 
+      });
     }
   });
 
