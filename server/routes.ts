@@ -4,150 +4,110 @@ import {
   insertUserSchema, insertSalonSchema, insertServiceSchema, 
   insertBookingSchema, insertReviewSchema, loginSchema, User 
 } from "../shared/schema";
-import { ZodError } from "zod";
-import { hashPassword, comparePasswords } from "./auth";
-import { Session } from "express-session";
-import { Router } from 'express';
+import { validateRequest } from "./validate";
+import { Router } from "express";
+import { compare, hash } from "bcryptjs";
+import { config } from "../shared/config";
 import { neon } from '@neondatabase/serverless';
 
-// Extend the Session type to include user
 declare module "express-session" {
   interface SessionData {
-    user?: Omit<User, 'password'>;
+    user?: Omit<User, 'password'>
   }
 }
 
 const router = Router();
 const sql = neon(process.env.DATABASE_URL!);
 
-// Test endpoint
-router.get('/api/test-db', async (req, res) => {
-  try {
-    const result = await sql`SELECT 1 as test`;
-    res.json({ 
-      success: true, 
-      message: 'Database connection successful',
-      data: result 
+// Setup routes
+export default async function registerRoutes(app: Express, storage: IStorage) {
+  // Get API version
+  app.get("/api/version", (req: Request, res: Response) => {
+    res.json({
+      version: config.version,
+      buildDate: config.buildDate
     });
-  } catch (error) {
-    console.error('Database connection test failed:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Database connection failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
+  });
+
+  // Get current system info
+  app.get("/api/system", async (req: Request, res: Response) => {
+    const uptime = process.uptime();
+    const memory = process.memoryUsage();
+    res.json({
+      uptime,
+      memory
     });
-  }
-});
+  });
 
-export async function registerRoutes(app: Express, storage: IStorage): Promise<void> {
-  // Helper function to handle validation errors
-  const validateRequest = (schema: any, data: any) => {
-    try {
-      return { data: schema.parse(data), error: null };
-    } catch (error) {
-      if (error instanceof ZodError) {
-        return { data: null, error: error.format() };
-      }
-      return { data: null, error: "Invalid request data" };
-    }
-  };
-
-  // User routes
+  // Auth endpoints
   app.post("/api/auth/register", async (req: Request, res: Response) => {
-    console.log("Registration request received:", req.body);
-    
-    // Validate the request data
     const { data, error } = validateRequest(insertUserSchema, req.body);
     if (error) {
-      console.log("Registration validation error:", error);
       return res.status(400).json({ message: "Validation error", errors: error });
     }
 
     try {
-      // Check if username or email already exists
-      console.log("Checking for existing username:", data.username);
-      const existingUsername = await storage.getUserByUsername(data.username);
-      if (existingUsername) {
-        console.log("Username already exists:", data.username);
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(data.username);
+      if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
-      console.log("Checking for existing email:", data.email);
-      const existingEmail = await storage.getUserByEmail(data.email);
-      if (existingEmail) {
-        console.log("Email already exists:", data.email);
-        return res.status(400).json({ message: "Email already exists" });
-      }
-
-      // Hash the password before storing it
-      console.log("Hashing password...");
-      const hashedPassword = await hashPassword(data.password);
-      
-      // Ensure all required fields are present according to the schema
-      // Note: The database uses snake_case (full_name) while our code uses camelCase (fullName)
-      // We need to adapt our data to match the expected database column names
-      const userData = { 
-        username: data.username,
-        password: hashedPassword,
-        email: data.email,
-        // Map to the database column name for full_name
-        full_name: data.fullName || "", 
-        phone: data.phone,
-        role: data.role || "customer",
-        preferred_language: data.preferredLanguage || "en",
-        loyalty_points: 0
+      // Hash password
+      const hashedPassword = await hash(data.password, 10);
+      const userData = {
+        ...data,
+        password: hashedPassword
       };
-      
-      console.log("Creating new user with data:", { ...userData, password: "[REDACTED]" });
+
+      // Create user
       const user = await storage.createUser(userData);
       
-      if (!user) {
-        console.error("User creation failed: No user returned from storage");
-        return res.status(500).json({ message: "Failed to create user account" });
-      }
-      
-      // Create a default salon if user is a salon owner
-      if (user.role === 'salon_owner') {
+      // If the user is a salon_owner, create a default salon for them
+      if (userData.role === 'salon_owner') {
+        console.log(`Creating default salon for new salon owner (${userData.username})`);
         try {
-          console.log("Creating default salon for salon owner:", user.id);
-          const salonData = {
-            ownerId: user.id,
-            nameEn: `${user.full_name || user.username}'s Salon`,
-            nameAr: `صالون ${user.full_name || user.username}`,
-            descriptionEn: 'New salon - update your description',
-            descriptionAr: 'صالون جديد - قم بتحديث الوصف',
-            address: 'Update your address',
-            city: 'Riyadh',
-            phone: user.phone || 'Update your phone number',
-            email: user.email,
-            imageUrl: 'https://via.placeholder.com/300x200?text=Salon+Image',
-            isLadiesOnly: true,
-            hasPrivateRooms: false,
-            isHijabFriendly: true,
-            priceRange: 'SAR',
+          const defaultSalon = {
+            owner_id: user.id,
+            name_en: `${userData.firstName}'s Salon`,
+            name_ar: `صالون ${userData.firstName}`,
+            description_en: 'My salon description',
+            description_ar: 'وصف صالوني',
+            address: 'Your address here',
+            phone: userData.phone || '',
+            email: userData.email,
+            image_url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop',
+            rating: 4.5,
+            is_featured: true,
+            business_hours: JSON.stringify({
+              monday: { open: '09:00', close: '18:00' },
+              tuesday: { open: '09:00', close: '18:00' },
+              wednesday: { open: '09:00', close: '18:00' },
+              thursday: { open: '09:00', close: '18:00' },
+              friday: { open: '09:00', close: '18:00' },
+              saturday: { open: '10:00', close: '16:00' },
+              sunday: { open: '10:00', close: '16:00' },
+            })
           };
           
-          await storage.createSalon(salonData);
-          console.log("Default salon created successfully for user:", user.id);
-        } catch (salonError) {
-          console.error("Error creating default salon:", salonError);
-          // We won't fail the registration if salon creation fails
-          // Just log the error and continue
+          await storage.createSalon(defaultSalon);
+          console.log(`Default salon created for user ID ${user.id}`);
+        } catch (salonErr) {
+          console.error('Error creating default salon:', salonErr);
+          // Continue with the user creation even if salon creation fails
         }
       }
-      
+
       // Don't return password in response
       const { password, ...userWithoutPassword } = user;
       
-      console.log("User created successfully:", { id: user.id, username: user.username });
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error("Error creating user:", errorMessage, error);
-      res.status(500).json({ 
-        message: "Error creating user", 
-        details: process.env.NODE_ENV === "development" ? errorMessage : undefined 
+      res.status(201).json({
+        user: userWithoutPassword,
+        message: "User registered successfully"
       });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
     }
   });
 
@@ -162,41 +122,30 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
-      // Compare the provided password with the stored hash
-      const passwordMatch = await comparePasswords(data.password, user.password);
-      if (!passwordMatch) {
+
+      const isMatch = await compare(data.password, user.password);
+      if (!isMatch) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // Don't return password in response
+      // Don't return password in response or session
       const { password, ...userWithoutPassword } = user;
       
-      // Log user details for debugging (with password redacted)
-      console.log('User attempting login:', {
-        ...userWithoutPassword,
-        role: user.role, // Explicitly log the role for debugging
+      // Store user in session
+      req.session.user = userWithoutPassword;
+      
+      // Log session info for debugging
+      console.log('User login successful. Session info:', {
+        id: req.sessionID,
+        cookie: req.session.cookie,
+        userId: userWithoutPassword.id,
+        role: userWithoutPassword.role,
+        sessionId: req.sessionID
       });
       
-      // Set up session
-      req.session.user = userWithoutPassword;
-      req.session.save((err) => {
-        if (err) {
-          console.error("Error saving session:", err);
-          return res.status(500).json({ message: "Error setting up session" });
-        }
-        
-        // Log session data for debugging
-        console.log('Session saved successfully:', {
-          userId: userWithoutPassword.id,
-          role: userWithoutPassword.role,
-          sessionId: req.sessionID
-        });
-        
-        res.status(200).json({
-          message: "Login successful",
-          user: userWithoutPassword,
-        });
+      res.status(200).json({
+        message: "Login successful",
+        user: userWithoutPassword,
       });
     } catch (err) {
       console.error(err);
@@ -255,74 +204,14 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
     }
   });
 
-  // Add route to get all users (admin only)
-  app.get("/api/users", async (req: Request, res: Response) => {
-    try {
-      const users = await storage.getAllUsers();
-      // Don't return passwords in response
-      const usersWithoutPasswords = users.map(({ password, ...rest }) => rest);
-      res.status(200).json(usersWithoutPasswords);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  app.patch("/api/users/:id", async (req: Request, res: Response) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Only allow updating certain fields
-      const allowedUpdates = ["fullName", "phone", "preferredLanguage"];
-      const updates: Record<string, any> = {};
-      for (const field of allowedUpdates) {
-        if (field in req.body) {
-          updates[field] = req.body[field];
-        }
-      }
-
-      const updatedUser = await storage.updateUser(userId, updates);
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Don't return password in response
-      const { password, ...userWithoutPassword } = updatedUser;
-      res.status(200).json(userWithoutPassword);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
   // Salon routes
   app.get("/api/salons", async (req: Request, res: Response) => {
     try {
-      // Only apply filters that were actually provided in the query
-      const appliedFilters: any = {};
-      
-      if (req.query.isLadiesOnly !== undefined) {
-        appliedFilters.isLadiesOnly = req.query.isLadiesOnly === 'true';
-      }
-      if (req.query.hasPrivateRooms !== undefined) {
-        appliedFilters.hasPrivateRooms = req.query.hasPrivateRooms === 'true';
-      }
-      if (req.query.isHijabFriendly !== undefined) {
-        appliedFilters.isHijabFriendly = req.query.isHijabFriendly === 'true';
-      }
-      if (req.query.city) {
-        appliedFilters.city = req.query.city as string;
-      }
-
-      const salons = await storage.getSalons(Object.keys(appliedFilters).length > 0 ? appliedFilters : undefined);
-      res.json(salons);
-    } catch (error) {
-      console.error("Error fetching salons:", error);
-      res.status(500).json({ message: "Error fetching salons" });
+      const salons = await storage.getSalons();
+      res.status(200).json(salons);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
     }
   });
 
@@ -332,16 +221,7 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
       if (!salon) {
         return res.status(404).json({ message: "Salon not found" });
       }
-      // Fetch services and reviews for the salon
-      const [services, reviews] = await Promise.all([
-        storage.getServicesBySalon(salon.id),
-        storage.getReviewsBySalon(salon.id),
-      ]);
-      res.status(200).json({
-        ...salon,
-        services,
-        reviews,
-      });
+      res.status(200).json(salon);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -363,13 +243,59 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
     }
   });
 
+  // Get salons by owner ID (with parameter)
   app.get("/api/salons/owner/:ownerId", async (req: Request, res: Response) => {
     try {
-      const salons = await storage.getSalonsByOwner(parseInt(req.params.ownerId));
-      res.status(200).json(salons);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error" });
+      const ownerId = parseInt(req.params.ownerId);
+      const result = await sql`SELECT * FROM salons WHERE owner_id = ${ownerId}`;
+      res.json(result);
+    } catch (error) {
+      console.error("Error getting salons by owner ID:", error);
+      res.status(500).json({ message: "Error getting salons" });
+    }
+  });
+
+  // Get salons for the logged-in owner (from session)
+  app.get("/api/salons/owner", async (req: Request, res: Response) => {
+    try {
+      // Check if user is logged in
+      if (!req.session.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const ownerId = req.session.user.id;
+      console.log('Fetching salons for owner ID (from session):', ownerId);
+      
+      // Get salons for this owner
+      const salons = await sql`SELECT * FROM salons WHERE owner_id = ${ownerId}`;
+      console.log('Found salons:', salons);
+      
+      // If no salon is found, return a temporary salon object
+      // This is just for debugging/testing
+      if (!salons || salons.length === 0) {
+        console.log('No salons found, returning dummy salon');
+        return res.json({
+          id: 0,
+          owner_id: ownerId,
+          name_en: 'Your Salon (Not Found)',
+          name_ar: 'صالونك (غير موجود)',
+          description_en: 'Please use the Map Salon feature to connect a salon to your account',
+          description_ar: 'يرجى استخدام ميزة ربط الصالون لربط صالون بحسابك',
+          address: 'N/A',
+          phone: 'N/A',
+          email: req.session.user.email || 'N/A',
+          image_url: 'https://via.placeholder.com/500?text=Salon+Not+Found',
+          rating: 0,
+          is_featured: false,
+          business_hours: '{}'  
+        });
+      }
+      
+      // Return the first salon for this owner (most owners only have one salon)
+      res.json(salons[0]);
+    } catch (error) {
+      console.error("Error getting salons for logged-in owner:", error);
+      res.status(500).json({ message: "Error getting salon data" });
     }
   });
 
@@ -392,13 +318,51 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
     }
   });
 
+  // Get services by salon ID (with parameter)
   app.get("/api/services/salon/:salonId", async (req: Request, res: Response) => {
     try {
-      const services = await storage.getServicesBySalon(parseInt(req.params.salonId));
-      res.status(200).json(services);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error" });
+      const salonId = parseInt(req.params.salonId);
+      const services = await sql`SELECT * FROM services WHERE salon_id = ${salonId}`;
+      res.json(services);
+    } catch (error) {
+      console.error("Error getting services by salon ID:", error);
+      res.status(500).json({ message: "Error getting services" });
+    }
+  });
+
+  // Get services for the logged-in owner's salon (from session)
+  app.get("/api/services/salon", async (req: Request, res: Response) => {
+    try {
+      // Check if user is logged in
+      if (!req.session.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const ownerId = req.session.user.id;
+      console.log('Fetching services for owner ID (from session):', ownerId);
+      
+      // Get salons for this owner
+      const salons = await sql`SELECT * FROM salons WHERE owner_id = ${ownerId}`;
+      
+      // If no salons found, return empty list
+      if (!salons || salons.length === 0) {
+        console.log('No salons found for this owner, returning empty services list');
+        return res.json([]);
+      }
+      
+      // Use the first salon
+      const salonId = salons[0].id;
+      console.log('Using salon ID:', salonId);
+      
+      // Get services for this salon
+      const services = await sql`SELECT * FROM services WHERE salon_id = ${salonId}`;
+      console.log('Found services:', services?.length || 0);
+      
+      // If no services, return empty array instead of null
+      res.json(services || []);
+    } catch (error) {
+      console.error("Error getting services for logged-in owner's salon:", error);
+      res.status(500).json({ message: "Error getting services data" });
     }
   });
 
@@ -451,54 +415,12 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
     }
   });
 
-  app.post("/api/bookings", async (req: Request, res: Response) => {
-    const { userId, salonId, serviceIds, datetime, notes } = req.body;
-    
-    if (!userId || !salonId || !serviceIds || !datetime || !Array.isArray(serviceIds)) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
+  app.get("/api/bookings/:id", async (req: Request, res: Response) => {
     try {
-      // Create bookings for each service
-      const bookings = [];
-      for (const serviceId of serviceIds) {
-        const bookingData = {
-          userId,
-          salonId,
-          serviceId,
-          datetime,
-          notes,
-          status: 'pending' as const
-        };
-        
-        const { data, error } = validateRequest(insertBookingSchema, bookingData);
-        if (error) {
-          return res.status(400).json({ message: "Validation error", errors: error });
-        }
-        
-        const booking = await storage.createBooking(data);
-        bookings.push(booking);
-      }
-      
-      res.status(201).json(bookings);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  app.patch("/api/bookings/:id/status", async (req: Request, res: Response) => {
-    const { status } = req.body;
-    if (!status || !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
-    }
-
-    try {
-      const booking = await storage.updateBookingStatus(parseInt(req.params.id), status);
+      const booking = await storage.getBooking(parseInt(req.params.id));
       if (!booking) {
         return res.status(404).json({ message: "Booking not found" });
       }
-      
       res.status(200).json(booking);
     } catch (err) {
       console.error(err);
@@ -506,13 +428,49 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
     }
   });
 
-  // Review routes
-  app.get("/api/reviews", async (req: Request, res: Response) => {
+  app.post("/api/bookings", async (req: Request, res: Response) => {
+    const { data, error } = validateRequest(insertBookingSchema, req.body);
+    if (error) {
+      return res.status(400).json({ message: "Validation error", errors: error });
+    }
+
     try {
-      const salonId = req.query.salonId ? parseInt(req.query.salonId as string) : undefined;
-      const reviews = salonId ? await storage.getReviewsBySalon(salonId) : await storage.getAllReviews();
-      console.log('API /api/reviews?salonId=', salonId, 'Result:', reviews);
-      res.status(200).json({ success: true, data: reviews });
+      const booking = await storage.createBooking(data);
+      res.status(201).json(booking);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Review routes
+  app.get("/api/reviews/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const reviews = await storage.getReviewsByUser(parseInt(req.params.userId));
+      res.status(200).json(reviews);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/reviews/salon/:salonId", async (req: Request, res: Response) => {
+    try {
+      const reviews = await storage.getReviewsBySalon(parseInt(req.params.salonId));
+      res.status(200).json(reviews);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/reviews/:id", async (req: Request, res: Response) => {
+    try {
+      const review = await storage.getReview(parseInt(req.params.id));
+      if (!review) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      res.status(200).json(review);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -534,17 +492,5 @@ export async function registerRoutes(app: Express, storage: IStorage): Promise<v
     }
   });
 
-  // DEBUG: Dump all reviews for manual verification
-  app.get("/api/debug/reviews", async (req: Request, res: Response) => {
-    try {
-      const allReviews = await storage.getAllReviews();
-      res.status(200).json({ success: true, data: allReviews });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
+  return router;
 }
-
-export default router;

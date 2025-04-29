@@ -103,17 +103,37 @@ const SalonProfile = () => {
     queryKey: ['owner-salon-profile'],
     queryFn: async () => {
       try {
-        // Assuming an endpoint to get salons for the logged-in owner
+        console.log('Fetching salon data for owner');
+        // Get salons for the logged-in owner
         const response = await apiRequest('GET', `${config.api.endpoints.salons}/owner`);
         const result = await response.json();
-        const salon = result.data || result;
+        console.log('Salon API response:', result);
         
-        // If salon has an image, set the preview
-        if (salon.imageUrl) {
-          setImagePreview(salon.imageUrl);
+        // Make sure we have valid salon data
+        const salon = result.data || result;
+        console.log('Normalized salon data:', salon);
+        
+        // Set image preview if available (normalize field names)
+        if (salon.imageUrl || salon.image_url) {
+          const imageUrl = salon.imageUrl || salon.image_url;
+          console.log('Setting image preview:', imageUrl);
+          setImagePreview(imageUrl);
         }
         
-        return salon;
+        // Normalize field names for consistent access
+        return {
+          ...salon,
+          // Make sure all required fields are available with normalized names
+          nameEn: salon.nameEn || salon.name_en || 'Your Salon',
+          nameAr: salon.nameAr || salon.name_ar || 'صالونك',
+          descriptionEn: salon.descriptionEn || salon.description_en || '',
+          descriptionAr: salon.descriptionAr || salon.description_ar || '',
+          imageUrl: salon.imageUrl || salon.image_url || '',
+          address: salon.address || '',
+          phone: salon.phone || '',
+          email: salon.email || '',
+          businessHours: salon.businessHours || salon.business_hours || '{}'
+        };
       } catch (error) {
         console.error('Failed to fetch owner salon data:', error);
         throw error;
