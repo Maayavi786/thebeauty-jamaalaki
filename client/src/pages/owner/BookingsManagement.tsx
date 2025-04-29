@@ -99,21 +99,33 @@ const BookingsManagement = () => {
     queryKey: ['owner-bookings'],
     queryFn: async () => {
       try {
-        const response = await apiRequest('GET', `${config.api.endpoints.bookings}/salon`);
+        console.log('Fetching salon bookings...');
+        // Fix the endpoint by using the correct path
+        const response = await apiRequest('GET', '/api/bookings/salon');
+        
+        if (!response.ok) {
+          console.error(`Bookings API returned ${response.status}: ${response.statusText}`);
+          return [];
+        }
+        
         const result = await response.json();
-        return result.data || result;
+        console.log('Bookings response:', result);
+        return result.data || result || [];
       } catch (error) {
         console.error('Failed to fetch salon bookings:', error);
-        throw error;
+        // Return empty array instead of throwing to prevent UI breaks
+        return [];
       }
     },
-    enabled: isAuthenticated && user?.role === 'salon_owner'
+    enabled: isAuthenticated && user?.role === 'salon_owner',
+    retry: 1, // Only retry once
+    retryDelay: 1000 // 1 second delay between retries
   });
 
   // Update booking status mutation
   const updateBookingMutation = useMutation({
     mutationFn: async ({ bookingId, status }: { bookingId: number; status: string }) => {
-      const response = await apiRequest('PATCH', `${config.api.endpoints.bookings}/${bookingId}`, {
+      const response = await apiRequest('PATCH', `/api/bookings/${bookingId}`, {
         status
       });
       return response.json();

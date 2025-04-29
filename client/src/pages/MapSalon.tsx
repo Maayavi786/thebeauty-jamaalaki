@@ -33,6 +33,7 @@ const MapSalon = () => {
         salonId: parseInt(salonId)
       });
       
+      // Simplified fetch and response handling
       const response = await fetch('/.netlify/functions/mapSalon', {
         method: 'POST',
         headers: {
@@ -44,58 +45,34 @@ const MapSalon = () => {
         }),
       });
 
-      // Check if the response is ok first
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response from mapSalon:', errorText);
+      let responseData: any = {};
+      
+      // Simple response handling with try/catch
+      try {
+        const text = await response.text();
+        console.log('Raw response:', text);
         
-        let errorMessage = "Failed to map salon";
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) {
-          // If we can't parse the error as JSON, use the raw text
-          errorMessage = errorText || errorMessage;
+        if (text && text.trim()) {
+          responseData = JSON.parse(text);
         }
-        
+      } catch (e) {
+        console.error('Error parsing response:', e);
+      }
+      
+      if (!response.ok) {
+        const errorMessage = responseData.error || 'Failed to map salon';
         toast({
           title: "Error",
           description: errorMessage,
           variant: "destructive"
         });
-        setLoading(false);
-        return;
-      }
-      
-      // Handle successful response
-      try {
-        const responseText = await response.text();
-        console.log('Raw response from mapSalon:', responseText);
-        
-        // Try to parse the response as JSON
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('Failed to parse response as JSON:', parseError);
-          // If we can't parse as JSON, create a simple data object
-          data = { 
-            success: true,
-            message: "Salon was mapped successfully, but there was an issue with the response format."
-          };
-        }
-        
-        // Update state and show success message
-        setResult(data);
+      } else {
+        // Success case
+        const successMessage = responseData.message || 'Salon mapped successfully';
+        setResult(responseData);
         toast({
           title: "Success",
-          description: data.message || "Salon mapped successfully",
-        });
-      } catch (processError) {
-        console.error('Error processing successful response:', processError);
-        toast({
-          title: "Warning",
-          description: "Salon may have been mapped, but there was an error processing the response.",
+          description: successMessage,
         });
       }
     } catch (error) {
@@ -130,6 +107,8 @@ const MapSalon = () => {
               <Label htmlFor="username">Your Username</Label>
               <Input
                 id="username"
+                name="username"
+                autoComplete="username"
                 value={user?.username || ''}
                 disabled
                 className="bg-muted"
@@ -140,6 +119,8 @@ const MapSalon = () => {
               <Label htmlFor="salonId">Salon ID</Label>
               <Input
                 id="salonId"
+                name="salonId"
+                autoComplete="off"
                 value={salonId}
                 onChange={(e) => setSalonId(e.target.value)}
                 type="number"
@@ -156,7 +137,7 @@ const MapSalon = () => {
                 <p className="text-sm">{result.message}</p>
                 <p className="text-sm mt-1">{result.serviceMessage}</p>
                 <p className="text-sm mt-3">
-                  <strong>Next step:</strong> Go to the <a href="/owner-test" className="underline text-primary">Owner Portal</a> to manage your salon.
+                  <strong>Next step:</strong> Go to the <a href="/owner/dashboard" className="underline text-primary">Owner Dashboard</a> to manage your salon.
                 </p>
               </div>
             )}
@@ -167,6 +148,8 @@ const MapSalon = () => {
               onClick={handleMapSalon} 
               disabled={loading || !user?.username}
               className="w-full"
+              type="button"
+              aria-label="Map salon to my account"
             >
               {loading ? 'Processing...' : 'Map Salon to My Account'}
             </Button>
