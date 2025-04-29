@@ -71,14 +71,27 @@ const Header = () => {
               </span>
             </Link>
             <Link href="/about">
-              <span className={`text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors cursor-pointer ${location === "/about" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}> 
+              <span 
+                className={`text-primary font-medium border border-transparent hover:border-ring rounded-full p-2 transition-colors cursor-pointer ${location === "/about" ? "text-primary" : ""} ${isRtl ? 'font-tajawal' : ''}`}
+              >
                 {isLtr ? "About" : "من نحن"}
               </span>
             </Link>
           </nav>
 
-          {/* Right Menu */}
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          {/* Right side: auth, theme, and language toggles */}
+          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+            {/* Owner Portal Direct Link - visible for all users */}
+            {isAuthenticated && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden md:flex items-center mr-2 bg-primary/10 hover:bg-primary/20 border-primary/20"
+                onClick={() => navigate('/owner-test')}
+              >
+                <span className="font-medium">{isLtr ? 'Owner Portal' : 'بوابة المالك'}</span>
+              </Button>
+            )}
             <LanguageToggle />
             <ThemeToggle />
 
@@ -148,6 +161,20 @@ const Header = () => {
 
             <nav className="mb-8">
               <ul className="space-y-4">
+                {/* Owner Portal Mobile Link - visible for all authenticated users */}
+                {isAuthenticated && (
+                  <li>
+                    <span 
+                      className={`block py-2 font-medium cursor-pointer bg-primary/10 px-3 rounded-md text-center ${isRtl ? 'font-tajawal' : ''}`}
+                      onClick={() => {
+                        closeMenu();
+                        navigate('/owner-test');
+                      }}
+                    >
+                      {isLtr ? "👑 Owner Portal" : "👑 بوابة المالك"}
+                    </span>
+                  </li>
+                )}
                 <li>
                   <Link href="/">
                     <span 
