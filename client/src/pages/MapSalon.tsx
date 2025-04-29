@@ -1,24 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/lib/toast';
+import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Ultra-minimal version with pure HTML form to avoid JS bundling issues
 const MapSalon = () => {
   const { isLtr } = useLanguage();
   const { user } = useAuth();
-  const formRef = useRef<HTMLFormElement>(null);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [salonId, setSalonId] = useState("2");
   
-  // Handle form submission via traditional HTML form POST
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission with JSON fetch
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.username) {
       toast({
@@ -31,27 +30,43 @@ const MapSalon = () => {
     
     setLoading(true);
     
-    // Create a hidden iframe for form submission to avoid page refresh
-    const iframe = document.createElement('iframe');
-    iframe.name = 'mapSalonFrame';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    
-    // Set form attributes to submit to iframe
-    if (formRef.current) {
-      formRef.current.target = 'mapSalonFrame';
-      formRef.current.submit();
-    }
-    
-    // Show success message after a delay
-    setTimeout(() => {
-      setLoading(false);
-      setSubmitted(true);
-      toast({
-        title: "Success",
-        description: "Salon mapped successfully"
+    try {
+      // Prepare the request payload as JSON
+      const payload = {
+        username: user.username,
+        salonId: parseInt(salonId, 10) || 2
+      };
+      
+      // Make a proper fetch request with application/json content-type
+      const response = await fetch('/.netlify/functions/mapSalon', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
-    }, 2000);
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSubmitted(true);
+        toast({
+          title: "Success",
+          description: data.message || "Salon mapped successfully"
+        });
+      } else {
+        throw new Error(data.error || 'Failed to map salon');
+      }
+    } catch (error) {
+      console.error('Error mapping salon:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to map salon",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
   return (
@@ -70,20 +85,10 @@ const MapSalon = () => {
           </CardHeader>
           
           <CardContent className="space-y-4">
-            {/* Use traditional HTML form with action instead of JavaScript fetch */}
             <form 
-              ref={formRef}
-              method="POST" 
-              action="/.netlify/functions/mapSalon"
               onSubmit={handleSubmit}
               className="space-y-4"
             >
-              <input
-                type="hidden"
-                name="username"
-                value={user?.username || ''}
-              />
-              
               <div className="space-y-2">
                 <Label htmlFor="username-display">Your Username</Label>
                 <Input
@@ -99,7 +104,6 @@ const MapSalon = () => {
                 <Label htmlFor="salonId">Salon ID</Label>
                 <Input
                   id="salonId"
-                  name="salonId"
                   autoComplete="off"
                   value={salonId}
                   onChange={(e) => setSalonId(e.target.value)}

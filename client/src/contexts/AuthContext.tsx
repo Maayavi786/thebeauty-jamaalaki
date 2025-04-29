@@ -110,20 +110,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
       setLoading(true);
       const response = await apiRequest('POST', config.api.endpoints.auth + '/register', userData);
       
-      // The server returns the user object directly on success with a 201 status code
       const data = await response.json();
+      console.log('Registration response:', data);
       
-      // Set the user from the response data
-      if (data && data.id) {
-        setUser(data);
+      // Check for user data in the correct structure (data.user)
+      if (response.ok && data && data.user) {
+        setUser(data.user);
         toast({
           title: "Success",
           description: "Your account has been created successfully",
         });
         return true;
+      } else if (response.ok) {
+        // If we got a success response but no proper user data
+        console.error('Registration response missing user data:', data);
+        throw new Error('Registration successful but user data format is invalid');
       } else {
-        // This case handles if we get a valid response but no user data
-        throw new Error('Registration successful but no user data returned');
+        // Handle error response
+        throw new Error(data.message || 'Registration failed');
       }
     } catch (error) {
       console.error('Registration failed:', error);

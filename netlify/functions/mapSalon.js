@@ -1,4 +1,5 @@
 const { neon } = require('@neondatabase/serverless');
+const querystring = require('querystring');
 
 // Netlify function to map a salon to an owner
 exports.handler = async (event, context) => {
@@ -12,14 +13,35 @@ exports.handler = async (event, context) => {
 
   let requestBody;
   try {
-    // Parse request body
-    requestBody = JSON.parse(event.body || '{}');
+    // Check content type and parse request body accordingly
+    const contentType = event.headers['content-type'] || '';
+    console.log('Content-Type:', contentType);
+    
+    if (contentType.includes('application/json')) {
+      // Parse as JSON
+      requestBody = JSON.parse(event.body || '{}');
+    } else if (contentType.includes('application/x-www-form-urlencoded')) {
+      // Parse as form data
+      requestBody = querystring.parse(event.body || '');
+    } else {
+      // Try to parse as JSON first, then fall back to form data if that fails
+      try {
+        requestBody = JSON.parse(event.body || '{}');
+      } catch (e) {
+        requestBody = querystring.parse(event.body || '');
+      }
+    }
+    
     console.log('Received request body:', JSON.stringify(requestBody));
   } catch (parseError) {
-    console.error('Failed to parse request body:', parseError);
+    console.error('Failed to parse request body:', parseError, 'Raw body:', event.body);
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Invalid request format' })
+      body: JSON.stringify({ 
+        error: 'Invalid request format',
+        details: parseError.message,
+        rawBody: event.body && event.body.substring(0, 100) + '...'
+      })
     };
   }
 
