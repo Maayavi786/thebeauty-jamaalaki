@@ -7,16 +7,18 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/lib/toast';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { config } from '@/lib/config';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 const MapSalon = () => {
   const { isLtr } = useLanguage();
   const { user } = useAuth();
   const [salonId, setSalonId] = useState('2'); // Default to salon ID 2
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [success, setSuccess] = useState(false);
+  const [message, setMessage] = useState('');
+  const [serviceMessage, setServiceMessage] = useState('');
 
-  const handleMapSalon = async () => {
+  const handleMapSalon = () => {
     if (!user?.username) {
       toast({
         title: "Error",
@@ -27,64 +29,82 @@ const MapSalon = () => {
     }
 
     setLoading(true);
-    try {
-      console.log('Sending request to map salon:', {
+    setSuccess(false);
+    setMessage('');
+    setServiceMessage('');
+
+    // Use regular fetch API with minimal processing
+    fetch('/.netlify/functions/mapSalon', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         username: user.username,
         salonId: parseInt(salonId)
-      });
-      
-      // Simplified fetch and response handling
-      const response = await fetch('/.netlify/functions/mapSalon', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: user.username,
-          salonId: parseInt(salonId)
-        }),
-      });
-
-      let responseData: any = {};
-      
-      // Simple response handling with try/catch
-      try {
-        const text = await response.text();
+      }),
+    })
+    .then(response => {
+      // Convert response to text first
+      return response.text().then(text => {
+        // Log the raw response
         console.log('Raw response:', text);
         
+        // Only try to parse as JSON if there's content
         if (text && text.trim()) {
-          responseData = JSON.parse(text);
+          try {
+            return {
+              ok: response.ok,
+              data: JSON.parse(text)
+            };
+          } catch (e) {
+            console.error('JSON parse error:', e);
+            return {
+              ok: false,
+              data: { error: 'Invalid response format' }
+            };
+          }
+        } else {
+          return {
+            ok: false,
+            data: { error: 'Empty response' }
+          };
         }
-      } catch (e) {
-        console.error('Error parsing response:', e);
-      }
+      });
+    })
+    .then(result => {
+      setLoading(false);
       
-      if (!response.ok) {
-        const errorMessage = responseData.error || 'Failed to map salon';
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      } else {
-        // Success case
-        const successMessage = responseData.message || 'Salon mapped successfully';
-        setResult(responseData);
+      if (result.ok) {
+        // Handle success
+        setSuccess(true);
+        setMessage(result.data.message || 'Salon mapped successfully');
+        setServiceMessage(result.data.serviceMessage || '');
+        
         toast({
           title: "Success",
-          description: successMessage,
+          description: result.data.message || 'Salon mapped successfully'
+        });
+      } else {
+        // Handle error
+        toast({
+          title: "Error",
+          description: result.data.error || 'Failed to map salon',
+          variant: "destructive"
         });
       }
-    } catch (error) {
-      console.error('Error mapping salon:', error);
+    })
+    .catch(error => {
+      // Handle network/fetch errors
+      console.error('Fetch error:', error);
+      setLoading(false);
+      
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "Network error. Please try again.",
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (
@@ -131,11 +151,14 @@ const MapSalon = () => {
               </p>
             </div>
 
-            {result && (
+            {success && (
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-900/30">
-                <h3 className="font-medium text-green-900 dark:text-green-400 mb-2">Success!</h3>
-                <p className="text-sm">{result.message}</p>
-                <p className="text-sm mt-1">{result.serviceMessage}</p>
+                <div className="flex items-center mb-2">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <h3 className="font-medium text-green-900 dark:text-green-400">Success!</h3>
+                </div>
+                <p className="text-sm">{message}</p>
+                {serviceMessage && <p className="text-sm mt-1">{serviceMessage}</p>}
                 <p className="text-sm mt-3">
                   <strong>Next step:</strong> Go to the <a href="/owner/dashboard" className="underline text-primary">Owner Dashboard</a> to manage your salon.
                 </p>
