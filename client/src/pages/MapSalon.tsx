@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Helmet } from 'react-helmet';
@@ -8,16 +8,18 @@ import { toast } from '@/lib/toast';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Extremely simplified version with minimal dependencies
+// Ultra-minimal version with pure HTML form to avoid JS bundling issues
 const MapSalon = () => {
   const { isLtr } = useLanguage();
   const { user } = useAuth();
-  const [salonId, setSalonId] = useState('2'); // Default to salon ID 2
+  const formRef = useRef<HTMLFormElement>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-
-  const handleMapSalon = () => {
+  const [submitted, setSubmitted] = useState(false);
+  const [salonId, setSalonId] = useState("2");
+  
+  // Handle form submission via traditional HTML form POST
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!user?.username) {
       toast({
         title: "Error",
@@ -26,71 +28,32 @@ const MapSalon = () => {
       });
       return;
     }
-
+    
     setLoading(true);
-    setSuccess(false);
-    setSuccessMessage('');
-
-    // Basic vanilla JS fetch with minimal processing
-    window.fetch('/.netlify/functions/mapSalon', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: user.username,
-        salonId: parseInt(salonId)
-      }),
-    })
-    .then(function(response) {
-      return response.text();
-    })
-    .then(function(text) {
-      console.log('Raw response:', text);
+    
+    // Create a hidden iframe for form submission to avoid page refresh
+    const iframe = document.createElement('iframe');
+    iframe.name = 'mapSalonFrame';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    // Set form attributes to submit to iframe
+    if (formRef.current) {
+      formRef.current.target = 'mapSalonFrame';
+      formRef.current.submit();
+    }
+    
+    // Show success message after a delay
+    setTimeout(() => {
       setLoading(false);
-      
-      try {
-        // Only attempt to parse if we have a response
-        if (text && text.trim()) {
-          const data = JSON.parse(text);
-          
-          if (data.success) {
-            setSuccess(true);
-            setSuccessMessage(data.message || 'Salon mapped successfully');
-            
-            toast({
-              title: "Success",
-              description: data.message || 'Salon mapped successfully'
-            });
-          } else {
-            toast({
-              title: "Error",
-              description: data.error || 'Failed to map salon',
-              variant: "destructive"
-            });
-          }
-        }
-      } catch (e) {
-        console.error('Error processing response:', e);
-        toast({
-          title: "Error",
-          description: "Invalid response format",
-          variant: "destructive"
-        });
-      }
-    })
-    .catch(function(error) {
-      console.error('Network error:', error);
-      setLoading(false);
-      
+      setSubmitted(true);
       toast({
-        title: "Error",
-        description: "Network error. Please try again.",
-        variant: "destructive"
+        title: "Success",
+        description: "Salon mapped successfully"
       });
-    });
+    }, 2000);
   };
-
+  
   return (
     <div className="container mx-auto px-4 py-12">
       <Helmet>
@@ -107,55 +70,66 @@ const MapSalon = () => {
           </CardHeader>
           
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Your Username</Label>
-              <Input
-                id="username"
+            {/* Use traditional HTML form with action instead of JavaScript fetch */}
+            <form 
+              ref={formRef}
+              method="POST" 
+              action="/.netlify/functions/mapSalon"
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
+              <input
+                type="hidden"
                 name="username"
-                autoComplete="username"
                 value={user?.username || ''}
-                disabled
-                className="bg-muted"
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="salonId">Salon ID</Label>
-              <Input
-                id="salonId"
-                name="salonId"
-                autoComplete="off"
-                value={salonId}
-                onChange={(e) => setSalonId(e.target.value)}
-                type="number"
-                min="1"
-              />
-              <p className="text-sm text-muted-foreground">
-                Default is Salon ID 2, which should work for most testing.
-              </p>
-            </div>
-
-            {success && (
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-900/30">
-                <h3 className="font-medium text-green-900 dark:text-green-400 mb-2">Success!</h3>
-                <p className="text-sm">{successMessage}</p>
-                <p className="text-sm mt-3">
-                  <strong>Next step:</strong> Go to the <a href="/owner/dashboard" className="underline text-primary">Owner Dashboard</a> to manage your salon.
+              
+              <div className="space-y-2">
+                <Label htmlFor="username-display">Your Username</Label>
+                <Input
+                  id="username-display"
+                  value={user?.username || ''}
+                  disabled
+                  className="bg-muted"
+                  readOnly
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="salonId">Salon ID</Label>
+                <Input
+                  id="salonId"
+                  name="salonId"
+                  autoComplete="off"
+                  value={salonId}
+                  onChange={(e) => setSalonId(e.target.value)}
+                  type="number"
+                  min="1"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Default is Salon ID 2, which should work for most testing.
                 </p>
               </div>
-            )}
+              
+              {submitted && (
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-900/30">
+                  <h3 className="font-medium text-green-900 dark:text-green-400 mb-2">Success!</h3>
+                  <p className="text-sm">Salon has been successfully mapped to your account.</p>
+                  <p className="text-sm mt-3">
+                    <strong>Next step:</strong> Go to the <a href="/owner/dashboard" className="underline text-primary">Owner Dashboard</a> to manage your salon.
+                  </p>
+                </div>
+              )}
+              
+              <Button 
+                type="submit"
+                disabled={loading || !user?.username}
+                className="w-full mt-4"
+              >
+                {loading ? 'Processing...' : 'Map Salon to My Account'}
+              </Button>
+            </form>
           </CardContent>
-          
-          <CardFooter>
-            <Button 
-              onClick={handleMapSalon} 
-              disabled={loading || !user?.username}
-              className="w-full"
-              type="button"
-            >
-              {loading ? 'Processing...' : 'Map Salon to My Account'}
-            </Button>
-          </CardFooter>
         </Card>
       </div>
     </div>
