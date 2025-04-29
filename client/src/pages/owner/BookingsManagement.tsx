@@ -100,8 +100,8 @@ const BookingsManagement = () => {
     queryFn: async () => {
       try {
         console.log('Fetching salon bookings...');
-        // Fix the endpoint by using the correct path
-        const response = await apiRequest('GET', '/api/bookings/salon');
+        // Fix the endpoint by using the correct config path
+        const response = await apiRequest('GET', `${config.api.endpoints.bookings}/salon`);
         
         if (!response.ok) {
           console.error(`Bookings API returned ${response.status}: ${response.statusText}`);
