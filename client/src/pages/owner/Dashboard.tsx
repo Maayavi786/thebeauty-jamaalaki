@@ -20,7 +20,20 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CalendarDays, TrendingUp, Tag, Settings, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  CalendarDays, 
+  TrendingUp, 
+  Tag, 
+  Settings, 
+  Users, 
+  DollarSign, 
+  Calendar,
+  AlertTriangle,
+  CalendarX 
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import OwnerNavigation from '@/components/owner/OwnerNavigation';
 import BookingsSummary from '@/components/owner/BookingsSummary';
 import RecentBookings from '@/components/owner/RecentBookings';
