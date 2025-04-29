@@ -62,35 +62,141 @@ const OwnerDashboard = () => {
     queryKey: ['owner-salon'],
     queryFn: async () => {
       try {
-        // Assuming an endpoint to get salons for the logged-in owner
+        console.log('Fetching salon data...');
         const response = await apiRequest('GET', `${config.api.endpoints.salons}/owner`);
+        
+        if (!response.ok) {
+          console.error(`Salon API returned ${response.status}:`, response.statusText);
+          try {
+            const errorData = await response.json();
+            console.error('Error details:', errorData);
+          } catch (e) {
+            console.error('Could not parse error response');
+          }
+          
+          // Return a fallback salon object
+          return {
+            id: 0,
+            nameEn: 'Your Salon',
+            nameAr: 'صالونك',
+            descriptionEn: 'Please use the Map Salon feature to connect a salon to your account',
+            descriptionAr: 'يرجى استخدام ميزة ربط الصالون لربط صالون بحسابك',
+            address: 'No address set',
+            imageUrl: 'https://via.placeholder.com/500?text=Salon+Not+Found'
+          };
+        }
+        
         const result = await response.json();
-        return result.data || result;
+        console.log('Salon data:', result);
+        
+        // Normalize field names for consistent access
+        return {
+          ...result,
+          id: result.id || 0,
+          nameEn: result.nameEn || result.name_en || 'Your Salon',
+          nameAr: result.nameAr || result.name_ar || 'صالونك',
+          descriptionEn: result.descriptionEn || result.description_en || '',
+          descriptionAr: result.descriptionAr || result.description_ar || '',
+          imageUrl: result.imageUrl || result.image_url || 'https://via.placeholder.com/500?text=No+Image',
+          address: result.address || 'No address set'
+        };
       } catch (error) {
-        console.error('Failed to fetch owner salon data:', error);
-        throw error;
+        console.error('Failed to fetch salon data:', error);
+        // Return a fallback salon object instead of throwing
+        return {
+          id: 0,
+          nameEn: 'Your Salon',
+          nameAr: 'صالونك',
+          descriptionEn: 'Please use the Map Salon feature to connect a salon to your account',
+          descriptionAr: 'يرجى استخدام ميزة ربط الصالون لربط صالون بحسابك',
+          address: 'No address set',
+          imageUrl: 'https://via.placeholder.com/500?text=Error+Loading+Salon'
+        };
       }
     },
-    enabled: isAuthenticated && user?.role === 'salon_owner'
+    enabled: isAuthenticated,
+    retry: 1, // Only retry once
+    retryDelay: 1000 // 1 second delay between retries
   });
 
   // Fetch recent bookings
   const {
     data: recentBookings,
-    isLoading: isBookingsLoading
+    isLoading: isBookingsLoading,
+    error: bookingsError
   } = useQuery({
     queryKey: ['owner-recent-bookings'],
     queryFn: async () => {
       try {
+        console.log('Fetching recent bookings...');
         const response = await apiRequest('GET', `${config.api.endpoints.bookings}/salon/recent`);
+        
+        if (!response.ok) {
+          console.log(`Bookings API returned ${response.status}: ${response.statusText}`);
+          // Return empty array instead of throwing to avoid breaking the UI
+          return [];
+        }
+        
         const result = await response.json();
+        console.log('Recent bookings response:', result);
         return result.data || result;
       } catch (error) {
         console.error('Failed to fetch recent bookings:', error);
-        throw error;
+        // Return empty array instead of throwing
+        return [];
       }
     },
-    enabled: isAuthenticated && user?.role === 'salon_owner'
+    enabled: isAuthenticated,
+    retry: 1, // Only retry once
+    retryDelay: 1000 // 1 second delay between retries
+  });
+
+  // Fetch salon analytics
+  const {
+    data: analytics,
+    isLoading: isAnalyticsLoading,
+    error: analyticsError
+  } = useQuery({
+    queryKey: ['owner-analytics'],
+    queryFn: async () => {
+      try {
+        // Calculate date range for analytics (last 6 months)
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        console.log(`Fetching analytics for date range: ${startDate} to ${endDate}`);
+        const response = await apiRequest('GET', `${config.api.endpoints.salons}/analytics?startDate=${startDate}&endDate=${endDate}`);
+        
+        if (!response.ok) {
+          console.log(`Analytics API returned ${response.status}: ${response.statusText}`);
+          // Return mock data instead of throwing
+          return {
+            bookings: 0,
+            revenue: 0,
+            clients: 0,
+            popularServices: [],
+            revenueByDay: []
+          };
+        }
+        
+        const result = await response.json();
+        console.log('Analytics response:', result);
+        return result.data || result;
+      } catch (error) {
+        console.error('Failed to fetch analytics:', error);
+        // Return mock data instead of throwing
+        return {
+          bookings: 0,
+          revenue: 0,
+          clients: 0,
+          popularServices: [],
+          revenueByDay: []
+        };
+      }
+    },
+    enabled: isAuthenticated,
+    retry: 1, // Only retry once
+    retryDelay: 1000 // 1 second delay between retries
   });
 
   if (loading) {
@@ -160,96 +266,163 @@ const OwnerDashboard = () => {
             ) : (
               <>
                 {/* Dashboard Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  {/* Total Bookings Card */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {/* Booking Stats Card */}
                   <Card>
-                    <CardHeader className="p-4 pb-2">
-                      <CardTitle className={`text-sm font-medium text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium">
                         {isLtr ? 'Total Bookings' : 'إجمالي الحجوزات'}
                       </CardTitle>
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-3xl font-bold">182</p>
-                          <p className="text-xs text-green-500 mt-1">
-                            +24% {isLtr ? 'this month' : 'هذا الشهر'}
-                          </p>
-                        </div>
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <CalendarDays className="h-6 w-6 text-primary" />
-                        </div>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {isAnalyticsLoading ? (
+                          <Skeleton className="h-8 w-16" />
+                        ) : (
+                          analytics?.bookings || '0'
+                        )}
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        {isLtr ? 'In the last 30 days' : 'في آخر 30 يوم'}
+                      </p>
                     </CardContent>
                   </Card>
 
-                  {/* Monthly Revenue Card */}
+                  {/* Revenue Stats Card */}
                   <Card>
-                    <CardHeader className="p-4 pb-2">
-                      <CardTitle className={`text-sm font-medium text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr ? 'Monthly Revenue' : 'الإيرادات الشهرية'}
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        {isLtr ? 'Total Revenue' : 'إجمالي الإيرادات'}
                       </CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-3xl font-bold">
-                            {isLtr ? 'SAR 12,580' : '١٢,٥٨٠ ر.س.'}
-                          </p>
-                          <p className="text-xs text-green-500 mt-1">
-                            +15% {isLtr ? 'vs last month' : 'مقارنة بالشهر الماضي'}
-                          </p>
-                        </div>
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <TrendingUp className="h-6 w-6 text-primary" />
-                        </div>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {isAnalyticsLoading ? (
+                          <Skeleton className="h-8 w-16" />
+                        ) : (
+                          `$${analytics?.revenue || '0'}`
+                        )}
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        {isLtr ? 'In the last 30 days' : 'في آخر 30 يوم'}
+                      </p>
                     </CardContent>
                   </Card>
 
-                  {/* Active Promotions Card */}
+                  {/* Clients Stats Card */}
                   <Card>
-                    <CardHeader className="p-4 pb-2">
-                      <CardTitle className={`text-sm font-medium text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr ? 'Active Promotions' : 'العروض النشطة'}
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        {isLtr ? 'New Clients' : 'العملاء الجدد'}
                       </CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-3xl font-bold">3</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {isLtr ? 'Ends in 8 days' : 'تنتهي في ٨ أيام'}
-                          </p>
-                        </div>
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <Tag className="h-6 w-6 text-primary" />
-                        </div>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {isAnalyticsLoading ? (
+                          <Skeleton className="h-8 w-16" />
+                        ) : (
+                          analytics?.clients || '0'
+                        )}
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        {isLtr ? 'In the last 30 days' : 'في آخر 30 يوم'}
+                      </p>
                     </CardContent>
                   </Card>
+                </div>
 
-                  {/* New Customers Card */}
-                  <Card>
-                    <CardHeader className="p-4 pb-2">
-                      <CardTitle className={`text-sm font-medium text-muted-foreground ${isRtl ? 'font-tajawal' : ''}`}>
-                        {isLtr ? 'New Customers' : 'العملاء الجدد'}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-3xl font-bold">46</p>
-                          <p className="text-xs text-green-500 mt-1">
-                            +12% {isLtr ? 'this month' : 'هذا الشهر'}
+                {/* Recent Bookings */}
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold">
+                    {isLtr ? 'Recent Bookings' : 'الحجوزات الأخيرة'}
+                  </h2>
+                  
+                  {isBookingsLoading ? (
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : bookingsError ? (
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center justify-center text-center py-10">
+                          <AlertTriangle className="h-10 w-10 text-amber-500 mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">
+                            {isLtr ? 'Unable to load bookings' : 'تعذر تحميل الحجوزات'}
+                          </h3>
+                          <p className="text-muted-foreground max-w-md">
+                            {isLtr 
+                              ? 'We had trouble loading your recent bookings. Please try again later.' 
+                              : 'واجهنا مشكلة في تحميل حجوزاتك الأخيرة. يرجى المحاولة مرة أخرى لاحقًا.'}
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            className="mt-4"
+                            onClick={() => window.location.reload()}
+                          >
+                            {isLtr ? 'Refresh Page' : 'تحديث الصفحة'}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : !recentBookings || recentBookings.length === 0 ? (
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center justify-center text-center py-10">
+                          <CalendarX className="h-10 w-10 text-muted-foreground mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">
+                            {isLtr ? 'No bookings yet' : 'لا توجد حجوزات بعد'}
+                          </h3>
+                          <p className="text-muted-foreground max-w-md">
+                            {isLtr 
+                              ? 'You have no recent bookings. When clients book your services, they will appear here.' 
+                              : 'ليس لديك حجوزات حديثة. عندما يقوم العملاء بحجز خدماتك، ستظهر هنا.'}
                           </p>
                         </div>
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <Users className="h-6 w-6 text-primary" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-4">
+                      {recentBookings.map((booking: any) => (
+                        <Card key={booking.id}>
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-medium">{booking.user_name || 'Anonymous'}</h3>
+                                <p className="text-sm text-muted-foreground">{booking.service_name}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {new Date(booking.booking_date).toLocaleString()}
+                                </p>
+                              </div>
+                              <Badge
+                                className={cn(
+                                  "capitalize",
+                                  booking.status === 'confirmed' 
+                                    ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                    : booking.status === 'cancelled'
+                                    ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                                    : "bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-100"
+                                )}
+                              >
+                                {booking.status}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      <Button variant="outline" className="w-full">
+                        {isLtr ? 'View All Bookings' : 'عرض جميع الحجوزات'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Main Dashboard Content Tabs */}

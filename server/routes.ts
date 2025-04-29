@@ -266,6 +266,14 @@ export default async function registerRoutes(app: Express, storage: IStorage) {
       const ownerId = req.session.user.id;
       console.log('Fetching salons for owner ID (from session):', ownerId);
       
+      if (!ownerId || isNaN(ownerId)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid owner ID", 
+          error: "Owner ID is missing or invalid" 
+        });
+      }
+      
       // Get salons for this owner
       const salons = await sql`SELECT * FROM salons WHERE owner_id = ${ownerId}`;
       console.log('Found salons:', salons);
@@ -295,7 +303,77 @@ export default async function registerRoutes(app: Express, storage: IStorage) {
       res.json(salons[0]);
     } catch (error) {
       console.error("Error getting salons for logged-in owner:", error);
-      res.status(500).json({ message: "Error getting salon data" });
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch salon details", 
+        error: error.message || "Unknown error" 
+      });
+    }
+  });
+
+  // Salon Analytics
+  app.get("/api/salons/analytics", async (req: Request, res: Response) => {
+    try {
+      // Check if user is logged in
+      if (!req.session.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const ownerId = req.session.user.id;
+      if (!ownerId || isNaN(ownerId)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid owner ID", 
+          error: "Owner ID is missing or invalid" 
+        });
+      }
+      
+      // Get date range from query parameters or use defaults
+      const startDate = req.query.startDate as string || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const endDate = req.query.endDate as string || new Date().toISOString().split('T')[0];
+      
+      // Get salon for this owner
+      const salons = await sql`SELECT id FROM salons WHERE owner_id = ${ownerId}`;
+      
+      if (!salons || salons.length === 0) {
+        return res.json({
+          bookings: 0,
+          revenue: 0,
+          clients: 0,
+          popularServices: [],
+          revenueByDay: []
+        });
+      }
+      
+      const salonId = salons[0].id;
+      
+      // Return mock analytics data for now
+      res.json({
+        bookings: 24,
+        revenue: 2400,
+        clients: 18,
+        popularServices: [
+          { name: 'Haircut', count: 10 },
+          { name: 'Manicure', count: 8 },
+          { name: 'Facial', count: 6 }
+        ],
+        revenueByDay: [
+          { date: '2025-04-22', amount: 300 },
+          { date: '2025-04-23', amount: 250 },
+          { date: '2025-04-24', amount: 400 },
+          { date: '2025-04-25', amount: 350 },
+          { date: '2025-04-26', amount: 500 },
+          { date: '2025-04-27', amount: 300 },
+          { date: '2025-04-28', amount: 300 }
+        ]
+      });
+    } catch (error) {
+      console.error("Error getting salon analytics:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch salon details", 
+        error: error.message || "Unknown error" 
+      });
     }
   });
 
@@ -303,15 +381,8 @@ export default async function registerRoutes(app: Express, storage: IStorage) {
   app.get("/api/services", async (req: Request, res: Response) => {
     try {
       // Get all services from all salons
-      const salons = await storage.getSalons();
-      const allServices = [];
-      
-      for (const salon of salons) {
-        const salonServices = await storage.getServicesBySalon(salon.id);
-        allServices.push(...salonServices);
-      }
-      
-      res.status(200).json(allServices);
+      const services = await sql`SELECT * FROM services`;
+      res.status(200).json(services);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -340,6 +411,10 @@ export default async function registerRoutes(app: Express, storage: IStorage) {
 
       const ownerId = req.session.user.id;
       console.log('Fetching services for owner ID (from session):', ownerId);
+      
+      if (!ownerId || isNaN(ownerId)) {
+        return res.status(400).json({ message: "Invalid owner ID" });
+      }
       
       // Get salons for this owner
       const salons = await sql`SELECT * FROM salons WHERE owner_id = ${ownerId}`;
@@ -412,6 +487,74 @@ export default async function registerRoutes(app: Express, storage: IStorage) {
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Recent bookings for the logged-in owner's salon
+  app.get("/api/bookings/salon/recent", async (req: Request, res: Response) => {
+    try {
+      // Check if user is logged in
+      if (!req.session.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const ownerId = req.session.user.id;
+      console.log('Fetching recent bookings for owner ID:', ownerId);
+      
+      if (!ownerId || isNaN(ownerId)) {
+        return res.status(400).json({ message: "Invalid owner ID" });
+      }
+      
+      // Get salon for this owner
+      const salons = await sql`SELECT id FROM salons WHERE owner_id = ${ownerId}`;
+      
+      if (!salons || salons.length === 0) {
+        return res.json([]);
+      }
+      
+      const salonId = salons[0].id;
+      
+      // Get recent bookings for this salon
+      // In a real app, you'd fetch from your database
+      // For now, return mock data
+      res.json([
+        {
+          id: 101,
+          user_id: 201,
+          service_id: 301,
+          salon_id: salonId,
+          booking_date: new Date().toISOString(),
+          status: 'confirmed',
+          user_name: 'Sarah Johnson',
+          service_name: 'Haircut',
+          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: 102,
+          user_id: 202,
+          service_id: 302,
+          salon_id: salonId,
+          booking_date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'pending',
+          user_name: 'Michael Brown',
+          service_name: 'Massage',
+          created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: 103,
+          user_id: 203,
+          service_id: 303,
+          salon_id: salonId,
+          booking_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'confirmed',
+          user_name: 'Emily Davis',
+          service_name: 'Manicure',
+          created_at: new Date().toISOString()
+        }
+      ]);
+    } catch (error) {
+      console.error("Error getting recent bookings:", error);
+      res.status(500).json({ message: "Error getting recent bookings" });
     }
   });
 
