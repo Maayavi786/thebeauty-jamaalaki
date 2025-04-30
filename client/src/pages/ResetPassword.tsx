@@ -43,14 +43,25 @@ export default function ResetPassword() {
       });
       return;
     }
+    
     setLoading(true);
     try {
-      const response = await apiRequest("POST", config.api.endpoints.auth + "/reset-password", { password, token });
-      const data = await response.json();
+      const response = await apiRequest("POST", config.api.endpoints.auth + "/reset-password", { token, password });
+      
+      // Handle both Response objects (from fetch) and direct data objects (from mock)
+      let data;
+      if (response && typeof response.json === 'function') {
+        // This is a Response object from fetch
+        data = await response.json();
+      } else {
+        // This is a direct data object from mock implementation
+        data = response;
+      }
+      
       if (data.success) {
         setSuccess(true);
         toast({
-          title: isLtr ? "Password Reset" : "تمت إعادة التعيين",
+          title: isLtr ? "Password Reset Successful" : "تم إعادة تعيين كلمة المرور بنجاح",
           description: isLtr
             ? "Your password has been updated."
             : "تم تحديث كلمة مرورك.",

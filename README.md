@@ -1191,7 +1191,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### 3. API Documentation
 
 #### Endpoint Structure
-- **Base URL**: `https://api.jamaalaki.com/v1`
+- **Base URL**:
 - **Authentication**: Bearer token
 - **Versioning**: URL path
 - **Rate Limits**: 100 requests/minute

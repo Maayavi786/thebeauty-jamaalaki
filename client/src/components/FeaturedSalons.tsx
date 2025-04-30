@@ -19,8 +19,19 @@ const FeaturedSalons = () => {
     queryFn: async () => {
       try {
         const response = await apiRequest('GET', config.api.endpoints.salons);
-        const result = await response.json();
+        
+        // Handle both Response objects (from fetch) and direct data objects (from mock)
+        let result;
+        if (response && typeof response.json === 'function') {
+          // This is a Response object from fetch
+          result = await response.json();
+        } else {
+          // This is a direct data object from mock implementation
+          result = response;
+        }
+        
         console.log('Featured Salons API response:', result);
+        
         // Standardize field names to ensure consistency
         let salons = [];
         if (Array.isArray(result)) {

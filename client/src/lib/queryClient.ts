@@ -1,10 +1,15 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { API_BASE_URL, USE_FIREBASE } from "./config";
 // Import Firebase utilities for direct API interactions
-import { auth, mockServices } from "./firebase";
+// Firebase imports
+import { auth, db } from "./firebase";
 import { collection, getDocs, getDoc, doc, query, where, addDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
-import { db } from "./firebase";
 import { COLLECTIONS } from "./firestore/schema";
+import { generateRandomId } from './utils';
+
+// Mock data imports - using relative paths to avoid path resolution issues
+import { mockServices } from './firebase/mockServices';
+import { getMockAllBookings, getMockBooking, getMockUserBookings } from './firebase/mockBookings';
 
 // Determine if we should use mock data for local testing
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA === 'true';
@@ -257,9 +262,77 @@ async function handleMockFirebaseRequest(method: string, endpoint: string, data?
   }
   
   try {
-    // Handle auth session endpoint specifically
+    // Handle auth endpoints specifically
     if (endpoint.includes('/auth/session')) {
       return handleMockAuthSession();
+    }
+    
+    // Handle login request
+    if (endpoint.includes('/auth/login')) {
+      // Mock successful login
+      return {
+        user: {
+          id: 'user1',
+          uid: 'user1',
+          username: data?.username || 'mockuser',
+          email: 'customer@example.com',
+          fullName: 'Mock User',
+          phone: '+1234567890',
+          role: 'customer',
+          avatar: 'https://via.placeholder.com/150',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        token: 'mock-auth-token-12345',
+        success: true
+      };
+    }
+    
+    // Handle register request
+    if (endpoint.includes('/auth/register')) {
+      // Mock successful registration
+      return {
+        user: {
+          id: 'new-user',
+          uid: 'new-user',
+          username: data?.username || 'newuser',
+          email: data?.email || 'newuser@example.com',
+          fullName: data?.fullName || 'New User',
+          phone: data?.phone || '+1234567890',
+          role: 'customer',
+          avatar: 'https://via.placeholder.com/150',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        token: 'mock-auth-token-new-user',
+        success: true
+      };
+    }
+    
+    // Handle bookings endpoints - normalize paths with or without /api/ prefix
+    const normalizedEndpoint = endpoint.replace('/api/', '/').replace(/^\//, '');
+    
+    // Handle bookings for a specific user - both /api/bookings/user/:userId and /bookings/user/:userId patterns
+    if (normalizedEndpoint.match(/bookings\/user\/[^/]+$/)) {
+      const userId = normalizedEndpoint.split('/').pop();
+      console.log(`[MockFirebase] Mock user bookings for user: ${userId}`);
+      const { getMockUserBookings } = await import('./firebase/mockBookings');
+      return getMockUserBookings(userId || 'user1');
+    }
+    
+    // Handle specific booking
+    if (normalizedEndpoint.match(/bookings\/[^/]+$/) && !normalizedEndpoint.includes('/user/')) {
+      const bookingId = normalizedEndpoint.split('/').pop();
+      console.log(`[MockFirebase] Mock get booking: ${bookingId}`);
+      const { getMockBooking } = await import('./firebase/mockBookings');
+      return getMockBooking(bookingId || '1');
+    }
+    
+    // Handle all bookings
+    if (normalizedEndpoint === 'bookings') {
+      console.log(`[MockFirebase] Mock all bookings`);
+      const { getMockAllBookings } = await import('./firebase/mockBookings');
+      return getMockAllBookings();
     }
     
     // Parse the endpoint to determine the collection/document path
@@ -286,6 +359,7 @@ async function handleMockFirebaseRequest(method: string, endpoint: string, data?
       } else if (apiSegments[0] === 'bookings') {
         collectionName = 'bookings';
         if (apiSegments.length > 1) documentId = apiSegments[1];
+        if (apiSegments.length > 2) subresource = apiSegments[2];
       } else if (apiSegments[0] === 'reviews') {
         collectionName = 'reviews';
         if (apiSegments.length > 1) documentId = apiSegments[1];
@@ -297,6 +371,44 @@ async function handleMockFirebaseRequest(method: string, endpoint: string, data?
       // Direct collection access (without api/ prefix)
       collectionName = segments[0];
       if (segments.length > 1) documentId = segments[1];
+      if (segments.length > 2) subresource = segments[2];
+    }
+    
+    // Handle special endpoints
+    if (collectionName === 'salons' && documentId === 'owner') {
+      // Handle /salons/owner endpoint
+      const mockSalons = await mockServices?.mockFirestore.getDocs({ path: 'salons' });
+      // Filter for owner salons (simplified - in a real app this would use the authenticated user)
+      return mockSalons?.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) || [];
+    }
+    
+    if (collectionName === 'salons' && documentId === 'analytics') {
+      // Mock analytics data
+      return {
+        totalBookings: 42,
+        totalRevenue: 2500,
+        completedBookings: 35,
+        cancelledBookings: 7,
+        topServices: [
+          { name: 'Haircut', count: 15 },
+          { name: 'Manicure', count: 12 },
+          { name: 'Facial', count: 8 }
+        ]
+      };
+    }
+    
+    if (collectionName === 'bookings' && documentId === 'salon' && subresource === 'recent') {
+      // Handle /bookings/salon/recent endpoint
+      const mockBookings = await mockServices?.mockFirestore.getDocs({ path: 'bookings' });
+      // Sort by date descending to get most recent
+      const sortedBookings = mockBookings?.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 10) || [];
+      return sortedBookings;
     }
     
     // Get mockData object based on collection name
@@ -328,22 +440,57 @@ async function handleMockFirebaseRequest(method: string, endpoint: string, data?
         // Fetching a specific document
         if (documentId) {
           const docPath = `${collectionName}/${documentId}`;
-          const docRef = { path: docPath };
-          const docSnapshot = await mockServices?.mockFirestore.getDoc(docRef);
-          
-          if (!docSnapshot?.exists()) {
-            throw { status: 404, message: 'Document not found' };
+          try {
+            const docRef = { path: docPath };
+            const docSnapshot = await mockServices?.mockFirestore.getDoc(docRef);
+            
+            // Check if docSnapshot exists and is properly structured
+            if (!docSnapshot || (typeof docSnapshot.exists === 'function' && !docSnapshot.exists())) {
+              console.log(`[MockFirebase] Document not found: ${docPath}`);
+              throw { status: 404, message: 'Document not found' };
+            }
+            
+            // Handle different response formats safely
+            if (typeof docSnapshot.data === 'function') {
+              return { id: documentId, ...docSnapshot.data() };
+            } else if (docSnapshot.id) {
+              // Direct data object
+              return { ...docSnapshot };
+            } else {
+              console.log(`[MockFirebase] Invalid document format: ${docPath}`, docSnapshot);
+              throw { status: 500, message: 'Invalid document format' };
+            }
+          } catch (error) {
+            console.error(`[MockFirebase] Error getting document ${docPath}:`, error);
+            if (error.status) throw error;
+            throw { status: 500, message: 'Failed to get document' };
           }
-          
-          return { id: documentId, ...docSnapshot.data() };
         }
         
         // Collection query
-        const querySnapshot = await getCollection();
-        return querySnapshot?.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) || [];
+        try {
+          const querySnapshot = await getCollection();
+          
+          // Make sure we have a proper response with docs array
+          if (querySnapshot && Array.isArray(querySnapshot.docs)) {
+            return querySnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+          } else if (Array.isArray(querySnapshot)) {
+            // Handle case where we might get direct array instead of {docs: [...]}
+            return querySnapshot.map(doc => ({
+              id: doc.id,
+              ...(typeof doc.data === 'function' ? doc.data() : doc)
+            }));
+          } else {
+            console.log('[MockFirebase] Invalid response format, returning empty array', querySnapshot);
+            return [];
+          }
+        } catch (error) {
+          console.error('[MockFirebase] Error in collection query:', error);
+          return [];
+        }
         
       case 'POST':
         // Creating a new document

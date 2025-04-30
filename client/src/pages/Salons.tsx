@@ -70,7 +70,17 @@ const Salons = () => {
       // Always use apiRequest to ensure correct URL and credentials
       try {
         const response = await apiRequest('GET', config.api.endpoints.salons);
-        const result = await response.json();
+        
+        // Handle both Response objects (from fetch) and direct data objects (from mock)
+        let result;
+        if (response && typeof response.json === 'function') {
+          // This is a Response object from fetch
+          result = await response.json();
+        } else {
+          // This is a direct data object from mock implementation
+          result = response;
+        }
+        
         console.log('Salons API response:', result);
         // Standardize field names to ensure consistency
         let salons = [];

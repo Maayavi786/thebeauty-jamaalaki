@@ -78,39 +78,40 @@ const OwnerDashboard = () => {
         console.log('Fetching salon data...');
         const response = await apiRequest('GET', `${config.api.endpoints.salons}/owner`);
         
-        if (!response.ok) {
-          console.error(`Salon API returned ${response.status}:`, response.statusText);
-          try {
-            const errorData = await response.json();
-            console.error('Error details:', errorData);
-          } catch (e) {
-            console.error('Could not parse error response');
+        // Handle both Response objects (from fetch) and direct data objects (from mock)
+        let result;
+        if (response && typeof response.json === 'function') {
+          // This is a Response object from fetch
+          if (!response.ok) {
+            console.error(`Salon API returned ${response.status}:`, response.statusText);
+            try {
+              const errorData = await response.json();
+              console.error('Error details:', errorData);
+            } catch (e) {
+              console.error('Could not parse error response');
+            }
+            
+            // Return a fallback salon object
+            return {
+              id: 0,
+              nameEn: 'Your Salon',
+              nameAr: 'صالونك',
+              descriptionEn: 'Please use the Map Salon feature to connect a salon to your account',
+              descriptionAr: 'يرجى استخدام ميزة ربط الصالون لربط صالون بحسابك',
+              address: 'No address set',
+              imageUrl: 'https://via.placeholder.com/500?text=Error+Loading+Salon'
+            };
           }
           
-          // Return a fallback salon object
-          return {
-            id: 0,
-            nameEn: 'Your Salon',
-            nameAr: 'صالونك',
-            descriptionEn: 'Please use the Map Salon feature to connect a salon to your account',
-            descriptionAr: 'يرجى استخدام ميزة ربط الصالون لربط صالون بحسابك',
-            address: 'No address set',
-            imageUrl: 'https://via.placeholder.com/500?text=Salon+Not+Found'
-          };
+          result = await response.json();
+        } else {
+          // This is a direct data object from mock implementation
+          result = response;
         }
         
-        const result = await response.json();
-        console.log('Salon data:', result);
-        
-        // Normalize field names for consistent access
+        console.log('Salon data response:', result);
         return {
-          ...result,
-          id: result.id || 0,
-          nameEn: result.nameEn || result.name_en || 'Your Salon',
-          nameAr: result.nameAr || result.name_ar || 'صالونك',
-          descriptionEn: result.descriptionEn || result.description_en || '',
-          descriptionAr: result.descriptionAr || result.description_ar || '',
-          imageUrl: result.imageUrl || result.image_url || 'https://via.placeholder.com/500?text=No+Image',
+          ...result.data || result,
           address: result.address || 'No address set'
         };
       } catch (error) {
@@ -144,13 +145,22 @@ const OwnerDashboard = () => {
         console.log('Fetching recent bookings...');
         const response = await apiRequest('GET', `${config.api.endpoints.bookings}/salon/recent`);
         
-        if (!response.ok) {
-          console.log(`Bookings API returned ${response.status}: ${response.statusText}`);
-          // Return empty array instead of throwing to avoid breaking the UI
-          return [];
+        // Handle both Response objects (from fetch) and direct data objects (from mock)
+        let result;
+        if (response && typeof response.json === 'function') {
+          // This is a Response object from fetch
+          if (!response.ok) {
+            console.log(`Bookings API returned ${response.status}: ${response.statusText}`);
+            // Return empty array instead of throwing to avoid breaking the UI
+            return [];
+          }
+          
+          result = await response.json();
+        } else {
+          // This is a direct data object from mock implementation
+          result = response;
         }
         
-        const result = await response.json();
         console.log('Recent bookings response:', result);
         return result.data || result;
       } catch (error) {
@@ -180,19 +190,28 @@ const OwnerDashboard = () => {
         console.log(`Fetching analytics for date range: ${startDate} to ${endDate}`);
         const response = await apiRequest('GET', `${config.api.endpoints.salons}/analytics?startDate=${startDate}&endDate=${endDate}`);
         
-        if (!response.ok) {
-          console.log(`Analytics API returned ${response.status}: ${response.statusText}`);
-          // Return mock data instead of throwing
-          return {
-            bookings: 0,
-            revenue: 0,
-            clients: 0,
-            popularServices: [],
-            revenueByDay: []
-          };
+        // Handle both Response objects (from fetch) and direct data objects (from mock)
+        let result;
+        if (response && typeof response.json === 'function') {
+          // This is a Response object from fetch
+          if (!response.ok) {
+            console.log(`Analytics API returned ${response.status}: ${response.statusText}`);
+            // Return mock data instead of throwing
+            return {
+              bookings: 0,
+              revenue: 0,
+              clients: 0,
+              popularServices: [],
+              revenueByDay: []
+            };
+          }
+          
+          result = await response.json();
+        } else {
+          // This is a direct data object from mock implementation
+          result = response;
         }
         
-        const result = await response.json();
         console.log('Analytics response:', result);
         return result.data || result;
       } catch (error) {

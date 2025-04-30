@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
@@ -49,15 +49,31 @@ const Profile = () => {
   const { toast } = useToast();
   
   // States for managing booking data
-  const [salonsMap, setSalonsMap] = useState<Record<number, Salon>>({});
-  const [servicesMap, setServicesMap] = useState<Record<number, Service>>({});
+  const [salonsMap, setSalonsMap] = useState<Record<string, Salon>>({});
+  const [servicesMap, setServicesMap] = useState<Record<string, Service>>({});
   
   // Use default query client for user bookings
   const { data: bookingsResponse, isLoading: isBookingsLoading } = useQuery({
     queryKey: [`${config.api.endpoints.bookings}/user/${user?.id}`],
     enabled: !!user,
   });
-  const bookings = Array.isArray(bookingsResponse?.data) ? bookingsResponse.data : [];
+  
+  // Handle both Response objects and direct data objects for bookings
+  const bookings = React.useMemo(() => {
+    if (!bookingsResponse) return [];
+    
+    // Check if it's a direct data array (from mock) or needs json parsing
+    if (Array.isArray(bookingsResponse)) {
+      return bookingsResponse;
+    }
+    
+    // Check if it has data property (API response structure)
+    if (bookingsResponse.data) {
+      return Array.isArray(bookingsResponse.data) ? bookingsResponse.data : [];
+    }
+    
+    return [];
+  }, [bookingsResponse]);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -91,10 +107,19 @@ const Profile = () => {
   
   // Fetch salon and service details for bookings
   useEffect(() => {
-    if (!bookings) return;
+    // Prevent infinite updates by checking if we already have all the data
+    if (!bookings || bookings.length === 0) return;
+    
+    // Create a tracking variable to avoid state updates if no new data
+    let hasNewData = false;
     
     const fetchSalonDetails = async () => {
       const salonIds = [...new Set(bookings.map(booking => booking.salonId))];
+      // Check if we already have all the salon data we need
+      const needsToFetch = salonIds.some(id => !(id in salonsMap));
+      if (!needsToFetch) return;
+      
+      hasNewData = true;
       const newSalonsMap: Record<number, Salon> = {};
 
       for (const salonId of salonIds) {
@@ -102,11 +127,23 @@ const Profile = () => {
           if (!(salonId in salonsMap)) {
             // Use default query client for fetching salon details
             const response = await apiRequest('GET', `${config.api.endpoints.salons}/${salonId}`);
-            if (response.ok) {
-              const result = await response.json();
-              const base = result.data || result;
-              newSalonsMap[salonId] = base;
+            
+            // Handle both Response objects (from fetch) and direct data objects (from mock)
+            let result;
+            if (response && typeof response.json === 'function') {
+              // This is a Response object from fetch
+              if (response.ok) {
+                result = await response.json();
+              } else {
+                throw new Error(`Failed to fetch salon ${salonId}: ${response.status}`);
+              }
+            } else {
+              // This is a direct data object from mock implementation
+              result = response;
             }
+            
+            const base = result.data || result;
+            newSalonsMap[salonId] = base;
           }
         } catch (error) {
           console.error(`Error fetching salon ${salonId}:`, error);
@@ -118,6 +155,11 @@ const Profile = () => {
     
     const fetchServiceDetails = async () => {
       const serviceIds = [...new Set(bookings.map(booking => booking.serviceId))];
+      // Check if we already have all the service data we need
+      const needsToFetch = serviceIds.some(id => !(id in servicesMap));
+      if (!needsToFetch) return;
+      
+      hasNewData = true;
       const newServicesMap: Record<number, Service> = {};
 
       for (const serviceId of serviceIds) {
@@ -125,23 +167,46 @@ const Profile = () => {
           if (!(serviceId in servicesMap)) {
             // Use default query client for fetching service details
             const response = await apiRequest('GET', `${config.api.endpoints.services}/${serviceId}`);
-            if (response.ok) {
-              const result = await response.json();
-              const base = result.data || result;
-              newServicesMap[serviceId] = base;
+            
+            // Handle both Response objects (from fetch) and direct data objects (from mock)
+            let result;
+            if (response && typeof response.json === 'function') {
+              // This is a Response object from fetch
+              if (response.ok) {
+                result = await response.json();
+              } else {
+                throw new Error(`Failed to fetch service ${serviceId}: ${response.status}`);
+              }
+            } else {
+              // This is a direct data object from mock implementation
+              result = response;
             }
+            
+            const base = result.data || result;
+            newServicesMap[serviceId] = base;
           }
         } catch (error) {
           console.error(`Error fetching service ${serviceId}:`, error);
         }
       }
 
-      setServicesMap(prev => ({ ...prev, ...newServicesMap }));
+      // Only update state if we have new data
+      if (Object.keys(newServicesMap).length > 0) {
+        setServicesMap(prev => ({ ...prev, ...newServicesMap }));
+      }
     };
     
-    fetchSalonDetails();
-    fetchServiceDetails();
-  }, [bookings]);
+    // Use an async IIFE to avoid useEffect warnings about using async directly
+    (async () => {
+      await fetchSalonDetails();
+      await fetchServiceDetails();
+    })();
+    
+    // Return early cleanup function
+    return () => {
+      // Cleanup if needed
+    };
+  }, [bookings, salonsMap, servicesMap]); // Include salonsMap and servicesMap in dependencies
   
   // Handler for cancelling a booking
   const handleCancelBooking = async (bookingId: number) => {

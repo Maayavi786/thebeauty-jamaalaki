@@ -136,7 +136,17 @@ const useSalonData = (salonId: number): SalonData => {
     queryFn: async () => {
       try {
         const response = await apiRequest('GET', `${config.api.endpoints.salons}/${salonId}`);
-        const result = await response.json();
+        
+        // Handle both Response objects (from fetch) and direct data objects (from mock)
+        let result;
+        if (response && typeof response.json === 'function') {
+          // This is a Response object from fetch
+          result = await response.json();
+        } else {
+          // This is a direct data object from mock implementation
+          result = response;
+        }
+        
         console.log('Salon details response:', result);
         return result;
       } catch (error) {
@@ -158,7 +168,17 @@ const useSalonData = (salonId: number): SalonData => {
       try {
         // This endpoint might need to be adjusted based on your API structure
         const response = await apiRequest('GET', `${config.api.endpoints.salons}/${salonId}/reviews`);
-        const result = await response.json();
+        
+        // Handle both Response objects (from fetch) and direct data objects (from mock)
+        let result;
+        if (response && typeof response.json === 'function') {
+          // This is a Response object from fetch
+          result = await response.json();
+        } else {
+          // This is a direct data object from mock implementation
+          result = response;
+        }
+        
         console.log('Reviews direct API response:', result);
         return result;
       } catch (error) {
@@ -269,13 +289,20 @@ const SalonDetails = () => {
   const { loading: authLoading } = useAuth();
   
   const pathParts = location.split('/');
-  const salonId = parseInt(pathParts[pathParts.length - 1], 10);
+  // Add validation for the salonId parameter and provide a default if invalid
+  const salonIdParam = pathParts[pathParts.length - 1];
+  const salonId = !isNaN(parseInt(salonIdParam, 10)) ? parseInt(salonIdParam, 10) : 1;
+  
+  // Use a ref to track if we've already shown an error toast to prevent infinite loops
+  const errorShownRef = useRef(false);
   
   const { salon, services, reviews, isLoading, errors } = useSalonData(salonId);
   
+  // Only show error toast once per error to prevent infinite update loops
   useEffect(() => {
     const handleError = (error: unknown, defaultMessage: string) => {
-      if (error) {
+      if (error && !errorShownRef.current) {
+        errorShownRef.current = true;
         const message = error instanceof Error ? error.message : defaultMessage;
         toast({
           title: isLtr ? "Error" : "خطأ",
@@ -285,8 +312,10 @@ const SalonDetails = () => {
       }
     };
 
-    handleError(errors.salonError, "Failed to load salon details");
-  }, [errors, toast, isLtr]);
+    if (errors.salonError) {
+      handleError(errors.salonError, "Failed to load salon details");
+    }
+  }, [errors.salonError, toast, isLtr]);
 
   if (authLoading) {
     return (

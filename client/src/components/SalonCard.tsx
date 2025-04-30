@@ -58,7 +58,11 @@ const SalonCard = ({ salon }: SalonCardProps) => {
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              {isLtr ? salon.city.split(' | ')[0] : salon.city.split(' | ')[1]}
+              {salon.city ? (
+                isLtr ? salon.city.split(' | ')[0] || salon.city : salon.city.split(' | ')[1] || salon.city
+              ) : (
+                isLtr ? 'Unknown Location' : 'موقع غير معروف'
+              )}
             </p>
           </div>
           

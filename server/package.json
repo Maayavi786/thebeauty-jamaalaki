@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "dev": "ts-node index.ts"
+    "dev": "ts-node index.ts",
+    "build": "echo \"Server build not needed for Netlify deployment\""
   },
   "dependencies": {
     "ts-node": "^10.9.1"

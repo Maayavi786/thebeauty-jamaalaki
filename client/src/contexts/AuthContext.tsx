@@ -77,20 +77,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
       setLoading(true);
       const response = await apiRequest('POST', config.api.endpoints.auth + '/login', { username, password });
       
-      const data = await response.json();
-      
-      // The API returns 200 status code with a 'message' field for successful login
-      if (response.ok) {
-        // Set the user data from the response
+      // Handle both Response objects (from fetch) and direct data objects (from mock)
+      let data;
+      if (response && typeof response.json === 'function') {
+        // This is a Response object from fetch
+        data = await response.json();
+        
+        // The API returns 200 status code with a 'message' field for successful login
+        if (response.ok) {
+          // Set the user data from the response
+          setUser(data.user);
+          toast({
+            title: "Success",
+            description: "You have been logged in successfully",
+          });
+          return true;
+        } else {
+          // Handle unsuccessful login
+          throw new Error(data.message || 'Login failed');
+        }
+      } else {
+        // This is a direct data object from mock implementation
+        data = response;
+        // Set the user data directly
         setUser(data.user);
         toast({
           title: "Success",
           description: "You have been logged in successfully",
         });
         return true;
-      } else {
-        // Handle unsuccessful login
-        throw new Error(data.message || 'Login failed');
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -110,24 +125,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }: AuthProv
       setLoading(true);
       const response = await apiRequest('POST', config.api.endpoints.auth + '/register', userData);
       
-      const data = await response.json();
-      console.log('Registration response:', data);
-      
-      // Check for user data in the correct structure (data.user)
-      if (response.ok && data && data.user) {
-        setUser(data.user);
-        toast({
-          title: "Success",
-          description: "Your account has been created successfully",
-        });
-        return true;
-      } else if (response.ok) {
-        // If we got a success response but no proper user data
-        console.error('Registration response missing user data:', data);
-        throw new Error('Registration successful but user data format is invalid');
+      // Handle both Response objects (from fetch) and direct data objects (from mock)
+      let data;
+      if (response && typeof response.json === 'function') {
+        // This is a Response object from fetch
+        data = await response.json();
+        console.log('Registration response:', data);
+        
+        // Check for user data in the correct structure (data.user)
+        if (response.ok && data && data.user) {
+          setUser(data.user);
+          toast({
+            title: "Success",
+            description: "Your account has been created successfully",
+          });
+          return true;
+        } else if (response.ok) {
+          // If we got a success response but no proper user data
+          console.error('Registration response missing user data:', data);
+          toast({
+            title: "Warning",
+            description: "Account created but login may be required",
+            variant: "warning"
+          });
+          return true;
+        } else {
+          // Handle unsuccessful registration
+          throw new Error(data.message || 'Registration failed');
+        }
       } else {
-        // Handle error response
-        throw new Error(data.message || 'Registration failed');
+        // This is a direct data object from mock implementation
+        data = response;
+        console.log('Registration response (mock):', data);
+        
+        // Check for user data in the mock response
+        if (data && data.user) {
+          setUser(data.user);
+          toast({
+            title: "Success",
+            description: "Your account has been created successfully",
+          });
+          return true;
+        } else {
+          // If we got a success response but no proper user data
+          console.error('Registration response missing user data:', data);
+          toast({
+            title: "Warning",
+            description: "Account created but login may be required",
+            variant: "warning"
+          });
+          return true;
+        }
       }
     } catch (error) {
       console.error('Registration failed:', error);

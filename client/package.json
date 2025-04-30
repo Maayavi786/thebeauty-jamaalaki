@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:prod": "npm run prod:check && vite build --mode production",
     "preview": "vite preview",
     "test:mock": "node scripts/test-mock-data.js",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "prod:check": "node scripts/production-checks.js",
+    "analyze": "vite-bundle-analyzer"
   },
   "dependencies": {
     "@ark-ui/react": "^5.6.0",
@@ -44,7 +47,10 @@
   "devDependencies": {
     "@grpc/grpc-js": "~1.8.22",
     "@types/react-icons": "^2.2.7",
+    "chalk": "^4.1.2",
+    "terser": "^5.39.0",
     "typescript": "^5.4.5",
+    "vite-bundle-analyzer": "^0.20.1",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.1.2"
   }

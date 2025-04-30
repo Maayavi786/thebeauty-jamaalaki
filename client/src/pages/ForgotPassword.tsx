@@ -30,14 +30,24 @@ export default function ForgotPassword() {
     setLoading(true);
     try {
       const response = await apiRequest("POST", config.api.endpoints.auth + "/forgot-password", { email });
-      const data = await response.json();
+      
+      // Handle both Response objects (from fetch) and direct data objects (from mock)
+      let data;
+      if (response && typeof response.json === 'function') {
+        // This is a Response object from fetch
+        data = await response.json();
+      } else {
+        // This is a direct data object from mock implementation
+        data = response;
+      }
+      
       if (data.success) {
         setSent(true);
         toast({
-          title: isLtr ? "Email Sent" : "تم إرسال البريد",
+          title: isLtr ? "Reset Link Sent" : "تم إرسال رابط إعادة التعيين",
           description: isLtr
-            ? "A password reset link has been sent to your email."
-            : "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.",
+            ? "Please check your email for the password reset link."
+            : "يرجى التحقق من بريدك الإلكتروني للحصول على رابط إعادة تعيين كلمة المرور.",
         });
       } else {
         toast({

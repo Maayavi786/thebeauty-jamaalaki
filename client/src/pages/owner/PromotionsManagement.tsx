@@ -91,11 +91,21 @@ const PromotionsManagement = () => {
     queryFn: async () => {
       try {
         const response = await apiRequest('GET', `${config.api.endpoints.promotions}/salon`);
-        const result = await response.json();
+        
+        // Handle both Response objects (from fetch) and direct data objects (from mock)
+        let result;
+        if (response && typeof response.json === 'function') {
+          // This is a Response object from fetch
+          result = await response.json();
+        } else {
+          // This is a direct data object from mock implementation
+          result = response;
+        }
+        
         return result.data || result;
       } catch (error) {
         console.error('Failed to fetch salon promotions:', error);
-        throw error;
+        return [];
       }
     },
     enabled: isAuthenticated && user?.role === 'salon_owner'
@@ -105,7 +115,15 @@ const PromotionsManagement = () => {
   const deletePromotionMutation = useMutation({
     mutationFn: async (promotionId: number) => {
       const response = await apiRequest('DELETE', `${config.api.endpoints.promotions}/${promotionId}`);
-      return response.json();
+      
+      // Handle both Response objects (from fetch) and direct data objects (from mock)
+      if (response && typeof response.json === 'function') {
+        // This is a Response object from fetch
+        return response.json();
+      } else {
+        // This is a direct data object from mock implementation
+        return response;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['owner-promotions'] });

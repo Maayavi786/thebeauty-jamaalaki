@@ -183,7 +183,15 @@ const ServicesManagement = () => {
   const addServiceMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest('POST', config.api.endpoints.services, data);
-      return response.json();
+      
+      // Handle both Response objects (from fetch) and direct data objects (from mock)
+      if (response && typeof response.json === 'function') {
+        // This is a Response object from fetch
+        return response.json();
+      } else {
+        // This is a direct data object from mock implementation
+        return response;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['owner-services'] });
@@ -205,7 +213,15 @@ const ServicesManagement = () => {
   const updateServiceMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest('PUT', `${config.api.endpoints.services}/${data.id}`, data);
-      return response.json();
+      
+      // Handle both Response objects (from fetch) and direct data objects (from mock)
+      if (response && typeof response.json === 'function') {
+        // This is a Response object from fetch
+        return response.json();
+      } else {
+        // This is a direct data object from mock implementation
+        return response;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['owner-services'] });
@@ -227,7 +243,15 @@ const ServicesManagement = () => {
   const deleteServiceMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await apiRequest('DELETE', `${config.api.endpoints.services}/${id}`);
-      return response.json();
+      
+      // Handle both Response objects (from fetch) and direct data objects (from mock)
+      if (response && typeof response.json === 'function') {
+        // This is a Response object from fetch
+        return response.json();
+      } else {
+        // This is a direct data object from mock implementation
+        return response;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['owner-services'] });
