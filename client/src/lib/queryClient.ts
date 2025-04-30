@@ -26,7 +26,18 @@ async function throwIfResNotOk(res: Response) {
 function normalizeEndpoint(endpoint: string): string {
   // Ensure endpoint starts with a single slash
   let normalized = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  // Always return with a single /api prefix
+  
+  // Don't add /api if it already starts with /api
+  if (normalized.startsWith('/api/')) {
+    return normalized;
+  }
+  
+  // Handle the special case where endpoint is just '/api'
+  if (normalized === '/api') {
+    normalized = '/';
+  }
+  
+  // Add /api prefix
   return '/api' + normalized;
 }
 
@@ -96,7 +107,13 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
-      const res = await fetch(`${API_BASE_URL}${queryKey[0] as string}`, {
+      // Normalize the endpoint path before making the request
+      const endpoint = queryKey[0] as string;
+      const normalizedEndpoint = normalizeEndpoint(endpoint);
+      const url = `${API_BASE_URL}${normalizedEndpoint}`;
+      console.log('React Query fetch:', url);
+      
+      const res = await fetch(url, {
         credentials: "include",
       });
 
