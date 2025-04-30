@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "salon-booking-fe45e",
+    "staging": "salon-booking-fe45e"
+  },
+  "targets": {},
+  "etags": {}
+}

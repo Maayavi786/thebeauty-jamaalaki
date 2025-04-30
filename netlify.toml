@@ -11,6 +11,13 @@
   # VITE_API_BASE_URL = "http://localhost:8888"
   SESSION_SECRET = "" # Set this in Netlify UI, never commit secrets
   DATABASE_URL = "" # Set this in Netlify UI, never commit secrets
+  # Firebase config - to be set in Netlify UI, not here
+  # FIREBASE_PROJECT_ID = ""
+  # FIREBASE_CLIENT_EMAIL = ""
+  # FIREBASE_PRIVATE_KEY = ""
+  # EMAIL_USER = ""
+  # EMAIL_PASSWORD = ""
+  # SENDER_EMAIL = ""
 
 [functions]
   directory = "netlify/functions"
@@ -42,7 +49,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    Content-Security-Policy = "default-src 'self' https://thebeauty.netlify.app; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://thebeauty.netlify.app"
+    Content-Security-Policy = "default-src 'self' https://thebeauty.netlify.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseio.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://thebeauty.netlify.app https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.google-analytics.com wss://*.firebaseio.com"
 
 [dev]
   framework = "vite"

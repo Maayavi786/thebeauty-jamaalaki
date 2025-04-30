@@ -1,8 +1,11 @@
 import { Switch, Route } from "wouter";
-// Toaster temporarily removed for build fix
 import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Helmet } from "react-helmet";
+import { Helmet } from 'react-helmet';
+import MockDataIndicator from './components/MockDataIndicator';
+import EmulatorIndicator from './components/EmulatorIndicator';
+import { FirebaseAuthProvider } from "@/contexts/FirebaseAuthContext";
+import { AuthProvider } from "@/contexts/AuthContext"; // Keep original auth for backward compatibility
 
 // Pages
 import Home from "@/pages/Home";
@@ -14,6 +17,9 @@ import BookingPage from "@/pages/BookingPage";
 import Profile from "@/pages/Profile";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import FirebaseLogin from "@/pages/FirebaseLogin";
+import FirebaseRegister from "@/pages/FirebaseRegister";
+import FirebaseProfile from "@/pages/FirebaseProfile";
 import NotFound from "@/pages/not-found";
 import OwnerTest from "@/pages/OwnerTest";
 import MapSalon from "@/pages/MapSalon";
@@ -43,8 +49,16 @@ function Router() {
       <Route path="/salons/:id" component={SalonDetails} />
       <Route path="/booking/:salonId/:serviceId" component={BookingPage} />
       <Route path="/profile" component={Profile} />
+      
+      {/* Legacy Auth Routes */}
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      
+      {/* Firebase Auth Routes */}
+      <Route path="/firebase-login" component={FirebaseLogin} />
+      <Route path="/firebase-register" component={FirebaseRegister} />
+      <Route path="/firebase-profile" component={FirebaseProfile} />
+      
       <Route path="/owner-test" component={OwnerTest} />
       <Route path="/map-salon" component={MapSalon} />
       
@@ -83,37 +97,45 @@ function App() {
   }, [language, dir]);
 
   return (
-    <div
-      className="flex flex-col min-h-screen bg-[#FAF6F2] dark:bg-[#18181A]"
-      style={{
-        backgroundImage: `
-          linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
-          url('/assets/luxury-motif-floral.svg'),
-          linear-gradient(180deg, #201A23 0%, #18181A 100%)
-        `,
-        backgroundBlendMode: 'normal',
-        backgroundRepeat: 'repeat',
-        backgroundSize: 'auto',
-      }}
-    >
-      <Helmet
-        htmlAttributes={{ lang: language, dir: dir }}
-        titleTemplate="%s | Jamaalaki"
-        defaultTitle="Jamaalaki - Salon Booking"
-      >
-        <meta name="description" content="Book salon services in Saudi Arabia" />
-      </Helmet>
-      <Header />
-      <main className="flex-grow">
-        <Router />
-      </main>
-      <Footer />
-      {/* Toaster temporarily removed for build fix */}
-      {/* Chat widget always visible */}
-      <ChatWidget />
-      {/* Quick access to salon owner dashboard */}
-      <DashboardLink />
-    </div>
+    // Wrap the entire app with Firebase Auth Provider
+    // Keep the original AuthProvider for backward compatibility during migration
+    <FirebaseAuthProvider>
+      <AuthProvider>
+        <div
+          className="flex flex-col min-h-screen bg-[#FAF6F2] dark:bg-[#18181A]"
+          style={{
+            backgroundImage: `
+              linear-gradient(180deg, #FAF6F2 0%, #FFF8F3 100%),
+              url('/assets/luxury-motif-floral.svg'),
+              linear-gradient(180deg, #201A23 0%, #18181A 100%)
+            `,
+            backgroundBlendMode: 'normal',
+            backgroundRepeat: 'repeat',
+            backgroundSize: 'auto',
+          }}
+        >
+          <Helmet
+            htmlAttributes={{ lang: language, dir: dir }}
+            titleTemplate="%s | Jamaalaki"
+            defaultTitle="Jamaalaki - Salon Booking"
+          >
+            <meta name="description" content="Book salon services in Saudi Arabia" />
+          </Helmet>
+          <Header />
+          <main className="flex-grow">
+            <Router />
+          </main>
+          <Footer />
+          {/* Chat widget always visible */}
+          <ChatWidget />
+          {/* Quick access to salon owner dashboard */}
+          <DashboardLink />
+          {/* Visual indicators for testing environments */}
+          <MockDataIndicator />
+          <EmulatorIndicator />
+        </div>
+      </AuthProvider>
+    </FirebaseAuthProvider>
   );
 }
 

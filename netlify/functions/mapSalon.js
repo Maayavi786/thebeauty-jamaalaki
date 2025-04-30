@@ -1,8 +1,8 @@
-const { neon } = require('@neondatabase/serverless');
-const querystring = require('querystring');
+import { neon } from '@neondatabase/serverless';
+import querystring from 'querystring';
 
 // Netlify function to map a salon to an owner
-exports.handler = async (event, context) => {
+export const handler = async (event, context) => {
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {

@@ -1,0 +1,112 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Common functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function hasRole(role) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+    
+    function isSalonOwner() {
+      return hasRole('salon_owner');
+    }
+    
+    function isSalonOwnerForSalon(salonId) {
+      let salon = get(/databases/$(database)/documents/salons/$(salonId));
+      return salon.data.owner_id == request.auth.uid;
+    }
+    
+    // User Rules
+    match /users/{userId} {
+      // Users can read/write their own data
+      allow read: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      // Don't allow users to delete their profile directly
+      // This should be handled via a Cloud Function to clean up related data
+      allow delete: if false;
+    }
+    
+    // Salon Rules
+    match /salons/{salonId} {
+      // Anyone can read salons
+      allow read: if true;
+      // Only salon owners can create salons
+      allow create: if isSignedIn() && isSalonOwner() && 
+                    request.resource.data.owner_id == request.auth.uid;
+      // Only the salon owner can update or delete their salon
+      allow update, delete: if isSignedIn() && isSalonOwnerForSalon(salonId);
+    }
+    
+    // Service Rules
+    match /services/{serviceId} {
+      // Anyone can read services
+      allow read: if true;
+      // Only salon owners can create/update/delete services for their salon
+      allow create: if isSignedIn() && isSalonOwner() && 
+                    isSalonOwnerForSalon(request.resource.data.salon_id);
+      allow update, delete: if isSignedIn() && isSalonOwner() && 
+                            isSalonOwnerForSalon(get(/databases/$(database)/documents/services/$(serviceId)).data.salon_id);
+    }
+    
+    // Booking Rules
+    match /bookings/{bookingId} {
+      // Users can read their own bookings, salon owners can read bookings for their salon
+      allow read: if isSignedIn() && (
+                    isOwner(resource.data.user_id) || 
+                    isSalonOwnerForSalon(resource.data.salon_id)
+                  );
+      // Users can create bookings
+      allow create: if isSignedIn() && 
+                    isOwner(request.resource.data.user_id);
+      // Users can update their own bookings, salon owners can update status for their salon
+      allow update: if isSignedIn() && (
+                    isOwner(resource.data.user_id) || 
+                    (isSalonOwnerForSalon(resource.data.salon_id) && 
+                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']))
+                  );
+      // Users can delete only their pending bookings
+      allow delete: if isSignedIn() && 
+                    isOwner(resource.data.user_id) && 
+                    resource.data.status == 'pending';
+    }
+    
+    // Review Rules
+    match /reviews/{reviewId} {
+      // Anyone can read reviews
+      allow read: if true;
+      // Users can create reviews for completed bookings
+      allow create: if isSignedIn() && 
+                    isOwner(request.resource.data.user_id) && 
+                    exists(/databases/$(database)/documents/bookings/$(request.resource.data.booking_id)) && 
+                    get(/databases/$(database)/documents/bookings/$(request.resource.data.booking_id)).data.status == 'completed';
+      // Users can update their own reviews
+      allow update: if isSignedIn() && 
+                    isOwner(resource.data.user_id) && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comment', 'rating', 'updatedAt']);
+      // Users can delete their own reviews
+      allow delete: if isSignedIn() && 
+                    isOwner(resource.data.user_id);
+    }
+    
+    // Promotion Rules
+    match /promotions/{promotionId} {
+      // Anyone can read promotions
+      allow read: if true;
+      // Only salon owners can create/update/delete promotions for their salon
+      allow create: if isSignedIn() && 
+                    isSalonOwner() && 
+                    isSalonOwnerForSalon(request.resource.data.salon_id);
+      allow update, delete: if isSignedIn() && 
+                            isSalonOwner() && 
+                            isSalonOwnerForSalon(get(/databases/$(database)/documents/promotions/$(promotionId)).data.salon_id);
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "thebeauty-migration-scripts",
+  "version": "1.0.0",
+  "description": "Data migration scripts for The Beauty Salon App",
+  "main": "migrateToFirebase.js",
+  "scripts": {
+    "migrate": "node migrateToFirebase.js"
+  },
+  "author": "Jamaalaki",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "firebase-admin": "^11.11.1",
+    "pg": "^8.9.0",
+    "uuid": "^9.0.0"
+  }
+}

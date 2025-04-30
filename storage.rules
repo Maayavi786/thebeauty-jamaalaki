@@ -1,0 +1,85 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Common functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function hasRole(role) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+    
+    function isSalonOwner() {
+      return hasRole('salon_owner');
+    }
+    
+    // Public images can be read by anyone but only authenticated users can write
+    match /public/{allImages=**} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    // User profile images can be read by anyone, written only by the owner
+    match /profile/{userId}/{allImages=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && isOwner(userId);
+    }
+    
+    // Salon images can be read by anyone, written only by the salon owner
+    match /salons/{salonId}/{allImages=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && 
+                   isSalonOwner() && 
+                   get(/databases/$(database)/documents/salons/$(salonId)).data.owner_id == request.auth.uid;
+    }
+    
+    // Service images follow the same rules as salon images
+    match /services/{serviceId}/{allImages=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && 
+                   isSalonOwner() && 
+                   get(/databases/$(database)/documents/services/$(serviceId)).data.salon_id in
+                   (
+                     // Check if user owns any salon that owns this service
+                     (
+                       query(/databases/$(database)/documents/salons)
+                       .where('owner_id', '==', request.auth.uid)
+                       .select(['__name__'])
+                       .limit(100)
+                     ).map(salon => salon.__name__)
+                   );
+    }
+    
+    // Booking attachments and related files - more restricted access
+    match /bookings/{bookingId}/{allImages=**} {
+      allow read: if isSignedIn() && (
+                    // User who made the booking
+                    get(/databases/$(database)/documents/bookings/$(bookingId)).data.user_id == request.auth.uid ||
+                    // Or salon owner
+                    (
+                      isSalonOwner() && 
+                      get(/databases/$(database)/documents/salons/$(get(/databases/$(database)/documents/bookings/$(bookingId)).data.salon_id)).data.owner_id == request.auth.uid
+                    )
+                  );
+      allow write: if isSignedIn() && (
+                    // User who made the booking
+                    get(/databases/$(database)/documents/bookings/$(bookingId)).data.user_id == request.auth.uid ||
+                    // Or salon owner
+                    (
+                      isSalonOwner() && 
+                      get(/databases/$(database)/documents/salons/$(get(/databases/$(database)/documents/bookings/$(bookingId)).data.salon_id)).data.owner_id == request.auth.uid
+                    )
+                  );
+    }
+    
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
